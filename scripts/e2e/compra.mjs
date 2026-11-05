@@ -74,6 +74,21 @@ try {
   const cartCount = await page.$eval('a[href="/carrito"]', (el) => el.textContent);
   assert(cartCount.includes("0"), "carrito vacío tras comprar");
 
+  step("Crear cuenta después de pagar y ver el historial");
+  await page.waitForSelector('input[name="password"]');
+  await page.type('input[name="password"]', "clave-e2e-segura");
+  await clickText(page, "button", "Crear cuenta");
+  await page.waitForFunction(() => location.pathname === "/cuenta", { timeout: 20000 });
+  await page.waitForFunction(() => document.body.innerText.includes("Volver a comprar"), { timeout: 20000 });
+  await shot(page, `${tag}06-cuenta`);
+  assert(true, "cuenta creada y pedido en el historial");
+
+  step("Volver a comprar llena el carrito");
+  await clickText(page, "button", "Volver a comprar");
+  await page.waitForFunction(() => location.pathname === "/carrito", { timeout: 20000 });
+  await sleep(500);
+  assert((await page.$eval("main", (el) => el.textContent)).includes("$55.550"), "carrito con el pedido anterior");
+
   console.log(`\nOK · pedido ${orderId}`);
 } catch (e) {
   await shot(page, `${tag}error`).catch(() => {});

@@ -67,8 +67,27 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
       ? `Promoción · ${bundle.items.length} productos`
       : (category?.name ?? "");
 
+  // Datos estructurados para buscadores (Google Shopping / resultados enriquecidos)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description ?? (notes.length ? `Notas de ${notes.join(", ")}` : product.name),
+    ...(product.image_urls[0] ? { image: product.image_urls } : {}),
+    brand: { "@type": "Brand", name: "Kaffa Love" },
+    ...(product.origin ? { countryOfOrigin: product.origin } : {}),
+    offers: {
+      "@type": "Offer",
+      price: product.price_clp,
+      priceCurrency: "CLP",
+      availability: available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: `/producto/${product.slug}`,
+    },
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <nav aria-label="Ruta" className="pt-6 text-sm text-ink-mute sm:pt-8">
         <Link href="/" className="hover:text-ink">
           Inicio

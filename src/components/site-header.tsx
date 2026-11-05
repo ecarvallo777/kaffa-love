@@ -29,7 +29,18 @@ export function SiteHeader() {
             <CategoryLinks />
           </Suspense>
         </nav>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          <Link
+            href="/cuenta"
+            className="grid size-10 place-items-center rounded-full transition-colors hover:bg-paper-2"
+            aria-label="Mi cuenta"
+            title="Mi cuenta"
+          >
+            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+              <circle cx="12" cy="8.5" r="3.5" />
+              <path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" strokeLinecap="round" />
+            </svg>
+          </Link>
           <CartButton />
         </div>
       </div>

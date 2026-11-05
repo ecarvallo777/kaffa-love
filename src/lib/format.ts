@@ -63,3 +63,6 @@ export const EVENT_LABELS: Record<string, string> = {
 
 /** Fecha ISO de hace n días */
 export const daysAgoIso = (n: number) => new Date(Date.now() - n * 86400_000).toISOString();
+
+/** Fecha de hace n horas */
+export const hoursAgo = (n: number) => new Date(Date.now() - n * 3600_000);

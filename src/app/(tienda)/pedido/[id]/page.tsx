@@ -9,6 +9,8 @@ import { mercadoPagoConfigured } from "@/lib/env";
 import { getOrder, orderLabel } from "@/lib/orders";
 import { syncMercadoPagoPayment } from "@/lib/payments";
 import { OrderActions } from "./order-actions";
+import { CreateAccountOffer } from "../../cuenta/forms";
+import { hoursAgo } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Tu pedido", robots: { index: false } };
 
@@ -41,7 +43,10 @@ async function OrderView({ params, searchParams }: PageProps<"/pedido/[id]">) {
   const lastAttemptFailed = sp.status === "rejected" || sp.collection_status === "rejected" || sp.sim === "rechazado";
 
   const items = order.order_items as Item[];
-  const customer = order.customers as { email: string; name: string } | null;
+  const customer = order.customers as { email: string; name: string; auth_user_id: string | null } | null;
+  const paidStatuses = ["pagado", "en_preparacion", "despachado", "listo_retiro", "entregado"];
+  const canCreateAccount =
+    !!customer && !customer.auth_user_id && paidStatuses.includes(order.status) && !!order.paid_at && new Date(order.paid_at) > hoursAgo(48);
   const pickup = order.pickup_locations as { name: string; address: string; hours: string } | null;
   const address = order.shipping_address as { street: string; number: string; apartment?: string | null; commune: string; region: string } | null;
   const reservationActive = order.status === "pendiente_pago" && order.reserved_until && new Date(order.reserved_until) > new Date();
@@ -125,6 +130,8 @@ async function OrderView({ params, searchParams }: PageProps<"/pedido/[id]">) {
         </ul>
         <p className="mt-3 text-sm text-ink-mute">La boleta la emite Mercado Pago y te llega por correo.</p>
       </section>
+
+      {canCreateAccount && customer && <CreateAccountOffer orderId={order.id} email={customer.email} />}
 
       <p className="mt-10 text-center">
         <Link href="/" className="text-sm text-ink-soft underline-offset-4 hover:underline">

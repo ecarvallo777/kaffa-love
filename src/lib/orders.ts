@@ -306,7 +306,7 @@ export async function getOrder(orderId: string) {
   const { data } = await createAdminClient()
     .from("orders")
     .select(
-      "*, customers (email, name, phone), order_items (id, product_id, product_name, unit_price_clp, quantity, grind), pickup_locations (name, address, hours)",
+      "*, customers (email, name, phone, auth_user_id), order_items (id, product_id, product_name, unit_price_clp, quantity, grind), pickup_locations (name, address, hours)",
     )
     .eq("id", orderId)
     .maybeSingle();

@@ -63,6 +63,9 @@ if (process.argv.includes("--usuarios")) {
 }
 
 if (customerIds.length) {
+  // Cuentas de cliente creadas en las pruebas
+  const { data: withAuth } = await db.from("customers").select("auth_user_id").in("id", customerIds).not("auth_user_id", "is", null);
+  for (const c of withAuth ?? []) await db.auth.admin.deleteUser(c.auth_user_id);
   await db.from("addresses").delete().in("customer_id", customerIds);
   await db.from("customers").delete().in("id", customerIds);
   console.log(`${customerIds.length} cliente(s) de prueba eliminado(s)`);
