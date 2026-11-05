@@ -97,3 +97,46 @@ export function addToCart(item: Omit<CartLine, "key" | "qty">, qty: number) {
 export function dismissLastAdded() {
   set({ ...state, lastAdded: null });
 }
+
+export function setLineQty(key: string, qty: number) {
+  load();
+  set({
+    ...state,
+    lines: state.lines
+      .map((l) => (l.key === key ? { ...l, qty: Math.max(0, Math.min(qty, l.maxQty ?? 50)) } : l))
+      .filter((l) => l.qty > 0),
+  });
+}
+
+export function setLineGrind(key: string, grind: Grind) {
+  load();
+  const line = state.lines.find((l) => l.key === key);
+  if (!line) return;
+  const newKey = `${line.productId}:${grind}`;
+  const other = state.lines.find((l) => l.key === newKey);
+  const lines = other
+    ? state.lines
+        .filter((l) => l.key !== key)
+        .map((l) => (l.key === newKey ? { ...l, qty: l.qty + line.qty } : l))
+    : state.lines.map((l) => (l.key === key ? { ...l, key: newKey, grind } : l));
+  set({ ...state, lines });
+}
+
+export function removeLine(key: string) {
+  load();
+  set({ ...state, lines: state.lines.filter((l) => l.key !== key) });
+}
+
+export function clearCart() {
+  load();
+  set({ lines: [], lastAdded: null });
+}
+
+/** Ajusta precios, nombres y máximos con los datos actuales del catálogo */
+export function syncLines(update: (line: CartLine) => CartLine | null) {
+  load();
+  const lines = state.lines.map(update).filter((l): l is CartLine => !!l && l.qty > 0);
+  const changed = JSON.stringify(lines) !== JSON.stringify(state.lines);
+  if (changed) set({ ...state, lines });
+  return changed;
+}

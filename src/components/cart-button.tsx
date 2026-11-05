@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { cartCount, useCart } from "@/lib/cart-store";
 
 export function CartButton() {
@@ -7,11 +8,10 @@ export function CartButton() {
   const count = cartCount(lines);
 
   return (
-    <button
-      type="button"
+    <Link
+      href="/carrito"
       className="relative inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-paper-2"
       aria-label={`Carrito, ${count} ${count === 1 ? "producto" : "productos"}`}
-      title="El carrito completo llega en el próximo paso"
     >
       <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
         <path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 8Z" strokeLinejoin="round" />
@@ -26,6 +26,6 @@ export function CartButton() {
       >
         {count}
       </span>
-    </button>
+    </Link>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { cartCount, dismissLastAdded, useCart } from "@/lib/cart-store";
 import { clp } from "@/lib/catalog-utils";
@@ -59,9 +60,13 @@ export function CartToast() {
           <span className="text-paper/70">
             {count} {count === 1 ? "producto" : "productos"} en tu carrito
           </span>
-          <button type="button" onClick={dismissLastAdded} className="font-medium underline-offset-4 hover:underline">
-            Seguir comprando
-          </button>
+          <Link
+            href="/carrito"
+            onClick={dismissLastAdded}
+            className="rounded-full bg-paper px-4 py-1.5 font-medium text-ink hover:bg-white"
+          >
+            Ver carrito
+          </Link>
         </div>
       </div>
     </div>
