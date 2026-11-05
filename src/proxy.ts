@@ -23,12 +23,11 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub;
 
   const path = request.nextUrl.pathname;
-  if (!user && (path.startsWith("/admin") || path.startsWith("/feria"))) {
+  if (!user &&(path.startsWith("/admin") || path.startsWith("/feria"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/ingresar";
     url.search = `?next=${encodeURIComponent(path)}`;

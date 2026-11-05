@@ -1,13 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getCatalog } from "@/lib/catalog";
 import { categoryHref, topCategories } from "@/lib/catalog-utils";
 import { CartButton } from "@/components/cart-button";
 import { Wordmark } from "@/components/wordmark";
 
-export async function SiteHeader() {
-  const catalog = await getCatalog();
-  const categories = topCategories(catalog);
-
+export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/85 backdrop-blur-md">
       <div className="bg-ink text-paper">
@@ -25,17 +23,11 @@ export async function SiteHeader() {
         </Link>
         <nav
           aria-label="Categorías"
-          className="-mx-1 flex flex-1 gap-1 overflow-x-auto [scrollbar-width:none] max-md:order-last max-md:basis-full"
+          className="-mx-1 flex min-h-8 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] max-md:order-last max-md:basis-full"
         >
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={categoryHref(c)}
-              className="shrink-0 rounded-full px-3 py-1.5 text-sm text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink"
-            >
-              {c.name}
-            </Link>
-          ))}
+          <Suspense>
+            <CategoryLinks />
+          </Suspense>
         </nav>
         <div className="ml-auto">
           <CartButton />
@@ -43,4 +35,17 @@ export async function SiteHeader() {
       </div>
     </header>
   );
+}
+
+async function CategoryLinks() {
+  const categories = topCategories(await getCatalog());
+  return categories.map((c) => (
+    <Link
+      key={c.id}
+      href={categoryHref(c)}
+      className="shrink-0 rounded-full px-3 py-1.5 text-sm text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink"
+    >
+      {c.name}
+    </Link>
+  ));
 }

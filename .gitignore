@@ -43,3 +43,6 @@ next-env.d.ts
 
 # capturas de pruebas e2e
 /e2e-output
+
+# credenciales generadas por scripts/crear-usuario.mjs
+/.credenciales-*

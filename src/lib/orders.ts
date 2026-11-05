@@ -121,9 +121,13 @@ export async function priceLines(lines: LineInput[], channel: "online" | "feria"
 }
 
 /** Reserva el stock de un pedido; si falta, borra el pedido y explica qué faltó */
-async function reserveOrDelete(orderId: string) {
+export async function reserveOrDelete(orderId: string) {
   const db = createAdminClient();
-  const { error } = await db.rpc("reserve_order_stock", { p_order_id: orderId });
+  let { error } = await db.rpc("reserve_order_stock", { p_order_id: orderId });
+  // Si falta stock, puede estar retenido por reservas vencidas: se liberan y se reintenta
+  if (error && /SIN_STOCK/.test(error.message) && (await expirePendingOrders()) > 0) {
+    ({ error } = await db.rpc("reserve_order_stock", { p_order_id: orderId }));
+  }
   if (!error) return null;
 
   await db.from("orders").delete().eq("id", orderId);
@@ -183,9 +187,10 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
   const errors = validateCheckout(input);
   if (errors.length) return { ok: false, errors };
 
-  await expirePendingOrders();
-
-  const priced = await priceLines(input.lines, "online");
+  let priced = await priceLines(input.lines, "online");
+  if (priced.problems.length && (await expirePendingOrders()) > 0) {
+    priced = await priceLines(input.lines, "online");
+  }
   if (priced.problems.length) return { ok: false, errors: priced.problems };
 
   const db = createAdminClient();

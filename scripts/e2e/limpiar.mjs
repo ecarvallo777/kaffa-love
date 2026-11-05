@@ -31,11 +31,35 @@ for (const o of all) {
   console.log(`Pedido #${o.number} (${o.status}) eliminado`);
 }
 
+// Movimientos manuales de prueba (ajustes, inicio de jornada): se revierten
+const { data: testMoves } = await db.from("stock_movements").select("id, product_id, delta").like("note", "%[PRUEBA]%");
+const net = new Map();
+for (const m of testMoves ?? []) net.set(m.product_id, (net.get(m.product_id) ?? 0) + m.delta);
+for (const [productId, delta] of net) {
+  if (!delta) continue;
+  const { data: p } = await db.from("products").select("stock, name").eq("id", productId).single();
+  await db.from("products").update({ stock: Math.max(0, p.stock - delta) }).eq("id", productId);
+  console.log(`${p.name}: stock ${p.stock} → ${Math.max(0, p.stock - delta)}`);
+}
+if (testMoves?.length) {
+  await db.from("stock_movements").delete().in("id", testMoves.map((m) => m.id));
+  await db.from("events").delete().eq("type", "stock_ajustado").like("data->>nota", "%[PRUEBA]%");
+}
+
 if (testSessionIds.size) {
-  await db.from("stock_movements").delete().like("note", "[PRUEBA]%");
   await db.from("events").delete().in("entity_id", [...testSessionIds]);
   await db.from("fair_sessions").delete().in("id", [...testSessionIds]);
   console.log(`${testSessionIds.size} jornada(s) de prueba eliminada(s)`);
+}
+
+// Usuarios de prueba (solo con --usuarios)
+if (process.argv.includes("--usuarios")) {
+  const { data: list } = await db.auth.admin.listUsers({ perPage: 1000 });
+  for (const u of list.users.filter((u) => u.email?.endsWith("@kaffalove.test"))) {
+    await db.from("staff").delete().eq("user_id", u.id);
+    await db.auth.admin.deleteUser(u.id);
+    console.log(`Usuario ${u.email} eliminado`);
+  }
 }
 
 if (customerIds.length) {

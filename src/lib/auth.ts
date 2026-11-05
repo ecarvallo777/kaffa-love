@@ -9,19 +9,19 @@ export type Staff = { userId: string; email: string; name: string; role: StaffRo
 /** Persona del equipo conectada, o null. Verifica el token con Supabase. */
 export async function getStaff(): Promise<Staff | null> {
   const auth = await createAuthClient();
-  const {
-    data: { user },
-  } = await auth.auth.getUser();
-  if (!user) return null;
+  // getClaims verifica la firma del token (localmente si el proyecto usa claves asimétricas)
+  const { data: claims } = await auth.auth.getClaims();
+  const userId = claims?.claims?.sub;
+  if (!userId) return null;
 
   const { data } = await createAdminClient()
     .from("staff")
     .select("name, role")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
   if (!data) return null;
 
-  return { userId: user.id, email: user.email ?? "", name: data.name, role: data.role };
+  return { userId, email: String(claims.claims.email ?? ""), name: data.name, role: data.role };
 }
 
 /**
@@ -31,6 +31,8 @@ export async function getStaff(): Promise<Staff | null> {
 export async function requireStaff(roles: StaffRole[] = ["admin"], next = "/admin") {
   const staff = await getStaff();
   if (!staff) redirect(`/ingresar?next=${encodeURIComponent(next)}`);
-  if (!roles.includes(staff.role)) redirect("/ingresar?error=permiso");
+  if (!roles.includes(staff.role)) {
+    redirect(staff.role === "operador" ? "/feria" : "/ingresar?error=permiso");
+  }
   return staff;
 }

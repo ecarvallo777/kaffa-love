@@ -1,11 +1,10 @@
 // Prueba de compra online completa con el pago simulado.
 // Requiere `npm run dev` corriendo y SIN MP_ACCESS_TOKEN (modo simulado).
 import { BASE, assert, clickText, launch, shot, sleep, step } from "./lib.mjs";
-import { adminDb, stockOf } from "./db.mjs";
+import { adminDb } from "./db.mjs";
 
 const db = adminDb();
-const SLUGS = ["caicedo-blend-colombia", "cafetera-chemex-400", "tetera-cisne-350"];
-const before = await stockOf(db, SLUGS);
+
 const { browser, page } = await launch({ mobile: process.argv.includes("--mobile") });
 const tag = process.argv.includes("--mobile") ? "m-" : "";
 
@@ -50,10 +49,12 @@ try {
   const orderId = page.url().split("/").pop();
   assert(!!orderId, `pedido creado ${orderId}`);
 
-  const reserved = await stockOf(db, SLUGS);
-  assert(reserved["caicedo-blend-colombia"] === before["caicedo-blend-colombia"] - 2, "reservó 2 Caicedo");
-  assert(reserved["cafetera-chemex-400"] === before["cafetera-chemex-400"] - 1, "reservó 1 Chemex (promo)");
-  assert(reserved["tetera-cisne-350"] === before["tetera-cisne-350"] - 1, "reservó 1 tetera (promo)");
+  // Se revisan los movimientos de ESTE pedido (otras compras pueden ocurrir en paralelo)
+  const { data: moves } = await db.from("stock_movements").select("delta, products(slug)").eq("order_id", orderId);
+  const moved = Object.fromEntries(moves.map((m) => [m.products.slug, m.delta]));
+  assert(moved["caicedo-blend-colombia"] === -2, "reservó 2 Caicedo");
+  assert(moved["cafetera-chemex-400"] === -1, "reservó 1 Chemex (promo)");
+  assert(moved["tetera-cisne-350"] === -1, "reservó 1 tetera (promo)");
 
   step("Aprobar pago simulado");
   await shot(page, `${tag}04-pago-simulado`);
