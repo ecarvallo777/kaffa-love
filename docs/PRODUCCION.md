@@ -42,7 +42,14 @@ Si primero quieres probar con credenciales de prueba, usa el Access Token de pru
    - `CRON_SECRET`: genera uno al azar (ver comando en `.env.example`).
    - **No** definas `ALLOW_SIMULATED_PAYMENTS`.
 3. `vercel.json` ya fija la región `gru1` (São Paulo), la más cercana a Chile. Conviene que el proyecto de Supabase esté en la misma región.
-4. Tarea programada: en el plan Hobby, Vercel solo permite una ejecución diaria, que ya está configurada. Además, las reservas vencidas se liberan cada vez que alguien compra, vende en feria o abre la administración. En el plan Pro, cambia el `schedule` a `*/10 * * * *`.
+4. **Liberar reservas vencidas cada 5 minutos (tú)**: si alguien deja a medias una compra, sus productos quedan reservados 30 minutos. Pasado ese plazo hay que liberarlos, o la tienda puede mostrar como "Agotado" algo que sí hay. En el plan gratuito, Vercel solo ejecuta su tarea una vez al día (ya configurada en `vercel.json` como respaldo), así que usa [cron-job.org](https://cron-job.org), que es gratis:
+   1. Crea una cuenta y luego **Create cronjob**.
+   2. URL: `https://<tu-dominio>/api/cron/expirar-reservas`
+   3. Frecuencia: **cada 5 minutos**.
+   4. En **Advanced → Headers**, agrega `Authorization` con el valor `Bearer <tu CRON_SECRET>`.
+   5. Guarda y usa **Test run**: la respuesta debe ser `{"ok":true,"expired":0}`. Si responde 401, revisa que el secreto coincida con el de Vercel.
+
+   En el plan Pro de Vercel puedes omitir este paso: cambia el `schedule` de `vercel.json` a `*/5 * * * *`.
 5. Conecta el dominio `kaffalove.cl` en **Settings → Domains** **solo después de** probar todo en la URL `*.vercel.app`.
 
 ## 3. Primer acceso a la administración
@@ -58,6 +65,7 @@ Las credenciales quedan en `.credenciales-<correo>.txt`, que git ignora. Ingresa
 El **Resumen** de la administración muestra esta lista y marca lo que falta:
 
 - [ ] Credenciales de Mercado Pago y clave del webhook.
+- [ ] Tarea de cron-job.org cada 5 minutos para liberar reservas vencidas (paso 2.4).
 - [ ] **Lugares de retiro**: dirección y horario reales. Hoy dice "Por definir".
 - [ ] **Despacho y tienda**: revisar las tarifas por región con el tarifario de Blue Express y guardar. Agregar correo y WhatsApp de contacto.
 - [ ] Correos con Resend: verificar el dominio y configurar `RESEND_API_KEY` y `EMAIL_FROM`.
