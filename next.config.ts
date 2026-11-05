@@ -1,6 +1,23 @@
 import type { NextConfig } from "next";
 import redirects from "./src/redirects.json";
 
+// Falla temprano y con un mensaje claro si falta la configuración de Supabase
+// (si no, el build se cae después con un error genérico al leer el catálogo).
+const missing = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SECRET_KEY"].filter(
+  (k) => !process.env[k]?.trim(),
+);
+if (missing.length) {
+  throw new Error(
+    `Faltan variables de entorno: ${missing.join(", ")}. ` +
+      "En Vercel: Settings > Environment Variables (marcarlas para Production y Preview) y volver a desplegar.",
+  );
+}
+if (/\/rest\/v1\/?$/.test(process.env.NEXT_PUBLIC_SUPABASE_URL!.trim())) {
+  throw new Error(
+    "NEXT_PUBLIC_SUPABASE_URL no debe terminar en /rest/v1. Usa solo https://<proyecto>.supabase.co",
+  );
+}
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
