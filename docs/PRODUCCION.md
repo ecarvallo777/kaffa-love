@@ -1,12 +1,23 @@
 # Puesta en producción: Kaffa Love · v2.0
 
-Guía paso a paso. El orden es intencional: **primero se prueba todo en Vercel** (incluidos pagos de prueba con Mercado Pago) y **al final** se conecta `kaffalove.cl` para los clientes. Mientras tanto, la tienda PrestaShop sigue funcionando.
+Guía paso a paso. El orden es intencional: **primero se prueba todo en Vercel** (incluidos pagos de prueba con Mercado Pago), **después** se conecta `kaffalove.cl` para los clientes y **al final** se cancela Hostinger. Mientras tanto, la tienda PrestaShop y el correo siguen funcionando.
+
+**Dónde queda cada cosa al terminar** (sin Hostinger):
+
+| Función | Antes | Después | Costo |
+| --- | --- | --- | --- |
+| Dominio | NIC.cl | NIC.cl (sin cambios) | Renovación anual de NIC |
+| DNS | Hostinger | **Vercel DNS** | Gratis |
+| Tienda | PrestaShop en Hostinger | **Vercel** + Supabase | Gratis (planes Hobby / Free) |
+| Recibir correo @kaffalove.cl | Hostinger | **ImprovMX** → reenvía a Gmail | Gratis |
+| Enviar correo @kaffalove.cl | Hostinger | **Gmail "Enviar como"** vía SMTP de **Resend** | Gratis (hasta 3.000 correos/mes) |
+| Correos de la tienda | — | **Resend** | Gratis (mismo límite) |
 
 Marca cada casilla al completar el paso.
 
 | Fase | Qué se logra | ¿Lo ven los clientes? |
 | --- | --- | --- |
-| 0. Restaurar el dominio | kaffalove.cl y su correo vuelven a funcionar (PrestaShop) | Sí, la tienda antigua |
+| 0. DNS en Vercel | kaffalove.cl y su correo vuelven a funcionar (PrestaShop), ya sin depender del DNS de Hostinger | Sí, la tienda antigua |
 | 1. Vercel: ramas y variables | Una URL de pruebas y una de producción | No |
 | 2. Acceso y datos del negocio | Administración con retiro, tarifas y contacto | No |
 | 3. Pagos de prueba con Mercado Pago | Compras de punta a punta con dinero ficticio | No |
@@ -14,21 +25,30 @@ Marca cada casilla al completar el paso.
 | 5. Ensayo general | Todo probado: tienda, feria, administración | No |
 | 6. Lanzamiento con kaffalove.cl | La tienda nueva queda pública | **Sí** |
 | 7. Después del lanzamiento | Migración de clientes, Google y limpieza | Sí |
+| 8. Salir de Hostinger | Correo migrado, respaldo de PrestaShop y membresía cancelada | Sí |
 
 ---
 
-## Fase 0 · Restaurar el dominio (urgente)
+## Fase 0 · DNS en Vercel (urgente)
 
-El 6 de noviembre de 2026 se cambiaron los DNS de kaffalove.cl en NIC.cl a los de Vercel. Como el dominio no está creado en Vercel, esos servidores no responden y **la web y el correo @kaffalove.cl dejaron de funcionar**.
+El 6 de noviembre de 2026 se cambiaron los DNS de kaffalove.cl en NIC.cl a los de Vercel (`ns1.vercel-dns.com` / `ns2.vercel-dns.com`). Eso **se mantiene**: es el primer paso para salir de Hostinger. Pero como el dominio aún no está creado en Vercel, esos servidores no responden y **la web y el correo @kaffalove.cl están caídos**. Se arregla creando el dominio en Vercel y copiando allí los registros que hoy tiene Hostinger, para que todo siga igual mientras se prueba.
 
-- [ ] **0.1** En [NIC Chile](https://www.nic.cl), entra a tu dominio y cambia los servidores DNS de vuelta a los de Hostinger:
-  ```
-  ns1.dns-parking.com
-  ns2.dns-parking.com
-  ```
-- [ ] **0.2** Espera entre minutos y unas horas. Comprueba que `https://kaffalove.cl` muestre PrestaShop y que lleguen correos a tus casillas @kaffalove.cl.
+- [ ] **0.1** Copia la lista de registros DNS actuales desde **Hostinger (hPanel) → Dominios → kaffalove.cl → DNS / Nameservers → Registros DNS**. Hostinger la conserva aunque ya no esté en uso. Interesan sobre todo: **A**, **CNAME**, **MX**, **TXT** (SPF y DMARC) y los registros de firma del correo (DKIM, suelen llamarse `hostingermail-a._domainkey`, `-b` y `-c`). Una captura de pantalla sirve.
+- [ ] **0.2** En Vercel, entra a la pestaña **Domains** de tu cuenta (no la del proyecto) y agrega `kaffalove.cl` **sin asignarlo al proyecto** todavía. Así Vercel responde por el dominio sin publicar la tienda nueva.
+- [ ] **0.3** En ese dominio, abre **DNS Records** y crea los mismos registros que tenía Hostinger. Como mínimo:
 
-> **No vuelvas a cambiar los DNS en NIC.cl.** El DNS se administra en Hostinger, y para el lanzamiento (fase 6) basta con editar dos registros allí. Así el correo nunca se interrumpe.
+  | Tipo | Nombre | Valor | Prioridad |
+  | --- | --- | --- | --- |
+  | A | *(vacío o `@`)* | `147.93.14.12` | |
+  | CNAME | `www` | `kaffalove.cl` | |
+  | MX | *(vacío o `@`)* | `mx1.hostinger.com` | 5 |
+  | MX | *(vacío o `@`)* | `mx2.hostinger.com` | 10 |
+  | TXT | *(vacío o `@`)* | `v=spf1 include:_spf.mail.hostinger.com ~all` | |
+  | CNAME / TXT | DKIM y DMARC | los de tu lista del paso 0.1 | |
+
+- [ ] **0.4** Espera unos minutos y comprueba que `https://kaffalove.cl` muestre PrestaShop y que lleguen y salgan correos de tus casillas @kaffalove.cl.
+
+> **Desde ahora el DNS se administra solo en Vercel.** No vuelvas a cambiar los DNS en NIC.cl, y no edites registros en Hostinger (ya no tienen efecto).
 
 ---
 
@@ -106,7 +126,7 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
 ## Fase 4 · Correos y tareas automáticas
 
-- [ ] **4.1** Correos de la tienda (confirmación de pedido, despacho, retiro y recuperación de contraseña): crea una cuenta en [Resend](https://resend.com) y agrega el dominio `kaffalove.cl`. Resend te pedirá unos registros DNS para un subdominio (por ejemplo `send.kaffalove.cl`): agrégalos en **Hostinger → Dominios → kaffalove.cl → DNS**. Usan un subdominio, así que no afectan el correo ni la web actuales.
+- [ ] **4.1** Correos de la tienda (confirmación de pedido, despacho, retiro y recuperación de contraseña): crea una cuenta en [Resend](https://resend.com) y agrega el dominio `kaffalove.cl`. Resend te pedirá unos registros DNS (DKIM y un subdominio de envío como `send.kaffalove.cl`): agrégalos en **Vercel → Domains → kaffalove.cl → DNS Records**. No afectan el correo ni la web actuales. Esta misma cuenta se usará en la fase 8 para enviar correos desde Gmail.
 - [ ] **4.2** Cuando Resend marque el dominio como verificado, carga `RESEND_API_KEY` y `EMAIL_FROM` (por ejemplo `Kaffa Love <pedidos@kaffalove.cl>`) en Preview y Production, y haz **Redeploy**. Haz una compra de prueba y revisa que llegue el correo.
 - [ ] **4.3** Liberación de reservas vencidas cada 5 minutos. Vercel gratis solo la ejecuta una vez al día (ya configurado), así que usa [cron-job.org](https://cron-job.org), que es gratis:
   1. **Create cronjob** con la URL `https://kaffa-love-git-master-kaffaloveroasters1111-7698.vercel.app/api/cron/expirar-reservas` y frecuencia **cada 5 minutos**.
@@ -141,14 +161,9 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 **Dominio**
 
-- [ ] **6.4** En Vercel, **Settings → Domains → Add**: agrega `kaffalove.cl` y `www.kaffalove.cl` (que `www` redirija a `kaffalove.cl`). Vercel muestra una **IP para el registro A** y un **destino CNAME para `www`**. Anótalos.
-- [ ] **6.5** En **Hostinger → Dominios → kaffalove.cl → DNS / Nameservers → Administrar registros DNS**:
-  - Registro **A**, nombre `@`: cambia `147.93.14.12` por la IP de Vercel. Si hay un **AAAA** para `@`, bórralo.
-  - Registro **CNAME**, nombre `www`: cambia `kaffalove.cl` por el destino de Vercel.
-  - **No toques** MX, TXT ni los registros de Resend (son el correo).
-
-  Un día antes, baja el TTL de esos dos registros a 300 para que el cambio sea rápido.
-- [ ] **6.6** Espera a que Vercel muestre ambos dominios como **Valid Configuration**. El certificado https se emite solo.
+- [ ] **6.4** En **Vercel → Domains → kaffalove.cl → DNS Records**, borra el registro **A** que apunta a `147.93.14.12` y el **CNAME** de `www` que apunta a `kaffalove.cl`. **No toques** MX, TXT ni los registros de Resend (son el correo).
+- [ ] **6.5** En el proyecto, **Settings → Domains → Add**: agrega `kaffalove.cl` y `www.kaffalove.cl` (que `www` redirija a `kaffalove.cl`). Como el DNS ya está en Vercel, la conexión es automática.
+- [ ] **6.6** Espera a que ambos dominios aparezcan como **Valid Configuration**. El certificado https se emite solo, en minutos.
 - [ ] **6.7** Actualiza en cron-job.org la URL a `https://kaffalove.cl/api/cron/expirar-reservas` y el secreto al `CRON_SECRET` de **Production**.
 
 **Verificación inmediata**
@@ -156,7 +171,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **6.8** Compra real de bajo monto en `https://kaffalove.cl`: debe quedar **Pagado**. Devuélvela desde Mercado Pago.
 - [ ] **6.9** Prueba una URL antigua, por ejemplo `https://kaffalove.cl/10-cafe-especialidad`: debe llevar a la categoría nueva.
 
-**Volver atrás si algo falla:** en Hostinger, deja otra vez el registro A en `147.93.14.12` y el CNAME de `www` en `kaffalove.cl`. PrestaShop sigue en Hostinger.
+**Volver atrás si algo falla:** quita `kaffalove.cl` y `www` del proyecto (**Settings → Domains**) y vuelve a crear en **DNS Records** el registro A `147.93.14.12` y el CNAME `www → kaffalove.cl`. PrestaShop sigue en Hostinger hasta la fase 8.
 
 ---
 
@@ -167,7 +182,38 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **7.3** En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
 - [ ] **7.4** Activa los respaldos de Supabase (plan Pro) o exporta la base periódicamente.
 - [ ] **7.5** Cuando tengas el logo y los colores definitivos, se cambian en `src/app/globals.css` y `src/components/wordmark.tsx`.
-- [ ] **7.6** Mantén PrestaShop unas semanas como respaldo antes de darlo de baja en Hostinger.
+
+---
+
+## Fase 8 · Salir de Hostinger
+
+Deja pasar **2 a 4 semanas** desde el lanzamiento, por si hay que volver a PrestaShop.
+
+**Correo: recibir en Gmail**
+
+- [ ] **8.1** Crea una cuenta gratuita en [ImprovMX](https://improvmx.com) con el dominio `kaffalove.cl`. Crea un alias por cada casilla que usas (por ejemplo `hola@kaffalove.cl`), y uno *catch-all* (`*`) si quieres recibir cualquier dirección. Todos reenvían a tu Gmail.
+- [ ] **8.2** **Antes de cambiar nada**, respalda los correos antiguos de Hostinger. Por ejemplo, con [Thunderbird](https://www.thunderbird.net): conecta la casilla por IMAP y copia las carpetas a "Carpetas locales". Haz lo mismo con cada casilla.
+- [ ] **8.3** En **Vercel → Domains → kaffalove.cl → DNS Records**:
+  - Borra los dos **MX** de Hostinger y crea `mx1.improvmx.com` (prioridad 10) y `mx2.improvmx.com` (prioridad 20).
+  - Cambia el **TXT de SPF** a `v=spf1 include:spf.improvmx.com ~all`.
+  - Borra los registros DKIM de Hostinger (`hostingermail-…`). **No toques** los de Resend.
+- [ ] **8.4** Espera a que ImprovMX marque el dominio como activo y envíate un correo de prueba a `hola@kaffalove.cl`: debe llegar a tu Gmail.
+
+**Correo: enviar como @kaffalove.cl desde Gmail**
+
+- [ ] **8.5** En Resend, crea una **API key** solo para Gmail (*Sending access*).
+- [ ] **8.6** En Gmail, ve a **Configuración → Cuentas e importación → Enviar como → Añadir otra dirección**:
+  - Nombre: `Kaffa Love`. Correo: `hola@kaffalove.cl`. Desmarca "Tratar como un alias".
+  - Servidor SMTP: `smtp.resend.com`, puerto `465`, conexión **SSL**.
+  - Usuario: `resend`. Contraseña: la API key del paso 8.5.
+  - Gmail envía un código de confirmación a `hola@kaffalove.cl`, que te llega por ImprovMX. Ingrésalo.
+- [ ] **8.7** Envía un correo de prueba a otra cuenta y revisa que el remitente sea `hola@kaffalove.cl` y que no caiga en spam.
+
+**Cancelar**
+
+- [ ] **8.8** Respalda PrestaShop: desde hPanel, descarga una copia de los archivos y de la base de datos (Respaldos). Guárdala por si necesitas consultar pedidos antiguos.
+- [ ] **8.9** Si quedan registros DNS que apunten a Hostinger (por ejemplo `147.93.14.12`), bórralos de Vercel.
+- [ ] **8.10** Cancela la membresía de Hostinger. Revisa antes que **el dominio no esté registrado en Hostinger** (está en NIC.cl, así que no debería verse afectado).
 
 ---
 
