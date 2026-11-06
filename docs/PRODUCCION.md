@@ -35,16 +35,25 @@ El 6 de noviembre de 2026 se cambiaron los DNS de kaffalove.cl en NIC.cl a los d
 
 - [ ] **0.1** Copia la lista de registros DNS actuales desde **Hostinger (hPanel) → Dominios → kaffalove.cl → DNS / Nameservers → Registros DNS**. Hostinger la conserva aunque ya no esté en uso. Interesan sobre todo: **A**, **CNAME**, **MX**, **TXT** (SPF y DMARC) y los registros de firma del correo (DKIM, suelen llamarse `hostingermail-a._domainkey`, `-b` y `-c`). Una captura de pantalla sirve.
 - [ ] **0.2** En Vercel, entra a la pestaña **Domains** de tu cuenta (no la del proyecto) y agrega `kaffalove.cl` **sin asignarlo al proyecto** todavía. Así Vercel responde por el dominio sin publicar la tienda nueva.
-- [ ] **0.3** En ese dominio, abre **DNS Records** y crea los mismos registros que tenía Hostinger. Como mínimo:
+- [ ] **0.3** En ese dominio, abre **DNS Records** y crea estos 13 registros (copiados de la zona de Hostinger el 6 de noviembre de 2026). En Vercel, el **Name** va **vacío** para el dominio principal (lo que Hostinger muestra como `@`), y los valores TXT van **sin comillas**:
 
-  | Tipo | Nombre | Valor | Prioridad |
-  | --- | --- | --- | --- |
-  | A | *(vacío o `@`)* | `147.93.14.12` | |
-  | CNAME | `www` | `kaffalove.cl` | |
-  | MX | *(vacío o `@`)* | `mx1.hostinger.com` | 5 |
-  | MX | *(vacío o `@`)* | `mx2.hostinger.com` | 10 |
-  | TXT | *(vacío o `@`)* | `v=spf1 include:_spf.mail.hostinger.com ~all` | |
-  | CNAME / TXT | DKIM y DMARC | los de tu lista del paso 0.1 | |
+  | # | Tipo | Name | Valor | Prioridad | Para qué |
+  | --- | --- | --- | --- | --- | --- |
+  | 1 | A | *(vacío)* | `147.93.14.12` | | Web PrestaShop |
+  | 2 | AAAA | *(vacío)* | `2a02:4780:13:1945:0:270d:adde:2` | | Web PrestaShop (IPv6) |
+  | 3 | CNAME | `www` | `kaffalove.cl` | | www |
+  | 4 | A | `ftp` | `147.93.14.12` | | FTP de Hostinger |
+  | 5 | MX | *(vacío)* | `mx1.hostinger.com` | 5 | Recibir correo |
+  | 6 | MX | *(vacío)* | `mx2.hostinger.com` | 10 | Recibir correo |
+  | 7 | TXT | *(vacío)* | `v=spf1 include:_spf.mail.hostinger.com ~all` | | Autoriza el envío de correo |
+  | 8 | TXT | `_dmarc` | `v=DMARC1; p=none` | | Política de correo |
+  | 9 | CNAME | `hostingermail-a._domainkey` | `hostingermail-a.dkim.mail.hostinger.com` | | Firma del correo |
+  | 10 | CNAME | `hostingermail-b._domainkey` | `hostingermail-b.dkim.mail.hostinger.com` | | Firma del correo |
+  | 11 | CNAME | `hostingermail-c._domainkey` | `hostingermail-c.dkim.mail.hostinger.com` | | Firma del correo |
+  | 12 | CNAME | `autodiscover` | `autodiscover.mail.hostinger.com` | | Configuración automática del correo (Outlook) |
+  | 13 | CNAME | `autoconfig` | `autoconfig.mail.hostinger.com` | | Configuración automática del correo (Thunderbird, celular) |
+
+  El TTL puede quedar en el valor que propone Vercel.
 
 - [ ] **0.4** Espera unos minutos y comprueba que `https://kaffalove.cl` muestre PrestaShop y que lleguen y salgan correos de tus casillas @kaffalove.cl.
 
@@ -161,7 +170,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 **Dominio**
 
-- [ ] **6.4** En **Vercel → Domains → kaffalove.cl → DNS Records**, borra el registro **A** que apunta a `147.93.14.12` y el **CNAME** de `www` que apunta a `kaffalove.cl`. **No toques** MX, TXT ni los registros de Resend (son el correo).
+- [ ] **6.4** En **Vercel → Domains → kaffalove.cl → DNS Records**, borra los registros **1, 2 y 3** de la fase 0 (el **A** y el **AAAA** del dominio principal, que apuntan a Hostinger, y el **CNAME** de `www`). **No toques** los de correo (MX, TXT, DKIM, autodiscover, autoconfig) ni los de Resend.
 - [ ] **6.5** En el proyecto, **Settings → Domains → Add**: agrega `kaffalove.cl` y `www.kaffalove.cl` (que `www` redirija a `kaffalove.cl`). Como el DNS ya está en Vercel, la conexión es automática.
 - [ ] **6.6** Espera a que ambos dominios aparezcan como **Valid Configuration**. El certificado https se emite solo, en minutos.
 - [ ] **6.7** Actualiza en cron-job.org la URL a `https://kaffalove.cl/api/cron/expirar-reservas` y el secreto al `CRON_SECRET` de **Production**.
@@ -196,7 +205,7 @@ Deja pasar **2 a 4 semanas** desde el lanzamiento, por si hay que volver a Prest
 - [ ] **8.3** En **Vercel → Domains → kaffalove.cl → DNS Records**:
   - Borra los dos **MX** de Hostinger y crea `mx1.improvmx.com` (prioridad 10) y `mx2.improvmx.com` (prioridad 20).
   - Cambia el **TXT de SPF** a `v=spf1 include:spf.improvmx.com ~all`.
-  - Borra los registros DKIM de Hostinger (`hostingermail-…`). **No toques** los de Resend.
+  - Borra los registros de correo de Hostinger: DKIM (`hostingermail-a/b/c._domainkey`), `autodiscover` y `autoconfig` (registros 9 a 13 de la fase 0). **No toques** los de Resend ni el `_dmarc`.
 - [ ] **8.4** Espera a que ImprovMX marque el dominio como activo y envíate un correo de prueba a `hola@kaffalove.cl`: debe llegar a tu Gmail.
 
 **Correo: enviar como @kaffalove.cl desde Gmail**
@@ -212,7 +221,7 @@ Deja pasar **2 a 4 semanas** desde el lanzamiento, por si hay que volver a Prest
 **Cancelar**
 
 - [ ] **8.8** Respalda PrestaShop: desde hPanel, descarga una copia de los archivos y de la base de datos (Respaldos). Guárdala por si necesitas consultar pedidos antiguos.
-- [ ] **8.9** Si quedan registros DNS que apunten a Hostinger (por ejemplo `147.93.14.12`), bórralos de Vercel.
+- [ ] **8.9** Borra el registro `ftp` (registro 4 de la fase 0) y cualquier otro que todavía apunte a Hostinger (`147.93.14.12`, `2a02:4780:…` o `*.hostinger.com`).
 - [ ] **8.10** Cancela la membresía de Hostinger. Revisa antes que **el dominio no esté registrado en Hostinger** (está en NIC.cl, así que no debería verse afectado).
 
 ---
