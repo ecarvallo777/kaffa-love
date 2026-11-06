@@ -115,14 +115,15 @@ Se usan dos ramas de git:
 
 Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
-- [ ] **3.1** En [Mercado Pago Developers](https://www.mercadopago.cl/developers/panel/app), crea una aplicación de tipo **Checkout Pro** con la cuenta de Kaffa Love.
-- [ ] **3.2** En **Credenciales de prueba**, copia el **Access Token** en `MP_ACCESS_TOKEN` del entorno **Preview** de Vercel.
-- [ ] **3.3** En **Webhooks → Modo de prueba**, configura:
+- [x] **3.1** En [Mercado Pago Developers](https://www.mercadopago.cl/developers/panel/app), crea una aplicación de tipo **Checkout Pro** con la cuenta de Kaffa Love.
+- [x] **3.2** En **Credenciales de prueba**, copia el **Access Token** en `MP_ACCESS_TOKEN` del entorno **Preview** de Vercel.
+- [x] **3.3** En **Webhooks → Modo de prueba**, configura:
   - URL: `https://kaffa-love-git-master-kaffaloveroasters1111-7698.vercel.app/api/webhooks/mercadopago`
   - Evento: **Pagos**
 
   Copia la **clave secreta** que muestra en `MP_WEBHOOK_SECRET` (**Preview**).
-- [ ] **3.4** Haz **Redeploy** de la rama `master`.
+- [x] **3.4** Haz **Redeploy** de la rama `master` (o un `git push origin master`).
+- [ ] **3.4b** En **Webhooks → Modo de prueba**, usa **Simular notificación** (evento Pagos). Debe responder **200**. Si responde **401**, la clave de `MP_WEBHOOK_SECRET` (Preview) no coincide con la del panel.
 - [ ] **3.5** En **Cuentas de prueba**, crea un usuario **comprador**. Para pagar en el checkout de prueba debes iniciar sesión con ese usuario y usar las [tarjetas de prueba](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
 - [ ] **3.6** Prueba estos casos y revisa cada pedido en la administración:
   - [ ] Pago **aprobado** con retiro: el pedido pasa a **Pagado** y aparece en el Resumen.
