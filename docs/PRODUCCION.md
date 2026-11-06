@@ -99,15 +99,15 @@ Se usan dos ramas de git:
 
 ## Fase 2 · Acceso y datos del negocio
 
-- [ ] **2.1** Crea tu usuario administrador (desde la carpeta del proyecto en tu computador):
+- [x] **2.1** Crea tu usuario administrador (desde la carpeta del proyecto en tu computador):
   ```
   node scripts/crear-usuario.mjs crewxart@gmail.com "Esteban Carvallo" admin
   ```
   La contraseña queda en `.credenciales-crewxart@gmail.com.txt` (git lo ignora). Ingresa en `<URL de pruebas>/ingresar`, cambia la contraseña en **Equipo** y borra ese archivo.
-- [ ] **2.2** **Lugares de retiro**: dirección y horario reales (hoy dice "Por definir").
-- [ ] **2.3** **Despacho y tienda**: tarifas por región según tu tarifario de Blue Express, correo y WhatsApp de contacto, Instagram. Guarda.
-- [ ] **2.4** **Productos**: completa las fichas de los cafés (proceso, variedad y notas de cata; a La Betania le faltan las notas) y sube fotos si ya las tienes.
-- [ ] **2.5** **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
+- [x] **2.2** **Lugares de retiro**: dirección y horario reales (hoy dice "Por definir").
+- [ ] **2.3** *(pendiente: se completa antes de la fase 6)* **Despacho y tienda**: tarifas por región según tu tarifario de Blue Express, correo y WhatsApp de contacto, Instagram. Guarda.
+- [ ] **2.4** *(pendiente: se completa antes de la fase 6)* **Productos**: completa las fichas de los cafés (proceso, variedad y notas de cata; a La Betania le faltan las notas) y sube fotos si ya las tienes.
+- [ ] **2.5** *(pendiente)* **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
 
 ---
 
@@ -161,6 +161,10 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 ## Fase 6 · Lanzamiento con kaffalove.cl
 
 Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse en kaffalove.cl.
+
+**Requisitos pendientes de la fase 2**
+
+- [ ] **6.0** Tarifas de despacho revisadas y guardadas (2.3), fichas de café completas (2.4) y operadores de feria creados (2.5).
 
 **Credenciales reales**
 
