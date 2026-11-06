@@ -61,7 +61,7 @@ El 6 de noviembre de 2026 se cambiaron los DNS de kaffalove.cl en NIC.cl a los d
 
 ---
 
-## Fase 1 · Vercel: ramas y variables
+## Fase 1 · Vercel: ramas y variables ✅
 
 Se usan dos ramas de git:
 
@@ -76,7 +76,7 @@ Se usan dos ramas de git:
   ```
 - [x] **1.2** En Vercel, entra a **Settings → Environments → Production → Branch Tracking** y elige `main`. Luego, en **Deployments**, promueve el último despliegue de `main` a producción (**⋯ → Promote to Production**).
 - [x] **1.3** Revisa en **Settings → Deployment Protection** que **Vercel Authentication** esté desactivada. Si está activa, Mercado Pago no puede enviar sus avisos de pago.
-- [ ] **1.4** En **Settings → Environment Variables**, carga las variables. Cada una se marca para el entorno que corresponde: **Preview** es la rama `master` y **Production** es `main`.
+- [x] **1.4** En **Settings → Environment Variables**, carga las variables. Cada una se marca para el entorno que corresponde: **Preview** es la rama `master` y **Production** es `main`.
 
   | Variable | Preview (pruebas) | Production | Sensitive |
   | --- | --- | --- | --- |
@@ -91,7 +91,7 @@ Se usan dos ramas de git:
   | `AGENT_API_KEY` | opcional | opcional | Sí |
 
   Para generar un valor al azar: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. **Nunca** definas `ALLOW_SIMULATED_PAYMENTS` en Vercel.
-- [ ] **1.5** Haz **Redeploy** de ambas ramas (las variables solo se aplican en despliegues nuevos). Comprueba que las dos URLs carguen la tienda.
+- [x] **1.5** Haz **Redeploy** de ambas ramas (las variables solo se aplican en despliegues nuevos). Comprueba que las dos URLs carguen la tienda.
 
 > Las dos ramas usan **la misma base de datos de Supabase**. Las compras de prueba descuentan stock real y consumen números de pedido. Al terminar las pruebas se limpia todo (fase 7).
 
