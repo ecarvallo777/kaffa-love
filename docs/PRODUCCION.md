@@ -123,14 +123,17 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
   Copia la **clave secreta** que muestra en `MP_WEBHOOK_SECRET` (**Preview**).
 - [x] **3.4** Haz **Redeploy** de la rama `master` (o un `git push origin master`).
-- [ ] **3.4b** En **Webhooks → Modo de prueba**, usa **Simular notificación** (evento Pagos). Debe responder **200**. Si responde **401**, la clave de `MP_WEBHOOK_SECRET` (Preview) no coincide con la del panel.
-- [ ] **3.5** En **Cuentas de prueba**, crea un usuario **comprador**. Para pagar en el checkout de prueba debes iniciar sesión con ese usuario y usar las [tarjetas de prueba](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
+- [x] **3.4b** En **Webhooks → Modo de prueba**, usa **Simular notificación** (evento Pagos). Debe responder **200**. Si responde **401**, la clave de `MP_WEBHOOK_SECRET` (Preview) no coincide con la del panel.
+- [x] **3.5** En **Cuentas de prueba**, crea un usuario **comprador**. Para pagar en el checkout de prueba debes iniciar sesión con ese usuario y usar las [tarjetas de prueba](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
 - [ ] **3.6** Prueba estos casos y revisa cada pedido en la administración:
-  - [ ] Pago **aprobado** con retiro: el pedido pasa a **Pagado** y aparece en el Resumen.
-  - [ ] Pago **aprobado** con despacho: el costo de envío corresponde a la región.
+
+  > Resultado del 6 de noviembre de 2026: en **modo de prueba**, Mercado Pago **no envía avisos** de los pagos (la simulación del panel sí llega con 200). Los pagos se confirman al volver a la tienda o, si se cierra la ventana, con la **conciliación** (busca pagos aprobados en la API de Mercado Pago), que corre en la tarea de la fase 4.3, al abrir la administración y al abrir la página del pedido. Con credenciales reales (fase 6) los avisos llegan normalmente.
+
+  - [x] Pago **aprobado** con retiro: el pedido pasa a **Pagado** y aparece en el Resumen.
+  - [x] Pago **aprobado** con despacho: el costo de envío corresponde a la región.
   - [ ] Pago **rechazado** (tarjeta de prueba con nombre de titular `OTHE`): el pedido sigue pendiente y se puede reintentar.
-  - [ ] Pagar y **cerrar la ventana** sin volver a la tienda: el pedido igual debe quedar **Pagado** (eso confirma que el webhook funciona).
-  - [ ] Dejar un pago sin completar por más de 30 minutos: el pedido pasa a **Expirado** y el stock vuelve (requiere la fase 4.3 o abrir la administración).
+  - [x] Pagar y **cerrar la ventana** sin volver a la tienda: el pedido igual debe quedar **Pagado** (eso confirma que el webhook funciona).
+  - [x] Dejar un pago sin completar por más de 30 minutos: el pedido pasa a **Expirado** y el stock vuelve (requiere la fase 4.3 o abrir la administración).
 
 ---
 
@@ -138,7 +141,7 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
 - [ ] **4.1** Correos de la tienda (confirmación de pedido, despacho, retiro y recuperación de contraseña): crea una cuenta en [Resend](https://resend.com) y agrega el dominio `kaffalove.cl`. Resend te pedirá unos registros DNS (DKIM y un subdominio de envío como `send.kaffalove.cl`): agrégalos en **Vercel → Domains → kaffalove.cl → DNS Records**. No afectan el correo ni la web actuales. Esta misma cuenta se usará en la fase 8 para enviar correos desde Gmail.
 - [ ] **4.2** Cuando Resend marque el dominio como verificado, carga `RESEND_API_KEY` y `EMAIL_FROM` (por ejemplo `Kaffa Love <pedidos@kaffalove.cl>`) en Preview y Production, y haz **Redeploy**. Haz una compra de prueba y revisa que llegue el correo.
-- [ ] **4.3** Liberación de reservas vencidas cada 5 minutos. Vercel gratis solo la ejecuta una vez al día (ya configurado), así que usa [cron-job.org](https://cron-job.org), que es gratis:
+- [ ] **4.3** **Importante.** Tarea cada 5 minutos que confirma pagos cuyo aviso no llegó y libera reservas vencidas. Vercel gratis solo la ejecuta una vez al día (ya configurado), así que usa [cron-job.org](https://cron-job.org), que es gratis:
   1. **Create cronjob** con la URL `https://kaffa-love-git-master-kaffaloveroasters1111-7698.vercel.app/api/cron/expirar-reservas` y frecuencia **cada 5 minutos**.
   2. En **Advanced → Headers**, agrega `Authorization` con el valor `Bearer <CRON_SECRET de Preview>`.
   3. Usa **Test run**: debe responder `{"ok":true,...}`.
