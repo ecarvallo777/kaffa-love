@@ -44,10 +44,10 @@ export async function createPreference(input: {
     external_reference: input.orderId,
     metadata: { order_id: input.orderId, order_number: input.orderNumber },
     back_urls: { success: backUrl, failure: backUrl, pending: backUrl },
-    // Mercado Pago solo acepta retorno automático y avisos hacia URLs públicas https
-    ...(https
-      ? { auto_return: "approved", notification_url: `${input.siteUrl}/api/webhooks/mercadopago` }
-      : {}),
+    // Retorno automático solo hacia URLs públicas https. Los avisos de pago llegan por el
+    // webhook configurado en el panel de Mercado Pago (firmado); no se usa notification_url
+    // porque esas notificaciones pueden llegar sin firma y serían rechazadas.
+    ...(https ? { auto_return: "approved" } : {}),
     // Solo aprobado o rechazado: no hay pagos "pendientes" que excedan la reserva de stock
     binary_mode: true,
     expires: true,
