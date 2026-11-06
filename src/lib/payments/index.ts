@@ -109,14 +109,29 @@ export async function syncMercadoPagoPayment(paymentId: string, expectedOrderId?
     case "rejected":
     case "cancelled":
       // El cliente puede reintentar mientras dure la reserva; al vencer, el cron libera el stock
-      await logEvent("pago_rechazado", "order", orderId, { payment_id: id, detalle: payment.status_detail });
+      await logEventOnce("pago_rechazado", orderId, id, { payment_id: id, detalle: payment.status_detail });
       break;
     case "refunded":
     case "charged_back":
-      await logEvent("pago_reembolsado", "order", orderId, { payment_id: id, estado: payment.status });
+      await logEventOnce("pago_reembolsado", orderId, id, { payment_id: id, estado: payment.status });
       break;
     default:
-      await logEvent("pago_actualizado", "order", orderId, { payment_id: id, estado: payment.status });
+      await logEventOnce(`pago_actualizado`, orderId, `${id}:${payment.status}`, { payment_id: id, estado: payment.status });
   }
   return payment;
+}
+
+/**
+ * Registra un evento de pago una sola vez por pago (la página del pedido, el webhook
+ * y la conciliación pueden revisar el mismo pago varias veces).
+ */
+async function logEventOnce(type: string, orderId: string, key: string, data: Record<string, unknown>) {
+  const { count } = await createAdminClient()
+    .from("events")
+    .select("id", { count: "exact", head: true })
+    .eq("type", type)
+    .eq("entity_id", orderId)
+    .eq("data->>clave", key);
+  if (count) return;
+  await logEvent(type, "order", orderId, { ...data, clave: key });
 }

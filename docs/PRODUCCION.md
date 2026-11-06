@@ -111,7 +111,7 @@ Se usan dos ramas de git:
 
 ---
 
-## Fase 3 · Pagos de prueba con Mercado Pago
+## Fase 3 · Pagos de prueba con Mercado Pago ✅
 
 Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
@@ -125,13 +125,13 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 - [x] **3.4** Haz **Redeploy** de la rama `master` (o un `git push origin master`).
 - [x] **3.4b** En **Webhooks → Modo de prueba**, usa **Simular notificación** (evento Pagos). Debe responder **200**. Si responde **401**, la clave de `MP_WEBHOOK_SECRET` (Preview) no coincide con la del panel.
 - [x] **3.5** En **Cuentas de prueba**, crea un usuario **comprador**. Para pagar en el checkout de prueba debes iniciar sesión con ese usuario y usar las [tarjetas de prueba](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
-- [ ] **3.6** Prueba estos casos y revisa cada pedido en la administración:
+- [x] **3.6** Prueba estos casos y revisa cada pedido en la administración:
 
   > Resultado del 6 de noviembre de 2026: en **modo de prueba**, Mercado Pago **no envía avisos** de los pagos (la simulación del panel sí llega con 200). Los pagos se confirman al volver a la tienda o, si se cierra la ventana, con la **conciliación** (busca pagos aprobados en la API de Mercado Pago), que corre en la tarea de la fase 4.3, al abrir la administración y al abrir la página del pedido. Con credenciales reales (fase 6) los avisos llegan normalmente.
 
   - [x] Pago **aprobado** con retiro: el pedido pasa a **Pagado** y aparece en el Resumen.
   - [x] Pago **aprobado** con despacho: el costo de envío corresponde a la región.
-  - [ ] Pago **rechazado** (tarjeta de prueba con nombre de titular `OTHE`): el pedido sigue pendiente y se puede reintentar.
+  - [x] Pago **rechazado** (tarjeta de prueba con nombre de titular `OTHE`): el pedido sigue pendiente y se puede reintentar.
   - [x] Pagar y **cerrar la ventana** sin volver a la tienda: el pedido igual debe quedar **Pagado** (eso confirma que el webhook funciona).
   - [x] Dejar un pago sin completar por más de 30 minutos: el pedido pasa a **Expirado** y el stock vuelve (requiere la fase 4.3 o abrir la administración).
 

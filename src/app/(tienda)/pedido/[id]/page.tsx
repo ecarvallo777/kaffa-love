@@ -70,6 +70,7 @@ async function OrderView({ params, searchParams }: PageProps<"/pedido/[id]">) {
           status={order.status}
           reservedUntil={reservationActive ? order.reserved_until : null}
           items={items.map((i) => ({ productId: i.product_id, name: i.product_name, priceClp: i.unit_price_clp, qty: i.quantity, grind: i.grind }))}
+          lastAttemptFailed={lastAttemptFailed}
         />
       </div>
 

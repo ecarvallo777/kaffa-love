@@ -13,11 +13,13 @@ export function OrderActions({
   status,
   reservedUntil,
   items,
+  lastAttemptFailed = false,
 }: {
   orderId: string;
   status: string;
   reservedUntil: string | null;
   items: Item[];
+  lastAttemptFailed?: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -25,11 +27,12 @@ export function OrderActions({
   const remaining = useCountdown(reservedUntil);
 
   // Mientras espera el pago, revisa cada pocos segundos si llegó la confirmación
+  // (no después de un rechazo: ahí se espera a que el cliente reintente)
   useEffect(() => {
-    if (status !== "pendiente_pago" || !reservedUntil) return;
+    if (status !== "pendiente_pago" || !reservedUntil || lastAttemptFailed) return;
     const t = setInterval(() => router.refresh(), 8000);
     return () => clearInterval(t);
-  }, [status, reservedUntil, router]);
+  }, [status, reservedUntil, lastAttemptFailed, router]);
 
   if (status === "pendiente_pago" && reservedUntil && remaining > 0) {
     const m = Math.floor(remaining / 60);
