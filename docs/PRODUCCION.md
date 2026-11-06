@@ -70,12 +70,12 @@ Se usan dos ramas de git:
 | `master` | Pruebas: aquí se trabaja y se prueba | `https://kaffa-love-git-master-kaffaloveroasters1111-7698.vercel.app` |
 | `main` | Producción: lo que verán los clientes | `https://kaffa-love-kaffaloveroasters1111-7698.vercel.app` (y luego `kaffalove.cl`) |
 
-- [ ] **1.1** Crea la rama `main` en GitHub con lo mismo que tiene `master`:
+- [x] **1.1** Crea la rama `main` en GitHub con lo mismo que tiene `master`:
   ```
   git push origin master:main
   ```
-- [ ] **1.2** En Vercel, entra a **Settings → Git → Production Branch** y escribe `main`.
-- [ ] **1.3** Revisa en **Settings → Deployment Protection** que **Vercel Authentication** esté desactivada. Si está activa, Mercado Pago no puede enviar sus avisos de pago.
+- [x] **1.2** En Vercel, entra a **Settings → Environments → Production → Branch Tracking** y elige `main`. Luego, en **Deployments**, promueve el último despliegue de `main` a producción (**⋯ → Promote to Production**).
+- [x] **1.3** Revisa en **Settings → Deployment Protection** que **Vercel Authentication** esté desactivada. Si está activa, Mercado Pago no puede enviar sus avisos de pago.
 - [ ] **1.4** En **Settings → Environment Variables**, carga las variables. Cada una se marca para el entorno que corresponde: **Preview** es la rama `master` y **Production** es `main`.
 
   | Variable | Preview (pruebas) | Production | Sensitive |
