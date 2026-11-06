@@ -29,13 +29,13 @@ Marca cada casilla al completar el paso.
 
 ---
 
-## Fase 0 · DNS en Vercel (urgente)
+## Fase 0 · DNS en Vercel ✅ (completada el 6 de noviembre de 2026)
 
 El 6 de noviembre de 2026 se cambiaron los DNS de kaffalove.cl en NIC.cl a los de Vercel (`ns1.vercel-dns.com` / `ns2.vercel-dns.com`). Eso **se mantiene**: es el primer paso para salir de Hostinger. Pero como el dominio aún no está creado en Vercel, esos servidores no responden y **la web y el correo @kaffalove.cl están caídos**. Se arregla creando el dominio en Vercel y copiando allí los registros que hoy tiene Hostinger, para que todo siga igual mientras se prueba.
 
-- [ ] **0.1** Copia la lista de registros DNS actuales desde **Hostinger (hPanel) → Dominios → kaffalove.cl → DNS / Nameservers → Registros DNS**. Hostinger la conserva aunque ya no esté en uso. Interesan sobre todo: **A**, **CNAME**, **MX**, **TXT** (SPF y DMARC) y los registros de firma del correo (DKIM, suelen llamarse `hostingermail-a._domainkey`, `-b` y `-c`). Una captura de pantalla sirve.
-- [ ] **0.2** En Vercel, entra a la pestaña **Domains** de tu cuenta (no la del proyecto) y agrega `kaffalove.cl` **sin asignarlo al proyecto** todavía. Así Vercel responde por el dominio sin publicar la tienda nueva.
-- [ ] **0.3** En ese dominio, abre **DNS Records** y crea estos 13 registros (copiados de la zona de Hostinger el 6 de noviembre de 2026). En Vercel, el **Name** va **vacío** para el dominio principal (lo que Hostinger muestra como `@`), y los valores TXT van **sin comillas**:
+- [x] **0.1** Copia la lista de registros DNS actuales desde **Hostinger (hPanel) → Dominios → kaffalove.cl → DNS / Nameservers → Registros DNS**. Hostinger la conserva aunque ya no esté en uso. Interesan sobre todo: **A**, **CNAME**, **MX**, **TXT** (SPF y DMARC) y los registros de firma del correo (DKIM, suelen llamarse `hostingermail-a._domainkey`, `-b` y `-c`). Una captura de pantalla sirve.
+- [x] **0.2** En Vercel, entra a la pestaña **Domains** de tu cuenta (no la del proyecto) y agrega `kaffalove.cl` **sin asignarlo al proyecto** todavía. Así Vercel responde por el dominio sin publicar la tienda nueva.
+- [x] **0.3** En ese dominio, abre **DNS Records** y crea estos 13 registros (copiados de la zona de Hostinger el 6 de noviembre de 2026). En Vercel, el **Name** va **vacío** para el dominio principal (lo que Hostinger muestra como `@`), y los valores TXT van **sin comillas**:
 
   | # | Tipo | Name | Valor | Prioridad | Para qué |
   | --- | --- | --- | --- | --- | --- |
@@ -55,7 +55,7 @@ El 6 de noviembre de 2026 se cambiaron los DNS de kaffalove.cl en NIC.cl a los d
 
   El TTL puede quedar en el valor que propone Vercel.
 
-- [ ] **0.4** Espera unos minutos y comprueba que `https://kaffalove.cl` muestre PrestaShop y que lleguen y salgan correos de tus casillas @kaffalove.cl.
+- [x] **0.4** Espera unos minutos y comprueba que `https://kaffalove.cl` muestre PrestaShop y que lleguen y salgan correos de tus casillas @kaffalove.cl.
 
 > **Desde ahora el DNS se administra solo en Vercel.** No vuelvas a cambiar los DNS en NIC.cl, y no edites registros en Hostinger (ya no tienen efecto).
 
@@ -171,7 +171,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 **Dominio**
 
 - [ ] **6.4** En **Vercel → Domains → kaffalove.cl → DNS Records**, borra los registros **1, 2 y 3** de la fase 0 (el **A** y el **AAAA** del dominio principal, que apuntan a Hostinger, y el **CNAME** de `www`). **No toques** los de correo (MX, TXT, DKIM, autodiscover, autoconfig) ni los de Resend.
-- [ ] **6.5** En el proyecto, **Settings → Domains → Add**: agrega `kaffalove.cl` y `www.kaffalove.cl` (que `www` redirija a `kaffalove.cl`). Como el DNS ya está en Vercel, la conexión es automática.
+- [ ] **6.5** En el proyecto, **Settings → Domains → Add**: agrega `kaffalove.cl` y `www.kaffalove.cl`. **Desmarca** «Redirect apex domains to www»: la tienda usa `https://kaffalove.cl` sin www, así que `www` debe redirigir a `kaffalove.cl`. Elige el entorno **Production**. Como el DNS ya está en Vercel, la conexión es automática.
 - [ ] **6.6** Espera a que ambos dominios aparezcan como **Valid Configuration**. El certificado https se emite solo, en minutos.
 - [ ] **6.7** Actualiza en cron-job.org la URL a `https://kaffalove.cl/api/cron/expirar-reservas` y el secreto al `CRON_SECRET` de **Production**.
 
