@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { mercadoPagoConfigured, simulatedPaymentsEnabled, siteUrl } from "@/lib/env";
 import { logEvent } from "@/lib/events";
 import { confirmOrderPaid, getOrder, preferenceItems } from "@/lib/orders";
-import { createPreference, getPayment } from "@/lib/payments/mercadopago";
+import { createPreference, getPayment, searchPaymentsByOrder } from "@/lib/payments/mercadopago";
 
 export type StartPaymentResult = { ok: true; url: string } | { ok: false; error: string };
 
@@ -48,6 +48,46 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
   }
 
   return { ok: false, error: "Los pagos todavía no están habilitados. Escríbenos para completar tu compra." };
+}
+
+/**
+ * Red de seguridad: si un aviso de Mercado Pago se perdió, busca pagos aprobados de un
+ * pedido directamente en su API y lo confirma. Devuelve true si encontró uno.
+ */
+export async function reconcileOrderPayment(orderId: string) {
+  if (!mercadoPagoConfigured()) return false;
+  const payments = await searchPaymentsByOrder(orderId);
+  const approved = payments.find((p) => p.status === "approved");
+  if (!approved) return false;
+  await syncMercadoPagoPayment(String(approved.id), orderId);
+  return true;
+}
+
+/**
+ * Revisa los pedidos que fueron a pagar y siguen pendientes (o vencieron en las
+ * últimas 24 horas) por si Mercado Pago aprobó un pago cuyo aviso no llegó.
+ * Se ejecuta antes de liberar reservas.
+ */
+export async function reconcilePendingPayments() {
+  if (!mercadoPagoConfigured()) return 0;
+  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const { data: orders } = await createAdminClient()
+    .from("orders")
+    .select("id")
+    .eq("channel", "online")
+    .not("mp_preference_id", "is", null)
+    .or(`status.eq.pendiente_pago,and(status.eq.expirado,updated_at.gte."${since}")`)
+    .limit(50);
+
+  let confirmed = 0;
+  for (const o of orders ?? []) {
+    try {
+      if (await reconcileOrderPayment(o.id)) confirmed++;
+    } catch (e) {
+      console.error("[payments] Conciliación:", (e as Error).message);
+    }
+  }
+  return confirmed;
 }
 
 /**

@@ -93,6 +93,15 @@ export async function getPayment(paymentId: string): Promise<MpPayment | null> {
   return res.json();
 }
 
+/** Pagos asociados a un pedido (external_reference), del más reciente al más antiguo */
+export async function searchPaymentsByOrder(orderId: string): Promise<MpPayment[]> {
+  const url = `${API}/v1/payments/search?external_reference=${encodeURIComponent(orderId)}&sort=date_created&criteria=desc&limit=20`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token()}` }, cache: "no-store" });
+  if (!res.ok) throw new Error(`No se pudieron buscar los pagos del pedido ${orderId} (${res.status})`);
+  const data = (await res.json()) as { results?: MpPayment[] };
+  return data.results ?? [];
+}
+
 /**
  * Verifica la firma de una notificación (cabecera x-signature).
  * https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks

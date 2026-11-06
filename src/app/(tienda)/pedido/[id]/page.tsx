@@ -7,7 +7,7 @@ import type { Grind } from "@/lib/catalog-types";
 import { grindLabel } from "@/lib/grinds";
 import { mercadoPagoConfigured } from "@/lib/env";
 import { getOrder, orderLabel } from "@/lib/orders";
-import { syncMercadoPagoPayment } from "@/lib/payments";
+import { reconcileOrderPayment, syncMercadoPagoPayment } from "@/lib/payments";
 import { OrderActions } from "./order-actions";
 import { CreateAccountOffer } from "../../cuenta/forms";
 import { hoursAgo } from "@/lib/format";
@@ -32,9 +32,15 @@ async function OrderView({ params, searchParams }: PageProps<"/pedido/[id]">) {
 
   // Volviendo de Mercado Pago: confirmamos el estado consultando su API
   const paymentId = typeof sp.payment_id === "string" ? sp.payment_id : null;
-  if (paymentId && paymentId !== "null" && order.status === "pendiente_pago" && mercadoPagoConfigured()) {
+  if (order.status === "pendiente_pago" && mercadoPagoConfigured()) {
     try {
-      await syncMercadoPagoPayment(paymentId, order.id);
+      if (paymentId && paymentId !== "null") {
+        await syncMercadoPagoPayment(paymentId, order.id);
+      } else if (order.mp_preference_id) {
+        // Sin datos de retorno (por ejemplo, cerró la ventana de Mercado Pago):
+        // se busca directamente si hay un pago aprobado para este pedido
+        await reconcileOrderPayment(order.id);
+      }
       order = (await getOrder(id))!;
     } catch (e) {
       console.error("[pedido] No se pudo verificar el pago:", (e as Error).message);

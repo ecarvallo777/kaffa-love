@@ -5,6 +5,7 @@ import { clp } from "@/lib/catalog-utils";
 import { EVENT_LABELS, daysAgoIso, fmtDateTime, startOfTodayChile } from "@/lib/format";
 import { ATTENTION_EVENTS } from "@/lib/events";
 import { expirePendingOrders, orderLabel } from "@/lib/orders";
+import { reconcilePendingPayments } from "@/lib/payments";
 import { lowStock, salesSince } from "@/lib/admin-data";
 import { mercadoPagoConfigured, siteUrl } from "@/lib/env";
 import { getPickupLocations } from "@/lib/pickup";
@@ -12,6 +13,7 @@ import { Card, Empty, PageHeader, Pill, Stat, StatusPill } from "@/components/ad
 
 export default async function AdminHome() {
   await connection();
+  await reconcilePendingPayments();
   await expirePendingOrders();
   const db = createAdminClient();
   const today = startOfTodayChile();
