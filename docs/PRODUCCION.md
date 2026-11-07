@@ -137,10 +137,10 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
 ---
 
-## Fase 4 · Correos y tareas automáticas
+## Fase 4 · Correos y tareas automáticas ✅
 
-- [ ] **4.1** Correos de la tienda (confirmación de pedido, despacho, retiro y recuperación de contraseña): crea una cuenta en [Resend](https://resend.com) y agrega el dominio `kaffalove.cl`. Resend te pedirá unos registros DNS (DKIM y un subdominio de envío como `send.kaffalove.cl`): agrégalos en **Vercel → Domains → kaffalove.cl → DNS Records**. No afectan el correo ni la web actuales. Esta misma cuenta se usará en la fase 8 para enviar correos desde Gmail.
-- [ ] **4.2** Cuando Resend marque el dominio como verificado, carga `RESEND_API_KEY` y `EMAIL_FROM` (por ejemplo `Kaffa Love <pedidos@kaffalove.cl>`) en Preview y Production, y haz **Redeploy**. Haz una compra de prueba y revisa que llegue el correo.
+- [x] **4.1** Correos de la tienda (confirmación de pedido, despacho, retiro y recuperación de contraseña): crea una cuenta en [Resend](https://resend.com) y agrega el dominio `kaffalove.cl`. Resend te pedirá unos registros DNS (DKIM y un subdominio de envío como `send.kaffalove.cl`): agrégalos en **Vercel → Domains → kaffalove.cl → DNS Records**. No afectan el correo ni la web actuales. Esta misma cuenta se usará en la fase 8 para enviar correos desde Gmail.
+- [x] **4.2** Cuando Resend marque el dominio como verificado, carga `RESEND_API_KEY` y `EMAIL_FROM` (por ejemplo `Kaffa Love <pedidos@kaffalove.cl>`) en Preview y Production, y haz **Redeploy**. Haz una compra de prueba y revisa que llegue el correo.
 - [x] **4.3** **Importante.** Tarea cada 5 minutos que confirma pagos cuyo aviso no llegó y libera reservas vencidas. Vercel gratis solo la ejecuta una vez al día (ya configurado), así que usa [cron-job.org](https://cron-job.org), que es gratis:
   1. **Create cronjob** con la URL `https://kaffa-love-git-master-kaffaloveroasters1111-7698.vercel.app/api/cron/expirar-reservas` y frecuencia **cada 5 minutos**.
   2. En **Advanced → Headers**, agrega `Authorization` con el valor `Bearer <CRON_SECRET de Preview>`.
