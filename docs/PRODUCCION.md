@@ -152,10 +152,10 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
 ## Fase 5 · Ensayo general
 
-- [ ] **5.1** Feria: con un usuario operador, abre una jornada, vende café (con molienda), preparados y una promoción, anula una venta y cierra con el total de Point.
-- [ ] **5.2** Administración: prepara, despacha (con número de seguimiento) y entrega un pedido. Cancela otro y revisa que el stock vuelva.
-- [ ] **5.3** Carga una compra con la plantilla Excel (**Cargar compras**).
-- [ ] **5.4** Revisa la tienda desde tu celular: portada, ficha, carrito, checkout y página del pedido.
+- [x] **5.1** Feria: con un usuario operador, abre una jornada, vende café (con molienda), preparados y una promoción, anula una venta y cierra con el total de Point.
+- [x] **5.2** Administración: prepara, despacha (con número de seguimiento) y entrega un pedido. Cancela otro y revisa que el stock vuelva.
+- [x] **5.3** ~~Carga una compra con la plantilla Excel (**Cargar compras**).~~ *Descartado (7 de noviembre de 2026): la carga de compras se hará de otra forma; la funcionalidad actual queda sin usar hasta reemplazarla.*
+- [x] **5.4** Revisa la tienda desde tu celular: portada, ficha, carrito, checkout y página del pedido.
 - [ ] **5.5** Legal: un asesor revisa **términos**, **cambios y devoluciones** (plazo actual: 10 días) y **privacidad** (`src/app/(tienda)/legal/`).
 - [ ] **5.6** El contador confirma la configuración de boletas en Mercado Pago (online y Point).
 - [ ] **5.7** Si cambiaste algo en el código, pásalo a producción: `git push origin master:main`.
