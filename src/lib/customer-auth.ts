@@ -32,6 +32,50 @@ export async function getCustomer(): Promise<Customer | null> {
   return byEmail ?? null;
 }
 
+export type SavedAddress = {
+  id: string;
+  street: string;
+  number: string | null;
+  apartment: string | null;
+  commune: string;
+  region: string;
+  notes: string | null;
+};
+
+export type CustomerProfile = {
+  email: string;
+  name: string;
+  phone: string;
+  addresses: SavedAddress[];
+};
+
+/** Datos para completar el checkout de un cliente con sesión (direcciones sin repetir, la más reciente primero) */
+export async function getCustomerProfile(): Promise<CustomerProfile | null> {
+  const customer = await getCustomer();
+  if (!customer) return null;
+  const db = createAdminClient();
+  const [{ data: full }, { data: addresses }] = await Promise.all([
+    db.from("customers").select("phone").eq("id", customer.id).single(),
+    db
+      .from("addresses")
+      .select("id, street, number, apartment, commune, region, notes")
+      .eq("customer_id", customer.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
+  const seen = new Set<string>();
+  const unique = (addresses ?? []).filter((a) => {
+    const key = addressKey(a);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return { email: customer.email, name: customer.name ?? "", phone: full?.phone ?? "", addresses: unique.slice(0, 5) };
+}
+
+export const addressKey = (a: { street: string; number: string | null; apartment: string | null; commune: string; region: string }) =>
+  [a.street, a.number ?? "", a.apartment ?? "", a.commune, a.region].map((s) => s.trim().toLowerCase()).join("|");
+
 /** Envía un enlace para crear o cambiar la contraseña (requiere Resend) */
 export async function sendPasswordLink(email: string, kind: "recuperar" | "bienvenida") {
   const db = createAdminClient();

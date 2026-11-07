@@ -9,6 +9,7 @@ import { grindLabel } from "@/lib/grinds";
 import { REGIONES } from "@/lib/chile";
 import type { PickupLocation } from "@/lib/pickup";
 import type { ShippingRate } from "@/lib/settings";
+import type { CustomerProfile, SavedAddress } from "@/lib/customer-auth";
 import { ProductArt } from "@/components/product-art";
 import { useSyncedCart } from "@/components/use-synced-cart";
 import { placeOrder } from "./actions";
@@ -43,22 +44,39 @@ const EMPTY: Draft = {
   notes: "",
 };
 
+function fromAddress(a: SavedAddress): Pick<Draft, "region" | "commune" | "street" | "number" | "apartment" | "notes"> {
+  return {
+    region: (REGIONES as readonly string[]).includes(a.region) ? a.region : "",
+    commune: a.commune,
+    street: a.street,
+    number: a.number ?? "",
+    apartment: a.apartment ?? "",
+    notes: a.notes ?? "",
+  };
+}
+
 export function CheckoutForm({
   catalog,
   pickups,
   rates,
   freeShippingFromClp,
+  profile,
 }: {
   catalog: Catalog;
   pickups: PickupLocation[];
   rates: ShippingRate[];
   freeShippingFromClp: number | null;
+  profile: CustomerProfile | null;
 }) {
   const { lines, notices } = useSyncedCart(catalog);
   const [draft, setDraft] = useState<Draft>(() => ({
     ...EMPTY,
     pickupLocationId: pickups.length === 1 ? pickups[0].id : "",
     delivery: pickups.length ? "retiro" : "despacho",
+    // Cliente con sesión: sus datos y su última dirección
+    ...(profile
+      ? { email: profile.email, name: profile.name, phone: profile.phone, ...(profile.addresses[0] ? fromAddress(profile.addresses[0]) : {}) }
+      : {}),
   }));
   const [marketing, setMarketing] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -70,10 +88,16 @@ export function CheckoutForm({
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "null") as Partial<Draft> | null;
+      if (!saved) return;
+      const pickupLocationId = pickups.some((p) => p.id === saved.pickupLocationId) ? saved.pickupLocationId! : undefined;
+      // Con sesión mandan los datos de la cuenta; del borrador solo se recuerda cómo recibir el pedido
+      const restore = profile
+        ? { ...(saved.delivery ? { delivery: saved.delivery } : {}), ...(pickupLocationId ? { pickupLocationId } : {}) }
+        : { ...saved, ...(pickupLocationId ? { pickupLocationId } : {}) };
       // eslint-disable-next-line react-hooks/set-state-in-effect -- carga única desde localStorage
-      if (saved) setDraft((d) => ({ ...d, ...saved, pickupLocationId: pickups.some((p) => p.id === saved.pickupLocationId) ? saved.pickupLocationId! : d.pickupLocationId }));
+      setDraft((d) => ({ ...d, ...restore }));
     } catch {}
-  }, [pickups]);
+  }, [pickups, profile]);
   useEffect(() => {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -152,8 +176,21 @@ export function CheckoutForm({
 
         <Step n={1} title="Tus datos">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Correo" className="sm:col-span-2" hint="Te enviaremos aquí la confirmación del pedido.">
-              <input type="email" required autoComplete="email" inputMode="email" value={draft.email} onChange={(e) => set("email", e.target.value)} className={input} />
+            <Field
+              label="Correo"
+              className="sm:col-span-2"
+              hint={profile ? "Compras con tu cuenta. Aquí te llegará la confirmación del pedido." : "Te enviaremos aquí la confirmación del pedido."}
+            >
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                inputMode="email"
+                value={draft.email}
+                readOnly={!!profile}
+                onChange={(e) => set("email", e.target.value)}
+                className={`${input} ${profile ? "bg-paper-2 text-ink-soft" : ""}`}
+              />
             </Field>
             <Field label="Nombre y apellido">
               <input required autoComplete="name" value={draft.name} onChange={(e) => set("name", e.target.value)} className={input} />
@@ -209,6 +246,26 @@ export function CheckoutForm({
 
           {draft.delivery === "despacho" && (
             <div className="mt-5 grid gap-4 sm:grid-cols-6">
+              {profile && profile.addresses.length > 0 && (
+                <Field label="Tus direcciones" className="sm:col-span-6">
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const a = profile.addresses.find((x) => x.id === e.target.value);
+                      if (a) setDraft((d) => ({ ...d, ...fromAddress(a) }));
+                    }}
+                    className={input}
+                  >
+                    <option value="">Usar una dirección guardada…</option>
+                    {profile.addresses.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.street} {a.number}
+                        {a.apartment ? `, ${a.apartment}` : ""} · {a.commune}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <Field label="Región" className="sm:col-span-3">
                 <select required autoComplete="address-level1" value={draft.region} onChange={(e) => set("region", e.target.value)} className={input}>
                   <option value="">Elige tu región</option>

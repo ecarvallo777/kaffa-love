@@ -132,6 +132,71 @@ export function clearCart() {
   set({ lines: [], lastAdded: null });
 }
 
+// Sincronización con la cuenta ------------------------------------------------------
+
+const OWNER_KEY = "kaffa-cart-owner";
+
+/** Cuenta a la que pertenece el carrito de este navegador (null = armado sin sesión) */
+export function getCartOwner(): string | null {
+  try {
+    return window.localStorage.getItem(OWNER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setCartOwner(customerId: string | null) {
+  try {
+    if (customerId) window.localStorage.setItem(OWNER_KEY, customerId);
+    else window.localStorage.removeItem(OWNER_KEY);
+  } catch {}
+}
+
+const DIRTY_KEY = "kaffa-cart-dirty";
+
+/** Hay cambios en este navegador que todavía no se guardaron en la cuenta */
+export function isCartDirty() {
+  try {
+    return window.localStorage.getItem(DIRTY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setCartDirty(dirty: boolean) {
+  try {
+    if (dirty) window.localStorage.setItem(DIRTY_KEY, "1");
+    else window.localStorage.removeItem(DIRTY_KEY);
+  } catch {}
+}
+
+export function getCartLines() {
+  load();
+  return state.lines;
+}
+
+/** Une dos carritos: misma línea (producto + molienda) → la cantidad mayor */
+export function mergeCartLines(a: CartLine[], b: CartLine[]) {
+  const map = new Map<string, CartLine>();
+  for (const l of [...a, ...b]) {
+    const cur = map.get(l.key);
+    map.set(l.key, cur ? { ...l, qty: Math.max(cur.qty, l.qty) } : l);
+  }
+  return [...map.values()];
+}
+
+/** Reemplaza el carrito con el guardado en la cuenta */
+export function replaceLines(lines: CartLine[]) {
+  load();
+  if (JSON.stringify(lines) === JSON.stringify(state.lines)) return;
+  set({ lines, lastAdded: null });
+}
+
+/** Avisa cada vez que cambia el carrito (para guardarlo en la cuenta) */
+export function onCartChange(listener: () => void) {
+  return subscribe(listener);
+}
+
 /** Ajusta precios, nombres y máximos con los datos actuales del catálogo */
 export function syncLines(update: (line: CartLine) => CartLine | null) {
   load();

@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -24,6 +25,7 @@ export default function AccountPage() {
 }
 
 async function Account() {
+  await connection(); // la sesión se lee en cada visita
   const customer = await getCustomer();
   if (!customer) {
     return (

@@ -59,6 +59,11 @@ export const EVENT_LABELS: Record<string, string> = {
   compra_cargada: "Compra cargada",
   producto_creado: "Producto creado",
   producto_editado: "Producto editado",
+  receta_creada: "Receta creada",
+  receta_editada: "Receta editada",
+  receta_eliminada: "Receta eliminada",
+  cuenta_creada: "Cuenta de cliente creada",
+  baja_novedades: "Se dio de baja de novedades",
 };
 
 /** Fecha ISO de hace n días */

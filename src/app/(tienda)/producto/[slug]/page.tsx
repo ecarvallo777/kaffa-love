@@ -19,6 +19,8 @@ import { ProductCard } from "@/components/product-card";
 import { TastingNotes } from "@/components/tasting-notes";
 import { AddToCart } from "@/components/add-to-cart";
 import { GrindGuide } from "@/components/grind-guide";
+import { RecipeTabs } from "@/components/recipe-card";
+import { recipeRatio, recipesForProduct } from "@/lib/recipes";
 
 export async function generateStaticParams() {
   const catalog = await getCatalog();
@@ -60,6 +62,7 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
   const parent = category?.parent_id ? categoryById(catalog, category.parent_id) : null;
   const bundle = product.type === "promocion" ? bundleDetails(product, catalog) : null;
   const isCoffee = product.type === "cafe";
+  const recipes = isCoffee ? await recipesForProduct(product.id) : [];
 
   const eyebrow = isCoffee
     ? [product.origin ?? subtitle, "250 g"].filter(Boolean).join(" · ")
@@ -153,6 +156,15 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
               }}
               available={available}
               maxQty={maxQty}
+              recipes={recipes.map((r) => ({
+                id: r.id,
+                title: r.title,
+                method: r.method,
+                grind: r.grind,
+                coffeeGrams: r.coffeeGrams,
+                waterMl: r.waterMl,
+                totalTime: r.totalTime,
+              }))}
             />
           </div>
 
@@ -169,8 +181,25 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
       </div>
 
       {isCoffee && (
-        <div className="mt-16 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-          <Recipe />
+        <div className={`mt-16 grid gap-6 ${recipes.length ? "lg:grid-cols-[1fr_1.2fr]" : ""}`}>
+          {recipes.length > 0 && (
+            <RecipeTabs
+              productId={product.id}
+              recipes={recipes.map((r) => ({
+                id: r.id,
+                title: r.title,
+                method: r.method,
+                coffeeGrams: r.coffeeGrams,
+                waterMl: r.waterMl,
+                ratio: recipeRatio(r),
+                temperature: r.temperature,
+                grind: r.grind,
+                totalTime: r.totalTime,
+                steps: r.steps,
+                notes: r.notes,
+              }))}
+            />
+          )}
           <GrindGuide compact />
         </div>
       )}
@@ -320,45 +349,6 @@ function InPromos({ product, catalog }: { product: Product; catalog: Catalog }) 
         })}
       </ul>
     </div>
-  );
-}
-
-function Recipe() {
-  const steps = [
-    ["Muele", "15 g de café en molienda media."],
-    ["Calienta", "250 ml de agua a 92–94 °C, recién hervida y reposada 30 segundos."],
-    ["Pre-infusión", "Vierte 30 ml, espera 30 segundos a que el café “florezca”."],
-    ["Vierte", "El resto del agua en círculos lentos. Total: 2:30 a 3:00 minutos."],
-  ];
-  return (
-    <section className="rounded-3xl border border-line p-6 sm:p-8">
-      <p className="text-xs tracking-[0.18em] text-accent uppercase">Receta sugerida</p>
-      <h2 className="mt-2 font-display text-2xl">Filtrado en V60 o Chemex</h2>
-      <div className="mt-6 flex gap-6 text-center">
-        {[
-          ["15 g", "café"],
-          ["250 ml", "agua"],
-          ["1:16", "proporción"],
-        ].map(([v, l]) => (
-          <div key={l} className="flex-1 rounded-2xl bg-paper-2 py-4">
-            <p className="font-display text-2xl tabular-nums">{v}</p>
-            <p className="text-xs text-ink-mute">{l}</p>
-          </div>
-        ))}
-      </div>
-      <ol className="mt-6 space-y-4">
-        {steps.map(([t, d], i) => (
-          <li key={t} className="flex gap-4">
-            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-ink text-xs text-paper tabular-nums">
-              {i + 1}
-            </span>
-            <p className="text-sm leading-relaxed">
-              <span className="font-medium">{t}.</span> <span className="text-ink-soft">{d}</span>
-            </p>
-          </li>
-        ))}
-      </ol>
-    </section>
   );
 }
 

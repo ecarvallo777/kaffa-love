@@ -9,6 +9,7 @@ import { clp } from "@/lib/catalog-utils";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { grindLabel } from "@/lib/grinds";
 import { siteUrl } from "@/lib/env";
+import { addressKey } from "@/lib/customer-auth";
 
 export const RESERVATION_MINUTES = 30;
 const GRINDS: Grind[] = ["grano", "fina", "media", "gruesa"];
@@ -247,7 +248,14 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
         }
       : null;
   if (address) {
-    await db.from("addresses").insert({ customer_id: customerId, ...address });
+    // Solo se guarda si es nueva para este cliente (así no se acumulan direcciones repetidas)
+    const { data: saved } = await db
+      .from("addresses")
+      .select("street, number, apartment, commune, region")
+      .eq("customer_id", customerId);
+    if (!saved?.some((a) => addressKey(a) === addressKey(address))) {
+      await db.from("addresses").insert({ customer_id: customerId, ...address });
+    }
   }
 
   const reservedUntil = new Date(Date.now() + RESERVATION_MINUTES * 60_000);

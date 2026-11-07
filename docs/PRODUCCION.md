@@ -267,6 +267,8 @@ node scripts/crear-usuario.mjs e2e-admin@kaffalove.test "Admin de Prueba" admin
 NEW_USER_PASSWORD=<la del archivo anterior> node scripts/crear-usuario.mjs e2e-operador@kaffalove.test "Operador de Prueba" operador
 node scripts/e2e/compra.mjs           # compra online completa (agrega --mobile para celular)
 node scripts/e2e/equipo.mjs           # login, permisos, feria y administración
+node scripts/e2e/cuenta.mjs           # datos guardados en el checkout y carrito entre dispositivos
+node scripts/e2e/recetas.mjs          # recetas en la administración, receta según molienda y temporizador
 node scripts/e2e/limpiar.mjs --usuarios
 ```
 

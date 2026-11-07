@@ -6,15 +6,29 @@ import { addToCart } from "@/lib/cart-store";
 import { clp } from "@/lib/catalog-utils";
 import { GRINDS } from "@/lib/grinds";
 import { GrindGlyph } from "@/components/grind-glyph";
+import { setSelectedGrind, useSelectedGrind } from "@/lib/grind-selection";
+
+/** Resumen de una receta del café, para mostrarla al elegir su molienda */
+export type RecipeHint = {
+  id: string;
+  title: string;
+  method: string;
+  grind: Grind;
+  coffeeGrams: number;
+  waterMl: number;
+  totalTime: string;
+};
 
 type Props = {
   product: { id: string; slug: string; name: string; priceClp: number; isCoffee: boolean };
   available: boolean;
   maxQty: number | null;
+  recipes?: RecipeHint[];
 };
 
-export function AddToCart({ product, available, maxQty }: Props) {
-  const [grind, setGrind] = useState<Grind | null>(null);
+export function AddToCart({ product, available, maxQty, recipes = [] }: Props) {
+  const grind = useSelectedGrind(product.id);
+  const setGrind = (g: Grind) => setSelectedGrind(product.id, g);
   const [qty, setQty] = useState(1);
   const [error, setError] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
@@ -64,10 +78,11 @@ export function AddToCart({ product, available, maxQty }: Props) {
     <div>
       {product.isCoffee && (
         <fieldset
+          id="molienda"
           ref={fieldsetRef}
           key={shakeKey}
-          className={shakeKey ? "animate-shake" : ""}
-          aria-describedby={error ? errorId : undefined}
+          className={`scroll-mt-32 ${shakeKey ? "animate-shake" : ""}`}
+          aria-describedby={error && !grind ? errorId : undefined}
           disabled={!available}
         >
           <legend className="flex w-full items-baseline justify-between">
@@ -85,7 +100,7 @@ export function AddToCart({ product, available, maxQty }: Props) {
                 className={`group relative flex cursor-pointer flex-col items-start gap-2 rounded-xl border p-3 transition-all has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent ${
                   grind === g.value
                     ? "border-ink bg-ink text-paper shadow-md"
-                    : error
+                    : error && !grind
                       ? "border-accent/60 bg-paper hover:border-ink"
                       : "border-line bg-paper hover:border-ink"
                 }`}
@@ -114,11 +129,12 @@ export function AddToCart({ product, available, maxQty }: Props) {
               </label>
             ))}
           </div>
-          {error && (
+          {error && !grind && (
             <p id={errorId} className="mt-2 text-sm text-accent" role="alert">
               Elige una molienda para agregar este café.
             </p>
           )}
+          {grind && <GrindRecipeHint grind={grind} recipes={recipes} />}
         </fieldset>
       )}
 
@@ -176,6 +192,37 @@ export function AddToCart({ product, available, maxQty }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+/** Debajo del selector: cómo preparar este café con la molienda elegida */
+function GrindRecipeHint({ grind, recipes }: { grind: Grind; recipes: RecipeHint[] }) {
+  const recipe = recipes.find((r) => r.grind === grind);
+  const info = GRINDS.find((g) => g.value === grind)!;
+
+  if (!recipe) {
+    return (
+      <p className="mt-3 rounded-xl bg-paper-2 px-4 py-3 text-sm text-ink-soft" aria-live="polite">
+        <span className="font-medium text-ink">Molienda {info.label.toLowerCase()}:</span> ideal para {info.methods.toLowerCase()}. {info.tip}
+      </p>
+    );
+  }
+  return (
+    <a
+      href="#receta"
+      aria-live="polite"
+      className="group mt-3 flex items-center gap-3 rounded-xl border border-crema/40 bg-crema/10 px-4 py-3 text-sm transition-colors hover:border-crema"
+    >
+      <GrindGlyph grind={grind} className="size-7 shrink-0 text-crema" />
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">Con esta molienda: {recipe.method || recipe.title}</span>
+        <span className="block text-ink-soft tabular-nums">
+          {recipe.coffeeGrams} g de café · {recipe.waterMl} ml de agua
+          {recipe.totalTime ? ` · ${recipe.totalTime}` : ""}
+        </span>
+      </span>
+      <span className="shrink-0 text-ink-soft group-hover:text-ink">Ver receta ↓</span>
+    </a>
   );
 }
 
