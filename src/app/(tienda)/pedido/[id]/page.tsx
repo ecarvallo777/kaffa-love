@@ -159,14 +159,17 @@ function statusHero(status: string, delivery: string, lastAttemptFailed: boolean
         ? { tone: bad, title: "El pago no se completó", text: "Tus productos siguen reservados. Puedes intentarlo de nuevo con otro medio de pago." }
         : { tone: wait, title: "Esperando tu pago", text: "Tus productos están reservados. Si ya pagaste, la confirmación puede tardar unos segundos." };
     case "pagado":
+      return { tone: ok, title: "¡Gracias! Tu pago fue aprobado", text: delivery === "retiro" ? "Pronto empezaremos a preparar tu pedido. Te avisaremos por correo cuando puedas retirarlo." : "Pronto empezaremos a preparar tu pedido. Te enviaremos el número de seguimiento cuando salga." };
     case "en_preparacion":
-      return { tone: ok, title: "¡Gracias! Tu pago fue aprobado", text: delivery === "retiro" ? "Estamos preparando tu pedido. Te avisaremos por correo cuando puedas retirarlo." : "Estamos preparando tu pedido. Te enviaremos el número de seguimiento cuando salga." };
+      return { tone: ok, title: "Estamos preparando tu pedido", text: delivery === "retiro" ? "Te avisaremos por correo cuando esté listo para retirar." : "Te enviaremos el número de seguimiento cuando salga con Blue Express." };
     case "despachado":
-      return { tone: ok, title: "Tu pedido va en camino", text: "Lo entregó Blue Express. Revisa el seguimiento abajo." };
+      return { tone: ok, title: "Tu pedido va en camino", text: "Ya está en manos de Blue Express. Puedes seguirlo con el número de seguimiento que aparece abajo." };
     case "listo_retiro":
       return { tone: ok, title: "Tu pedido está listo para retiro", text: "Te esperamos en el lugar y horario indicados." };
     case "entregado":
-      return { tone: ok, title: "Pedido entregado", text: "¡Que disfrutes tu café!" };
+      return delivery === "retiro"
+        ? { tone: ok, title: "Pedido retirado", text: "¡Gracias por pasar a buscarlo! Que disfrutes tu café." }
+        : { tone: ok, title: "Pedido entregado", text: "¡Que disfrutes tu café!" };
     case "expirado":
       return { tone: bad, title: "La reserva venció", text: "Pasaron 30 minutos sin confirmar el pago y liberamos los productos. Puedes volver a armar tu carrito." };
     case "rechazado":

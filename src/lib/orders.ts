@@ -417,7 +417,14 @@ export async function notifyStatusChange(order: OrderWithDetails, status: string
   const customer = order.customers as { email: string; name: string } | null;
   if (!customer?.email || order.channel !== "online") return;
   const pickup = order.pickup_locations as { name: string; address: string; hours: string } | null;
+  const isPickup = order.delivery === "retiro";
   const messages: Record<string, [string, string] | undefined> = {
+    en_preparacion: [
+      `Estamos preparando tu pedido ${orderLabel(order.number)}`,
+      isPickup
+        ? "<p>Ya estamos preparando tu pedido. Te escribiremos apenas esté listo para retirar.</p>"
+        : "<p>Ya estamos preparando tu pedido. Te escribiremos cuando salga con Blue Express, con su número de seguimiento.</p>",
+    ],
     despachado: [
       `Tu pedido ${orderLabel(order.number)} va en camino`,
       `<p>Tu pedido salió hacia ${escapeHtml((order.shipping_address as { commune?: string } | null)?.commune ?? "tu dirección")}.</p>${
@@ -430,6 +437,15 @@ export async function notifyStatusChange(order: OrderWithDetails, status: string
         ? `<p>Puedes retirarlo en <b>${escapeHtml(pickup.name)}</b>, ${escapeHtml(pickup.address)}.</p><p>Horario: ${escapeHtml(pickup.hours)}</p>`
         : "<p>Ya puedes retirarlo.</p>",
     ],
+    entregado: isPickup
+      ? [
+          `Retiraste tu pedido ${orderLabel(order.number)}`,
+          "<p>¡Gracias por pasar a buscarlo! Esperamos que disfrutes tu café.</p><p>Si algo no está bien, responde este correo y lo vemos.</p>",
+        ]
+      : [
+          `Tu pedido ${orderLabel(order.number)} fue entregado`,
+          "<p>Blue Express nos informó que tu pedido fue entregado. ¡Esperamos que disfrutes tu café!</p><p>Si algo no está bien, responde este correo y lo vemos.</p>",
+        ],
   };
   const m = messages[status];
   if (!m) return;

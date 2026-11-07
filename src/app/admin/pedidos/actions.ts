@@ -56,7 +56,7 @@ export async function changeOrderStatus(_prev: ActionResult, form: FormData): Pr
     por: staff.email,
     ...(tracking ? { tracking } : {}),
   });
-  if (status === "despachado" || status === "listo_retiro") {
+  if (["en_preparacion", "despachado", "listo_retiro", "entregado"].includes(status)) {
     await notifyStatusChange({ ...order, tracking_number: tracking || order.tracking_number }, status);
   }
 

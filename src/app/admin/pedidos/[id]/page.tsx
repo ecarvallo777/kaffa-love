@@ -31,11 +31,11 @@ export default async function OrderDetail({ params }: PageProps<"/admin/pedidos/
 
   const actions: { status: string; label: string; primary?: boolean }[] = [];
   if (isOnline) {
-    if (order.status === "pagado") actions.push({ status: "en_preparacion", label: "Marcar en preparación", primary: true });
+    if (order.status === "pagado") actions.push({ status: "en_preparacion", label: "Marcar en preparación (avisa al cliente)", primary: true });
     if (["pagado", "en_preparacion"].includes(order.status)) {
       if (order.delivery === "retiro") actions.push({ status: "listo_retiro", label: "Listo para retiro (avisa al cliente)", primary: order.status === "en_preparacion" });
     }
-    if (["despachado", "listo_retiro"].includes(order.status)) actions.push({ status: "entregado", label: order.delivery === "retiro" ? "Marcar retirado" : "Marcar entregado", primary: true });
+    if (["despachado", "listo_retiro"].includes(order.status)) actions.push({ status: "entregado", label: order.delivery === "retiro" ? "Marcar retirado (avisa al cliente)" : "Marcar entregado (avisa al cliente)", primary: true });
   }
   const canCancel = isOnline && ["pendiente_pago", "pagado", "en_preparacion", "listo_retiro"].includes(order.status);
   const canShip = isOnline && order.delivery === "despacho" && ["pagado", "en_preparacion"].includes(order.status);
