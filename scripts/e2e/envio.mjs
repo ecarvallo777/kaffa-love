@@ -1,4 +1,4 @@
-// Prueba de tarifas de despacho por tamaño (Blue Express): XS para 1 o 2 bolsas
+// Prueba de tarifas de despacho por tamaño (Blue Express): XS para 1 bolsa
 // de café, S para el resto; por región (Santiago, centro, extremo). El checkout
 // muestra la tarifa y el servidor cobra la misma. Requiere `npm run dev` con pago simulado.
 // Después: node scripts/e2e/limpiar.mjs
@@ -16,10 +16,13 @@ async function settingsRates() {
   return Object.fromEntries(JSON.parse(await data.text()).shippingRates.map((r) => [r.region, r]));
 }
 
-async function shippingShown(region) {
+async function shippingShown(region, commune = "") {
   await page.goto(`${BASE}/checkout`, { waitUntil: "networkidle0" });
   await clickText(page, 'button[role="radio"]', "Despacho a domicilio");
   await page.select('select[autocomplete="address-level1"]', region);
+  const c = await page.$('input[autocomplete="address-level2"]');
+  await c.evaluate((el) => (el.value = ""));
+  if (commune) await c.type(commune);
   await page.waitForFunction(() => document.body.innerText.includes("Despacho con Blue Express"), { timeout: 10000 });
   return page.evaluate(() => {
     const p = [...document.querySelectorAll("p")].find((x) => x.innerText.includes("Despacho con Blue Express"));
@@ -58,19 +61,20 @@ try {
   t = await shippingShown("Antofagasta");
   assert(t.includes(clp(ant.priceXsClp)), `Antofagasta: ${clp(ant.priceXsClp)}`);
 
-  step("2 bolsas → sigue XS; 3 bolsas → S");
+  step("Comuna con tarifa propia: Chaitén (Los Lagos) es zona Extremo; Castro sigue en Centro");
+  t = await shippingShown("Los Lagos", "chaiten");
+  assert(t.includes(clp(5200)), "Chaitén (escrito sin tilde): $5.200");
+  t = await shippingShown("Los Lagos", "Castro");
+  assert(t.includes(clp(rates["Los Lagos"].priceXsClp)), `Castro: ${clp(rates["Los Lagos"].priceXsClp)}`);
+
+  step("2 bolsas → S");
   await page.goto(`${BASE}/carrito`, { waitUntil: "networkidle0" });
   await page.click('button[aria-label^="Agregar uno de"]');
   t = await shippingShown("Metropolitana de Santiago");
-  assert(t.includes(clp(rm.priceXsClp)), `2 bolsas: ${clp(rm.priceXsClp)}`);
-  await page.goto(`${BASE}/carrito`, { waitUntil: "networkidle0" });
-  await page.click('button[aria-label^="Agregar uno de"]');
-  t = await shippingShown("Metropolitana de Santiago");
-  assert(t.includes(clp(rm.priceClp)), `3 bolsas: ${clp(rm.priceClp)}`);
+  assert(t.includes(clp(rm.priceClp)), `2 bolsas: ${clp(rm.priceClp)}`);
 
   step("1 café + 1 accesorio → S, y el servidor cobra lo mismo");
   await page.goto(`${BASE}/carrito`, { waitUntil: "networkidle0" });
-  await page.click('button[aria-label^="Quitar uno de"]');
   await page.click('button[aria-label^="Quitar uno de"]');
   // Accesorio barato (sin pasar el monto de despacho gratis)
   const { data: acc } = await db.from("products").select("slug").eq("type", "accesorio").eq("active", true).eq("visible_online", true).gt("stock", 0).order("price_clp").limit(1).single();

@@ -20,13 +20,13 @@ export default async function SettingsPage() {
         <Card title="Tarifas de despacho">
           <p className="mb-4 text-sm text-ink-soft">
             Tarifas de Blue Express con entrega a domicilio desde Santiago (IVA incluido). <strong>XS</strong> (hasta 0,5 kg) se cobra en
-            pedidos de solo café con 1 o 2 bolsas; <strong>S</strong> (hasta 3 kg) en todo lo demás. Si dejas XS vacía, se cobra S.
+            pedidos de solo café con 1 bolsa (250 g); <strong>S</strong> (hasta 3 kg) en todo lo demás. Si dejas XS vacía, se cobra S.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="text-left text-xs text-ink-mute uppercase">
-                  <th className="py-2">Región</th><th className="py-2">XS (1–2 cafés)</th><th className="py-2">S (resto)</th><th className="py-2">Plazo</th><th className="py-2 text-center">Activa</th>
+                  <th className="py-2">Región</th><th className="py-2">XS (1 café)</th><th className="py-2">S (resto)</th><th className="py-2">Plazo</th><th className="py-2 text-center">Activa</th>
                 </tr>
               </thead>
               <tbody>
@@ -42,6 +42,30 @@ export default async function SettingsPage() {
               </tbody>
             </table>
           </div>
+          <h3 className="mt-6 font-medium">Comunas con tarifa propia</h3>
+          <p className="mb-3 text-sm text-ink-soft">
+            Para comunas que Blue Express cobra como otra zona (por ejemplo, la provincia de Palena es zona Extremo, o una comuna rural de la
+            Región Metropolitana). Reemplazan la tarifa de su región. Para quitar una, deja el nombre vacío.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] text-sm">
+              <thead>
+                <tr className="text-left text-xs text-ink-mute uppercase">
+                  <th className="py-2">Comuna</th><th className="py-2">XS (1 café)</th><th className="py-2">S (resto)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...s.communeRates, ...Array.from({ length: 3 }, () => null)].map((c, i) => (
+                  <tr key={i} className="border-t border-line">
+                    <td className="py-2 pr-3"><input name={`cname_${i}`} defaultValue={c?.commune ?? ""} placeholder={c ? "" : "Agregar comuna"} aria-label="Comuna" className={`${field} h-9`} /></td>
+                    <td className="py-2 pr-3"><input name={`cxs_${i}`} defaultValue={c?.priceXsClp ?? ""} inputMode="numeric" aria-label="Tarifa XS de la comuna" className={`${field} h-9 w-28`} /></td>
+                    <td className="py-2 pr-3"><input name={`cs_${i}`} defaultValue={c?.priceClp ?? ""} inputMode="numeric" aria-label="Tarifa S de la comuna" className={`${field} h-9 w-28`} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <input type="hidden" name="communeRows" value={s.communeRates.length + 3} />
           <Field label="Despacho gratis desde (CLP)" hint="Déjalo vacío para no ofrecer despacho gratis." className="mt-5 max-w-xs">
             <input name="freeShippingFromClp" defaultValue={s.freeShippingFromClp ?? ""} inputMode="numeric" className={field} />
           </Field>

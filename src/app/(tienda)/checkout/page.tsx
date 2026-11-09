@@ -33,6 +33,7 @@ async function Checkout() {
       catalog={catalog}
       pickups={pickups}
       rates={settings.shippingRates.filter((r) => r.enabled)}
+      communeRates={settings.communeRates}
       freeShippingFromClp={settings.freeShippingFromClp}
       profile={profile}
     />

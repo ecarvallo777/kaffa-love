@@ -21,6 +21,20 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
     if (xs !== null && (!Number.isInteger(xs) || xs <= 0)) return { error: `Revisa la tarifa XS de ${region}.` };
     rates.push({ region, priceClp: price, priceXsClp: xs, days: String(form.get(`days_${i}`) ?? "").trim() || "Por confirmar", enabled: form.get(`enabled_${i}`) === "on" });
   }
+  const communeRates: Settings["communeRates"] = [];
+  const num = (k: string) => {
+    const raw = String(form.get(k) ?? "").replace(/[.$\s]/g, "");
+    return raw ? Number(raw) : null;
+  };
+  for (let i = 0; i < Number(form.get("communeRows") ?? 0); i++) {
+    const commune = String(form.get(`cname_${i}`) ?? "").trim();
+    if (!commune) continue;
+    const priceClp = num(`cs_${i}`);
+    const priceXsClp = num(`cxs_${i}`);
+    if (priceClp === null || !Number.isInteger(priceClp) || priceClp <= 0) return { error: `Falta la tarifa S de ${commune}.` };
+    if (priceXsClp !== null && (!Number.isInteger(priceXsClp) || priceXsClp <= 0)) return { error: `Revisa la tarifa XS de ${commune}.` };
+    communeRates.push({ commune, priceXsClp, priceClp });
+  }
   const freeRaw = String(form.get("freeShippingFromClp") ?? "").replace(/[.$\s]/g, "");
   const free = freeRaw ? Number(freeRaw) : null;
   if (free !== null && (!Number.isInteger(free) || free <= 0)) return { error: "El monto para despacho gratis no es válido." };
@@ -43,6 +57,7 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
     await saveSettings({
       ...current,
       shippingRates: rates,
+      communeRates,
       freeShippingFromClp: free,
       contactEmail: String(form.get("contactEmail") ?? "").trim(),
       contactPhone: String(form.get("contactPhone") ?? "").trim(),

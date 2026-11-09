@@ -2,7 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { REGIONES } from "@/lib/chile";
-import { ratePrice, type ParcelSize } from "@/lib/shipping";
+import { rateFor, ratePrice, type CommuneRate, type ParcelSize } from "@/lib/shipping";
 
 /*
  * Configuración de la tienda que se edita desde la administración.
@@ -14,7 +14,7 @@ export type ShippingRate = {
   region: string;
   /** Tarifa paquete S (hasta 3 kg): la general */
   priceClp: number;
-  /** Tarifa paquete XS (hasta 0,5 kg): pedidos de solo café con 1 o 2 bolsas. null = se usa la S */
+  /** Tarifa paquete XS (hasta 0,5 kg): pedidos de solo café con 1 bolsa. null = se usa la S */
   priceXsClp?: number | null;
   days: string;
   enabled: boolean;
@@ -22,6 +22,8 @@ export type ShippingRate = {
 
 export type Settings = {
   shippingRates: ShippingRate[];
+  /** Comunas con tarifa propia (otra zona de Blue Express que su región) */
+  communeRates: CommuneRate[];
   /** Despacho gratis desde este subtotal (null = nunca) */
   freeShippingFromClp: number | null;
   contactEmail: string;
@@ -68,6 +70,8 @@ export const DEFAULT_SETTINGS: Settings = {
       enabled: true,
     };
   }),
+  // Provincia de Palena: zona Extremo en el mapa del tarifario (Chiloé y el resto de Los Lagos son Centro)
+  communeRates: ["Chaitén", "Futaleufú", "Hualaihué", "Palena"].map((commune) => ({ commune, priceXsClp: 5200, priceClp: 9500 })),
   freeShippingFromClp: null,
   contactEmail: "",
   contactPhone: "",
@@ -109,9 +113,10 @@ export async function saveSettings(settings: Settings) {
   if (error) throw new Error(`No se pudo guardar la configuración: ${error.message}`);
 }
 
-export function shippingQuote(settings: Settings, region: string, subtotalClp: number, size: ParcelSize = "s") {
-  const rate = settings.shippingRates.find((r) => r.region === region && r.enabled);
-  if (!rate) return null;
+export function shippingQuote(settings: Settings, region: string, commune: string, subtotalClp: number, size: ParcelSize = "s") {
+  const regionRate = settings.shippingRates.find((r) => r.region === region && r.enabled);
+  if (!regionRate) return null;
+  const rate = rateFor(regionRate, commune, settings.communeRates);
   const free = settings.freeShippingFromClp !== null && subtotalClp >= settings.freeShippingFromClp;
   return {
     service: `Despacho a domicilio (${rate.days})`,

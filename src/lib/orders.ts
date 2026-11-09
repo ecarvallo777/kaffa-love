@@ -204,7 +204,7 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
   let pickupLocationId: string | null = null;
   if (input.delivery === "despacho") {
     const size = parcelSize(priced.lines.map((l) => ({ type: l.product.type, qty: l.qty })));
-    const quote = shippingQuote(await getSettings(), input.address!.region, priced.subtotal, size);
+    const quote = shippingQuote(await getSettings(), input.address!.region, input.address!.commune, priced.subtotal, size);
     if (!quote) return { ok: false, errors: ["Por ahora no despachamos a esa región. Puedes elegir retiro."] };
     shippingClp = quote.priceClp;
     shippingService = quote.service;
