@@ -16,7 +16,10 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
     const i = REGIONES.indexOf(region);
     const price = Number(String(form.get(`price_${i}`) ?? "").replace(/[.$\s]/g, ""));
     if (!Number.isInteger(price) || price < 0) return { error: `Revisa la tarifa de ${region}.` };
-    rates.push({ region, priceClp: price, days: String(form.get(`days_${i}`) ?? "").trim() || "Por confirmar", enabled: form.get(`enabled_${i}`) === "on" });
+    const xsRaw = String(form.get(`xs_${i}`) ?? "").replace(/[.$\s]/g, "");
+    const xs = xsRaw ? Number(xsRaw) : null;
+    if (xs !== null && (!Number.isInteger(xs) || xs <= 0)) return { error: `Revisa la tarifa XS de ${region}.` };
+    rates.push({ region, priceClp: price, priceXsClp: xs, days: String(form.get(`days_${i}`) ?? "").trim() || "Por confirmar", enabled: form.get(`enabled_${i}`) === "on" });
   }
   const freeRaw = String(form.get("freeShippingFromClp") ?? "").replace(/[.$\s]/g, "");
   const free = freeRaw ? Number(freeRaw) : null;

@@ -4,6 +4,7 @@ import type { Grind, Product } from "@/lib/catalog-types";
 import { logEvent } from "@/lib/events";
 import { refreshCatalog } from "@/lib/catalog-revalidate";
 import { getSettings, shippingQuote } from "@/lib/settings";
+import { parcelSize } from "@/lib/shipping";
 import { REGIONES } from "@/lib/chile";
 import { clp } from "@/lib/catalog-utils";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
@@ -202,7 +203,8 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
   let shippingService: string | null = null;
   let pickupLocationId: string | null = null;
   if (input.delivery === "despacho") {
-    const quote = shippingQuote(await getSettings(), input.address!.region, priced.subtotal);
+    const size = parcelSize(priced.lines.map((l) => ({ type: l.product.type, qty: l.qty })));
+    const quote = shippingQuote(await getSettings(), input.address!.region, priced.subtotal, size);
     if (!quote) return { ok: false, errors: ["Por ahora no despachamos a esa región. Puedes elegir retiro."] };
     shippingClp = quote.priceClp;
     shippingService = quote.service;

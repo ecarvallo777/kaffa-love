@@ -14,6 +14,7 @@ import { ProductArt } from "@/components/product-art";
 import { useSyncedCart } from "@/components/use-synced-cart";
 import { placeOrder } from "./actions";
 import { track } from "@/lib/track";
+import { parcelSize, ratePrice } from "@/lib/shipping";
 
 const DRAFT_KEY = "kaffa-checkout-v1";
 
@@ -118,7 +119,10 @@ export function CheckoutForm({
   }, [lines, subtotal]);
   const rate = rates.find((r) => r.region === draft.region);
   const freeShipping = freeShippingFromClp !== null && subtotal >= freeShippingFromClp;
-  const shipping = draft.delivery === "despacho" ? (rate ? (freeShipping ? 0 : rate.priceClp) : null) : 0;
+  // Mismo cálculo que el servidor: XS para 1 o 2 bolsas de café, S para el resto
+  const size = parcelSize(lines.map((l) => ({ type: catalog.products.find((p) => p.id === l.productId)?.type ?? "accesorio", qty: l.qty })));
+  const ratePriceClp = rate ? ratePrice(rate, size) : null;
+  const shipping = draft.delivery === "despacho" ? (ratePriceClp !== null ? (freeShipping ? 0 : ratePriceClp) : null) : 0;
   const total = subtotal + (shipping ?? 0);
 
   function submit(e: React.FormEvent) {
@@ -304,7 +308,7 @@ export function CheckoutForm({
               {rate && (
                 <p className="rounded-2xl bg-paper-2 p-4 text-sm sm:col-span-6">
                   <span className="font-medium">Despacho con Blue Express</span> · {rate.days} ·{" "}
-                  <span className="font-medium tabular-nums">{freeShipping ? "Gratis" : clp(rate.priceClp)}</span>
+                  <span className="font-medium tabular-nums">{freeShipping ? "Gratis" : clp(ratePriceClp ?? rate.priceClp)}</span>
                 </p>
               )}
             </div>

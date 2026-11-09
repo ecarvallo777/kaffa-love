@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { REGIONES } from "@/lib/chile";
+import { ratePrice, type ParcelSize } from "@/lib/shipping";
 
 /*
  * Configuración de la tienda que se edita desde la administración.
@@ -11,7 +12,10 @@ import { REGIONES } from "@/lib/chile";
 
 export type ShippingRate = {
   region: string;
+  /** Tarifa paquete S (hasta 3 kg): la general */
   priceClp: number;
+  /** Tarifa paquete XS (hasta 0,5 kg): pedidos de solo café con 1 o 2 bolsas. null = se usa la S */
+  priceXsClp?: number | null;
   days: string;
   enabled: boolean;
 };
@@ -42,14 +46,28 @@ export type Settings = {
 const BUCKET = "config";
 const FILE = "settings.json";
 
+/** Zona "Extremo" de Blue Express (norte grande y extremo sur) */
+const EXTREME_REGIONS = new Set<string>([
+  "Arica y Parinacota",
+  "Tarapacá",
+  "Antofagasta",
+  "Aysén del General Carlos Ibáñez del Campo",
+  "Magallanes y de la Antártica Chilena",
+]);
+
 export const DEFAULT_SETTINGS: Settings = {
   // Valores de partida: el administrador debe confirmarlos antes de vender
-  shippingRates: REGIONES.map((region) => ({
-    region,
-    priceClp: region === "Metropolitana de Santiago" ? 3990 : 5990,
-    days: region === "Metropolitana de Santiago" ? "1 a 3 días hábiles" : "2 a 5 días hábiles",
-    enabled: true,
-  })),
+  // Tarifario pyme de Blue Express, entrega a domicilio desde Santiago (IVA incluido)
+  shippingRates: REGIONES.map((region) => {
+    const zone = region === "Metropolitana de Santiago" ? "santiago" : EXTREME_REGIONS.has(region) ? "extremo" : "centro";
+    return {
+      region,
+      priceXsClp: { santiago: 3100, centro: 4300, extremo: 5200 }[zone],
+      priceClp: { santiago: 4200, centro: 5600, extremo: 9500 }[zone],
+      days: zone === "santiago" ? "1 a 3 días hábiles" : "2 a 5 días hábiles",
+      enabled: true,
+    };
+  }),
   freeShippingFromClp: null,
   contactEmail: "",
   contactPhone: "",
@@ -91,13 +109,13 @@ export async function saveSettings(settings: Settings) {
   if (error) throw new Error(`No se pudo guardar la configuración: ${error.message}`);
 }
 
-export function shippingQuote(settings: Settings, region: string, subtotalClp: number) {
+export function shippingQuote(settings: Settings, region: string, subtotalClp: number, size: ParcelSize = "s") {
   const rate = settings.shippingRates.find((r) => r.region === region && r.enabled);
   if (!rate) return null;
   const free = settings.freeShippingFromClp !== null && subtotalClp >= settings.freeShippingFromClp;
   return {
     service: `Despacho a domicilio (${rate.days})`,
-    priceClp: free ? 0 : rate.priceClp,
+    priceClp: free ? 0 : ratePrice(rate, size),
     days: rate.days,
     free,
   };

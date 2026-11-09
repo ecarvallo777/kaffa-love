@@ -19,20 +19,22 @@ export default async function SettingsPage() {
       <ActionForm action={saveStoreSettings} className="space-y-6">
         <Card title="Tarifas de despacho">
           <p className="mb-4 text-sm text-ink-soft">
-            Mientras no esté conectada la API de Blue Express, el checkout usa esta tabla. Revisa los valores con tu tarifario antes de vender.
+            Tarifas de Blue Express con entrega a domicilio desde Santiago (IVA incluido). <strong>XS</strong> (hasta 0,5 kg) se cobra en
+            pedidos de solo café con 1 o 2 bolsas; <strong>S</strong> (hasta 3 kg) en todo lo demás. Si dejas XS vacía, se cobra S.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="text-left text-xs text-ink-mute uppercase">
-                  <th className="py-2">Región</th><th className="py-2">Tarifa (CLP)</th><th className="py-2">Plazo</th><th className="py-2 text-center">Activa</th>
+                  <th className="py-2">Región</th><th className="py-2">XS (1–2 cafés)</th><th className="py-2">S (resto)</th><th className="py-2">Plazo</th><th className="py-2 text-center">Activa</th>
                 </tr>
               </thead>
               <tbody>
                 {s.shippingRates.map((r, i) => (
                   <tr key={r.region} className="border-t border-line">
                     <td className="py-2 pr-3">{r.region}</td>
-                    <td className="py-2 pr-3"><input name={`price_${i}`} defaultValue={r.priceClp} inputMode="numeric" className={`${field} h-9 w-28`} /></td>
+                    <td className="py-2 pr-3"><input name={`xs_${i}`} defaultValue={r.priceXsClp ?? ""} inputMode="numeric" aria-label={`Tarifa XS ${r.region}`} className={`${field} h-9 w-28`} /></td>
+                    <td className="py-2 pr-3"><input name={`price_${i}`} aria-label={`Tarifa S ${r.region}`} defaultValue={r.priceClp} inputMode="numeric" className={`${field} h-9 w-28`} /></td>
                     <td className="py-2 pr-3"><input name={`days_${i}`} defaultValue={r.days} className={`${field} h-9`} /></td>
                     <td className="py-2 text-center"><input type="checkbox" name={`enabled_${i}`} defaultChecked={r.enabled} className="size-4 accent-accent" /></td>
                   </tr>

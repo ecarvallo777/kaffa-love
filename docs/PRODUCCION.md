@@ -105,7 +105,15 @@ Se usan dos ramas de git:
   ```
   La contraseña queda en `.credenciales-crewxart@gmail.com.txt` (git lo ignora). Ingresa en `<URL de pruebas>/ingresar`, cambia la contraseña en **Equipo** y borra ese archivo.
 - [x] **2.2** **Lugares de retiro**: dirección y horario reales (hoy dice "Por definir").
-- [ ] **2.3** *(pendiente: se completa antes de la fase 6)* **Despacho y tienda**: tarifas por región según tu tarifario de Blue Express, correo y WhatsApp de contacto, Instagram. Guarda.
+- [x] **2.3** **Despacho y tienda**: correo, WhatsApp, Instagram y despacho gratis desde $50.000. Tarifas cargadas el 9 de noviembre de 2026 desde el [tarifario pyme de Blue Express](https://cdn.blue.cl/cms/2/media/tarifario_pyme_41b030f383.pdf) (entrega a domicilio desde Santiago, IVA incluido). **XS** (hasta 0,5 kg) se cobra en pedidos de solo café con 1 o 2 bolsas; **S** (hasta 3 kg) en todo lo demás:
+
+  | Zona | Regiones | XS | S |
+  | --- | --- | --- | --- |
+  | Santiago | Metropolitana | $3.100 | $4.200 |
+  | Centro | Atacama a Los Lagos | $4.300 | $5.600 |
+  | Extremo | Arica, Tarapacá, Antofagasta, Aysén y Magallanes | $5.200 | $9.500 |
+
+  Si Blue Express cambia sus precios, se editan en **Configuración → Tarifas de despacho**.
 - [ ] **2.4** *(pendiente: se completa antes de la fase 6)* **Productos**: completa las fichas de los cafés (proceso, variedad y notas de cata; a La Betania le faltan las notas) y sube fotos si ya las tienes.
 - [ ] **2.6** *(pendiente: antes de la fase 6)* **Costos y comisiones**: ingresa el costo unitario neto de cada producto (**Productos**) y las comisiones de Mercado Pago para feria y tienda (**Configuración → Impuestos y comisiones**). Sin esto, la utilidad de **Ferias** y **Reportes** sale más alta de lo real.
 - [ ] **2.5** *(pendiente)* **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
@@ -169,7 +177,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 **Requisitos pendientes de la fase 2**
 
-- [ ] **6.0** Tarifas de despacho revisadas y guardadas (2.3), fichas de café completas (2.4), operadores de feria creados (2.5) y costos y comisiones ingresados (2.6).
+- [ ] **6.0** Fichas de café completas (2.4), operadores de feria creados (2.5) y costos y comisiones ingresados (2.6).
 
 **Credenciales reales**
 
@@ -274,6 +282,7 @@ node scripts/e2e/equipo.mjs           # login, permisos, feria y administración
 node scripts/e2e/cuenta.mjs           # datos guardados en el checkout y carrito entre dispositivos
 node scripts/e2e/recetas.mjs          # recetas en la administración, receta según molienda y temporizador
 node scripts/e2e/utilidad.mjs         # costos, utilidad real de feria, reportes, inventario y Nosotros
+node scripts/e2e/envio.mjs            # tarifas XS/S por región en el checkout y en el pedido
 node scripts/e2e/ventas.mjs           # embudo anónimo, sugerencias del carrito, "retomar compra" y baja firmada
 node scripts/e2e/limpiar.mjs --usuarios
 ```
