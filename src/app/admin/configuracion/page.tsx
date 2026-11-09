@@ -1,14 +1,15 @@
 import { connection } from "next/server";
 import { getSettings } from "@/lib/settings";
+import { requireStaff } from "@/lib/auth";
 import { ActionForm } from "@/components/admin/action-form";
 import { Card, Field, PageHeader, btn, field } from "@/components/admin/ui";
-import { saveStoreSettings } from "./actions";
+import { saveStoreSettings, sendSampleEmails } from "./actions";
 
 export const metadata = { title: "Configuración" };
 
 export default async function SettingsPage() {
   await connection();
-  const s = await getSettings();
+  const [s, staff] = await Promise.all([getSettings(), requireStaff(["admin"], "/admin/configuracion")]);
   return (
     <>
       <PageHeader
@@ -105,6 +106,18 @@ export default async function SettingsPage() {
         </Card>
         <button className={btn.primary}>Guardar configuración</button>
       </ActionForm>
+      <Card title="Ver los correos automáticos" className="mt-6">
+        <p className="mb-4 text-sm text-ink-soft">
+          Te enviamos un ejemplo de cada uno (carrito abandonado y recompra), armado con el último pedido online con café. No se envía nada a
+          clientes.
+        </p>
+        <ActionForm action={sendSampleEmails} className="flex flex-wrap items-end gap-3">
+          <Field label="Enviar a">
+            <input name="to" type="email" required defaultValue={staff.email} className={`${field} min-w-72`} />
+          </Field>
+          <button className={btn.secondary}>Enviarme ejemplos</button>
+        </ActionForm>
+      </Card>
     </>
   );
 }

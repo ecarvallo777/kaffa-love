@@ -81,7 +81,72 @@ const button = (href: string, label: string) =>
 const footer = (email: string) =>
   `<p style="color:#8b7c70;font-size:12px;margin-top:28px">Te escribimos porque aceptaste recibir novedades de Kaffa Love. <a href="${unsubscribeUrl(email)}" style="color:#8b7c70">Dejar de recibir estos correos</a>.</p>`;
 
-const firstName = (c: Customer) => c.name?.trim().split(" ")[0] ?? "";
+const firstName = (c: Pick<Customer, "name">) => c.name?.trim().split(" ")[0] ?? "";
+
+// Plantillas -----------------------------------------------------------------------------
+
+type Coffee = { slug: string; name: string; active: boolean; visible_online: boolean };
+
+export function abandonEmail(c: Pick<Customer, "email" | "name">, items: Item[], orderId: string) {
+  const name = firstName(c);
+  return {
+    subject: "Tu café te está esperando",
+    html: emailLayout(
+      `${name ? `${escapeHtml(name)}, t` : "T"}u café te está esperando`,
+      `<p>Dejaste estos productos en tu carrito y no alcanzaste a pagar. Los guardamos para que retomes tu compra con un clic:</p>
+${itemsTable(items)}
+${button(`${siteUrl()}/carrito/recuperar?pedido=${orderId}&origen=abandono`, "Retomar mi compra")}
+<p style="color:#8b7c70;font-size:13px">Los precios y el stock se confirman al pagar. Si tuviste algún problema con el pago, responde este correo y te ayudamos.</p>
+${footer(c.email)}`,
+    ),
+  };
+}
+
+export function repurchaseEmail(c: Pick<Customer, "email" | "name">, coffeeItems: Item[], orderId: string, main: Coffee, days: number) {
+  const name = firstName(c);
+  const shortName = main.name.split(",")[0];
+  const stillSold = main.active && main.visible_online;
+  const more = `<a href="${siteUrl()}/categoria/cafe-de-especialidad" style="color:#b4432c">Mira los cafés de esta temporada</a>`;
+  return {
+    subject: `¿Se te está acabando el ${shortName}?`,
+    html: emailLayout(
+      `¿Se te está acabando el ${escapeHtml(shortName)}?`,
+      `<p>${name ? `Hola ${escapeHtml(name)}: h` : "H"}ace unas semanas te llevaste:</p>
+${itemsTable(coffeeItems)}
+<p>Una bolsa de 250 g rinde más o menos ${days} días de café diario. Si quieres repetir, lo dejamos listo con la misma molienda:</p>
+${button(`${siteUrl()}/carrito/recuperar?pedido=${orderId}&origen=recompra`, "Repetir mi pedido")}
+<p>${stillSold ? `¿Quieres probar algo distinto? ${more} o <a href="${siteUrl()}/producto/${main.slug}#receta" style="color:#b4432c">la receta de tu café</a>.` : `${more}.`}</p>
+${footer(c.email)}`,
+    ),
+  };
+}
+
+/** Envía un ejemplo de cada correo (con el último pedido online real que tenga café) a `to` */
+export async function sendAutomationSamples(to: string, name: string | null) {
+  const db = createAdminClient();
+  const [{ data: orders }, { data: coffees }, settings] = await Promise.all([
+    db
+      .from("orders")
+      .select("id, order_items (product_id, product_name, quantity, unit_price_clp, grind)")
+      .eq("channel", "online")
+      .order("created_at", { ascending: false })
+      .limit(30),
+    db.from("products").select("id, slug, name, active, visible_online").eq("type", "cafe"),
+    getSettings(),
+  ]);
+  const coffeeById = new Map((coffees ?? []).map((p) => [p.id, p]));
+  const order = (orders ?? []).find((o) => (o.order_items as Item[]).some((i) => coffeeById.has(i.product_id)));
+  if (!order) return { error: "Aún no hay pedidos online con café para armar el ejemplo." };
+  const items = order.order_items as Item[];
+  const coffeeItems = items.filter((i) => coffeeById.has(i.product_id));
+  const who = { email: to, name };
+  const mails = [abandonEmail(who, items, order.id), repurchaseEmail(who, coffeeItems, order.id, coffeeById.get(coffeeItems[0].product_id)!, settings.repurchaseDays)];
+  for (const m of mails) {
+    const ok = await sendEmail({ to, subject: `[Ejemplo] ${m.subject}`, html: m.html });
+    if (!ok) return { error: "No se pudo enviar: revisa RESEND_API_KEY y EMAIL_FROM en este entorno." };
+  }
+  return { ok: true as const };
+}
 
 // Carrito abandonado ----------------------------------------------------------------
 
@@ -108,18 +173,7 @@ export async function runAbandonedCartEmails() {
     if (await boughtSince(o.customer_id, o.created_at, o.id)) continue;
 
     const c = o.customers;
-    const ok = await sendEmail({
-      to: c.email,
-      subject: "Tu café te está esperando",
-      html: emailLayout(
-        `${firstName(c) ? `${escapeHtml(firstName(c))}, t` : "T"}u café te está esperando`,
-        `<p>Dejaste estos productos en tu carrito y no alcanzaste a pagar. Los guardamos para que retomes tu compra con un clic:</p>
-${itemsTable(o.order_items)}
-${button(`${siteUrl()}/carrito/recuperar?pedido=${o.id}&origen=abandono`, "Retomar mi compra")}
-<p style="color:#8b7c70;font-size:13px">Los precios y el stock se confirman al pagar. Si tuviste algún problema con el pago, responde este correo y te ayudamos.</p>
-${footer(c.email)}`,
-      ),
-    });
+    const ok = await sendEmail({ to: c.email, ...abandonEmail(c, o.order_items, o.id) });
     if (!ok) break; // correo no configurado o error: se reintenta en la próxima ejecución
     await logEvent("correo_abandono", "order", o.id, { customer_id: o.customer_id, pedido: o.number });
     sent++;
@@ -159,22 +213,7 @@ export async function runRepurchaseEmails() {
     if (await boughtSince(o.customer_id, o.paid_at ?? o.created_at, o.id)) continue;
 
     const c = o.customers;
-    const main = coffeeById.get(coffeeItems[0].product_id)!;
-    const shortName = main.name.split(",")[0];
-    const stillSold = main.active && main.visible_online;
-    const ok = await sendEmail({
-      to: c.email,
-      subject: `¿Se te está acabando el ${shortName}?`,
-      html: emailLayout(
-        `¿Se te está acabando el ${escapeHtml(shortName)}?`,
-        `<p>${firstName(c) ? `Hola ${escapeHtml(firstName(c))}: h` : "H"}ace unas semanas te llevaste:</p>
-${itemsTable(coffeeItems)}
-<p>Una bolsa de 250 g rinde más o menos ${days} días de café diario. Si quieres repetir, lo dejamos listo con la misma molienda:</p>
-${button(`${siteUrl()}/carrito/recuperar?pedido=${o.id}&origen=recompra`, "Repetir mi pedido")}
-${stillSold ? `<p>¿Quieres probar algo distinto? <a href="${siteUrl()}/categoria/cafe-de-especialidad" style="color:#b4432c">Mira los cafés de esta temporada</a> o <a href="${siteUrl()}/producto/${main.slug}#receta" style="color:#b4432c">la receta de tu café</a>.</p>` : `<p><a href="${siteUrl()}/categoria/cafe-de-especialidad" style="color:#b4432c">Mira los cafés de esta temporada</a>.</p>`}
-${footer(c.email)}`,
-      ),
-    });
+    const ok = await sendEmail({ to: c.email, ...repurchaseEmail(c, coffeeItems, o.id, coffeeById.get(coffeeItems[0].product_id)!, days) });
     if (!ok) break;
     await logEvent("correo_recompra", "order", o.id, { customer_id: o.customer_id, pedido: o.number, dias: days });
     sent++;

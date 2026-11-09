@@ -4,6 +4,7 @@ import { refresh, updateTag } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { REGIONES } from "@/lib/chile";
 import { getSettings, saveSettings, type Settings } from "@/lib/settings";
+import { sendAutomationSamples } from "@/lib/automations";
 import type { ActionResult } from "@/components/admin/action-form";
 
 export async function saveStoreSettings(_prev: ActionResult, form: FormData): Promise<ActionResult> {
@@ -57,4 +58,13 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
   updateTag("settings");
   refresh();
   return { ok: "Configuración guardada." };
+}
+
+/** Envía un ejemplo de cada correo automático (no registra nada ni afecta a clientes) */
+export async function sendSampleEmails(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const staff = await requireStaff(["admin"]);
+  const to = String(form.get("to") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { error: "Escribe un correo válido." };
+  const res = await sendAutomationSamples(to, staff.name);
+  return "error" in res ? { error: res.error } : { ok: `Listo: revisa ${to} (2 correos marcados como [Ejemplo]).` };
 }
