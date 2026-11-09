@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 
 const ITEMS = [
   ["/admin", "Resumen"],
+  ["/admin/reportes", "Reportes"],
   ["/admin/pedidos", "Pedidos"],
   ["/admin/productos", "Productos"],
   ["/admin/recetas", "Recetas"],
   ["/admin/stock", "Stock"],
-  ["/admin/compras", "Cargar compras"],
+  ["/admin/inventario", "Inventario"],
   ["/admin/ferias", "Ferias"],
   ["/admin/retiro", "Lugares de retiro"],
-  ["/admin/configuracion", "Despacho y tienda"],
+  ["/admin/configuracion", "Configuración"],
   ["/admin/equipo", "Equipo"],
 ] as const;
 

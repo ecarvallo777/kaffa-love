@@ -37,6 +37,7 @@ export function SiteFooter() {
             <li><Link href="/legal/terminos" className="text-paper/80 hover:text-paper">Términos y condiciones</Link></li>
             <li><Link href="/legal/cambios-y-devoluciones" className="text-paper/80 hover:text-paper">Cambios y devoluciones</Link></li>
             <li><Link href="/legal/privacidad" className="text-paper/80 hover:text-paper">Privacidad</Link></li>
+            <li><Link href="/nosotros" className="text-paper/80 hover:text-paper">Nosotros</Link></li>
             <li><Link href="/contacto" className="text-paper/80 hover:text-paper">Contacto</Link></li>
           </ul>
         </div>

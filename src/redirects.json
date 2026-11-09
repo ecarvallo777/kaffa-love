@@ -28,7 +28,7 @@
   { "from": "/:cat/43-:rest", "to": "/categoria/regalos" },
   { "from": "/:cat/44-:rest", "to": "/producto/promo-v60-filtros-tetera" },
 
-  { "from": "/content/4-sobre-nosotros", "to": "/" },
+  { "from": "/content/4-sobre-nosotros", "to": "/nosotros" },
   { "from": "/content/1-:rest", "to": "/legal/terminos" },
   { "from": "/content/2-:rest", "to": "/legal/terminos" },
   { "from": "/content/3-:rest", "to": "/legal/terminos" },

@@ -38,17 +38,35 @@ export function ProductForm({
   categories,
   options,
   bundle: initialBundle,
+  cost,
+  costs = {},
+  ivaPct = 19,
 }: {
   product: ProductRow | null;
   categories: Category[];
   options: Option[];
   bundle: { product_id: string; quantity: number }[];
+  /** Costo unitario neto actual del producto */
+  cost?: number | null;
+  /** Costos netos de todos los productos (para calcular el de una promoción) */
+  costs?: Record<string, number>;
+  ivaPct?: number;
 }) {
   const [state, action, pending] = useActionState(saveProduct, null);
   const [type, setType] = useState(product?.type ?? "cafe");
   const [trackStock, setTrackStock] = useState(product?.track_stock ?? true);
   const [bundle, setBundle] = useState(initialBundle.length ? initialBundle : [{ product_id: "", quantity: 1 }]);
   const [price, setPrice] = useState(String(product?.price_clp ?? ""));
+  const [costInput, setCostInput] = useState(cost !== null && cost !== undefined ? String(cost) : "");
+
+  // Margen: precio sin IVA menos costo neto
+  const priceNum = Number(price.replace(/[.\s$]/g, ""));
+  const bundleCost = bundle.every((b) => !b.product_id || costs[b.product_id] !== undefined)
+    ? bundle.reduce((s, b) => s + (b.product_id ? (costs[b.product_id] ?? 0) * b.quantity : 0), 0)
+    : null;
+  const unitCost = type === "promocion" ? bundleCost : costInput.trim() ? Number(costInput.replace(/[.\s$]/g, "")) : null;
+  const netPrice = priceNum > 0 ? priceNum / (1 + ivaPct / 100) : 0;
+  const margin = unitCost !== null && Number.isFinite(unitCost) && netPrice > 0 ? (netPrice - unitCost) / netPrice : null;
 
   const parentName = (c: Category) => categories.find((x) => x.id === c.parent_id)?.name;
   const bundleRegular = bundle.reduce((s, b) => s + (options.find((o) => o.id === b.product_id)?.price_clp ?? 0) * b.quantity, 0);
@@ -84,6 +102,26 @@ export function ProductForm({
             <F label="Precio (CLP, IVA incluido)">
               <input name="price_clp" required inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} className={field} />
             </F>
+            {type === "promocion" ? (
+              <div>
+                <span className="mb-1 block text-sm font-medium">Costo neto</span>
+                <p className="flex h-11 items-center rounded-xl bg-paper-2 px-3 text-sm tabular-nums">
+                  {bundleCost !== null ? clp(bundleCost) : "Falta el costo de algún producto incluido"}
+                </p>
+                <span className="mt-1 block text-xs text-ink-mute">Suma de los costos de sus productos.</span>
+              </div>
+            ) : (
+              <F label="Costo unitario neto (sin IVA)" hint="Lo que te cuesta cada unidad. Se usa para la utilidad real.">
+                <input name="cost_clp" inputMode="numeric" value={costInput} onChange={(e) => setCostInput(e.target.value)} placeholder="Ej.: 6500" className={field} />
+              </F>
+            )}
+            {margin !== null && (
+              <p className={`text-sm sm:col-span-2 ${margin < 0.2 ? "text-accent-deep" : "text-ink-soft"}`}>
+                Precio sin IVA {clp(Math.round(netPrice))} · margen bruto <b className="tabular-nums">{Math.round(margin * 100)} %</b>
+                {margin < 0.2 && " (bajo: revisa el precio o el costo)"}
+                <span className="text-ink-mute"> · antes de comisiones y gastos</span>
+              </p>
+            )}
             <F label="SKU (opcional)">
               <input name="sku" defaultValue={product?.sku ?? ""} className={field} />
             </F>

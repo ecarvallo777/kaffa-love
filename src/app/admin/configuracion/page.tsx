@@ -4,7 +4,7 @@ import { ActionForm } from "@/components/admin/action-form";
 import { Card, Field, PageHeader, btn, field } from "@/components/admin/ui";
 import { saveStoreSettings } from "./actions";
 
-export const metadata = { title: "Despacho y tienda" };
+export const metadata = { title: "Configuración" };
 
 export default async function SettingsPage() {
   await connection();
@@ -12,8 +12,8 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader
-        title="Despacho y tienda"
-        description="Tarifas de despacho por región (Blue Express), contacto y políticas. Se aplican al instante en el checkout."
+        title="Configuración"
+        description="Tarifas de despacho, contacto y políticas, impuestos y comisiones. Se aplican al instante."
       />
       <ActionForm action={saveStoreSettings} className="space-y-6">
         <Card title="Tarifas de despacho">
@@ -51,6 +51,28 @@ export default async function SettingsPage() {
             <Field label="Instagram (URL)"><input name="instagram" defaultValue={s.instagram} className={field} /></Field>
             <Field label="Días para cambios y devoluciones" hint="Mínimo 10 (derecho a retracto en compras a distancia).">
               <input name="returnDays" type="number" min={10} defaultValue={s.returnDays} className={field} />
+            </Field>
+          </div>
+        </Card>
+        <Card title="Impuestos y comisiones">
+          <p className="mb-4 text-sm text-ink-soft">
+            Se usan para calcular la utilidad real de cada feria y de la tienda. Revisa las comisiones en tu cuenta de Mercado Pago
+            (incluye el IVA de la comisión si corresponde).
+          </p>
+          {(s.mpFeriaPct === 0 || s.mpTiendaPct === 0) && (
+            <p className="mb-4 rounded-xl bg-crema/15 px-3 py-2 text-sm text-[#8a5a1c]">
+              Falta ingresar alguna comisión de Mercado Pago: mientras esté en 0 %, la utilidad aparecerá más alta de lo real.
+            </p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="IVA (%)" hint="Incluido en los precios.">
+              <input name="ivaPct" inputMode="decimal" defaultValue={s.ivaPct} className={field} />
+            </Field>
+            <Field label="Comisión Point en feria (%)" hint="Mercado Pago Point.">
+              <input name="mpFeriaPct" inputMode="decimal" defaultValue={s.mpFeriaPct} className={field} />
+            </Field>
+            <Field label="Comisión tienda online (%)" hint="Mercado Pago Checkout Pro.">
+              <input name="mpTiendaPct" inputMode="decimal" defaultValue={s.mpTiendaPct} className={field} />
             </Field>
           </div>
         </Card>

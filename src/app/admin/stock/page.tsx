@@ -33,7 +33,7 @@ export default async function StockPage() {
       <PageHeader
         title="Stock"
         description="Inventario compartido entre la tienda y las ferias. Cada cambio queda registrado con su motivo."
-        actions={<LinkButton href="/admin/compras">Cargar compras desde Excel</LinkButton>}
+        actions={<LinkButton href="/admin/inventario">Conteo de inventario</LinkButton>}
       />
       <div className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
         <div className="space-y-6">

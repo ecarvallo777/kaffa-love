@@ -173,11 +173,7 @@ try {
   await page.waitForFunction(() => document.body.textContent.includes("Cambios guardados"), { timeout: 20000 });
   assert(true, "producto guardado");
 
-  step("Plantilla de compras");
-  const status = await page.evaluate(async () => (await fetch("/admin/compras/plantilla")).status);
-  assert(status === 200, "descarga la plantilla .xlsx");
-
-  for (const [path, name] of [["/admin/configuracion", "admin-06-config"], ["/admin/retiro", "admin-07-retiro"], ["/admin/equipo", "admin-08-equipo"], ["/admin/compras", "admin-09-compras"], ["/admin/productos/nuevo", "admin-10-nuevo"]]) {
+  for (const [path, name] of [["/admin/configuracion", "admin-06-config"], ["/admin/retiro", "admin-07-retiro"], ["/admin/equipo", "admin-08-equipo"], ["/admin/inventario", "admin-09-inventario"], ["/admin/productos/nuevo", "admin-10-nuevo"]]) {
     await goto(`${BASE}${path}`);
     assert(!(await text()).includes("Application error"), `${path} carga`);
     await shot(page, name);

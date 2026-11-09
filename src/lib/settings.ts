@@ -25,6 +25,12 @@ export type Settings = {
   instagram: string;
   /** Días para devolver accesorios sin uso */
   returnDays: number;
+  /** IVA incluido en los precios (%) */
+  ivaPct: number;
+  /** Comisión de Mercado Pago Point en ferias (% sobre lo cobrado) */
+  mpFeriaPct: number;
+  /** Comisión de Mercado Pago Checkout Pro en la tienda online (% sobre lo cobrado) */
+  mpTiendaPct: number;
 };
 
 const BUCKET = "config";
@@ -43,6 +49,10 @@ export const DEFAULT_SETTINGS: Settings = {
   contactPhone: "",
   instagram: "https://instagram.com/kaffaloveroasters11.11",
   returnDays: 10,
+  ivaPct: 19,
+  // Sin valor por defecto: se ingresan desde la administración según el contrato con Mercado Pago
+  mpFeriaPct: 0,
+  mpTiendaPct: 0,
 };
 
 export async function getSettings(): Promise<Settings> {

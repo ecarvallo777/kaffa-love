@@ -107,6 +107,7 @@ Se usan dos ramas de git:
 - [x] **2.2** **Lugares de retiro**: dirección y horario reales (hoy dice "Por definir").
 - [ ] **2.3** *(pendiente: se completa antes de la fase 6)* **Despacho y tienda**: tarifas por región según tu tarifario de Blue Express, correo y WhatsApp de contacto, Instagram. Guarda.
 - [ ] **2.4** *(pendiente: se completa antes de la fase 6)* **Productos**: completa las fichas de los cafés (proceso, variedad y notas de cata; a La Betania le faltan las notas) y sube fotos si ya las tienes.
+- [ ] **2.6** *(pendiente: antes de la fase 6)* **Costos y comisiones**: ingresa el costo unitario neto de cada producto (**Productos**) y las comisiones de Mercado Pago para feria y tienda (**Configuración → Impuestos y comisiones**). Sin esto, la utilidad de **Ferias** y **Reportes** sale más alta de lo real.
 - [ ] **2.5** *(pendiente)* **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
 
 ---
@@ -154,7 +155,7 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 
 - [x] **5.1** Feria: con un usuario operador, abre una jornada, vende café (con molienda), preparados y una promoción, anula una venta y cierra con el total de Point.
 - [x] **5.2** Administración: prepara, despacha (con número de seguimiento) y entrega un pedido. Cancela otro y revisa que el stock vuelva.
-- [x] **5.3** ~~Carga una compra con la plantilla Excel (**Cargar compras**).~~ *Descartado (7 de noviembre de 2026): la carga de compras se hará de otra forma; la funcionalidad actual queda sin usar hasta reemplazarla.*
+- [x] **5.3** ~~Carga una compra con la plantilla Excel (**Cargar compras**).~~ *Reemplazado (8 de noviembre de 2026) por **Inventario**: conteo de lo que hay en la bodega o registro de mercadería recibida.*
 - [x] **5.4** Revisa la tienda desde tu celular: portada, ficha, carrito, checkout y página del pedido.
 - [ ] **5.5** Legal: un asesor revisa **términos**, **cambios y devoluciones** (plazo actual: 10 días) y **privacidad** (`src/app/(tienda)/legal/`).
 - [ ] **5.6** El contador confirma la configuración de boletas en Mercado Pago (online y Point).
@@ -168,7 +169,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 **Requisitos pendientes de la fase 2**
 
-- [ ] **6.0** Tarifas de despacho revisadas y guardadas (2.3), fichas de café completas (2.4) y operadores de feria creados (2.5).
+- [ ] **6.0** Tarifas de despacho revisadas y guardadas (2.3), fichas de café completas (2.4), operadores de feria creados (2.5) y costos y comisiones ingresados (2.6).
 
 **Credenciales reales**
 
@@ -269,6 +270,7 @@ node scripts/e2e/compra.mjs           # compra online completa (agrega --mobile 
 node scripts/e2e/equipo.mjs           # login, permisos, feria y administración
 node scripts/e2e/cuenta.mjs           # datos guardados en el checkout y carrito entre dispositivos
 node scripts/e2e/recetas.mjs          # recetas en la administración, receta según molienda y temporizador
+node scripts/e2e/utilidad.mjs         # costos, utilidad real de feria, reportes, inventario y Nosotros
 node scripts/e2e/limpiar.mjs --usuarios
 ```
 

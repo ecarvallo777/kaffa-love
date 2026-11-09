@@ -6,6 +6,7 @@ import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/events";
 import { slugify } from "@/lib/slug";
+import { setProductCost } from "@/lib/costs";
 import type { ActionResult } from "@/components/admin/action-form";
 
 const TYPES = ["cafe", "accesorio", "promocion", "preparado"] as const;
@@ -62,6 +63,9 @@ export async function saveProduct(_prev: ActionResult, form: FormData): Promise<
   if (price === null || Number.isNaN(price) || price < 0) return { error: "Ingresa un precio válido en pesos." };
 
   const isBundle = type === "promocion";
+  // Costo unitario neto (las promociones lo calculan desde sus productos)
+  const cost = isBundle ? null : int(form, "cost_clp");
+  if (cost !== null && (Number.isNaN(cost) || cost < 0)) return { error: "El costo debe ser un número en pesos." };
   const trackStock = isBundle ? false : form.get("track_stock") === "on";
   const lowStock = int(form, "low_stock_threshold") ?? 3;
   const dims = { weight_g: num(form, "weight_g"), length_cm: num(form, "length_cm"), width_cm: num(form, "width_cm"), height_cm: num(form, "height_cm") };
@@ -132,7 +136,13 @@ export async function saveProduct(_prev: ActionResult, form: FormData): Promise<
     if (error) return { error: `No se pudo guardar el contenido de la promoción: ${error.message}` };
   }
 
-  await logEvent(id ? "producto_editado" : "producto_creado", "product", productId, { nombre: name, precio: price, por: staff.email });
+  try {
+    await setProductCost(productId!, cost);
+  } catch (e) {
+    return { error: `El producto se guardó, pero no su costo: ${(e as Error).message}` };
+  }
+
+  await logEvent(id ? "producto_editado" : "producto_creado", "product", productId, { nombre: name, precio: price, costo: cost, por: staff.email });
   updateTag("catalog");
 
   if (!id) redirect(`/admin/productos/${productId}?creado=1`);

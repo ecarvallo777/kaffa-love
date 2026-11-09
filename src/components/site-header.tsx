@@ -22,12 +22,18 @@ export function SiteHeader() {
           <Wordmark />
         </Link>
         <nav
-          aria-label="Categorías"
+          aria-label="Menú principal"
           className="-mx-1 flex min-h-8 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] max-md:order-last max-md:basis-full"
         >
           <Suspense>
             <CategoryLinks />
           </Suspense>
+          <Link
+            href="/nosotros"
+            className="shrink-0 rounded-full px-3 py-1.5 text-sm text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink"
+          >
+            Nosotros
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-1">
           <Link

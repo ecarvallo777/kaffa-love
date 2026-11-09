@@ -22,20 +22,32 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
   const staff = await requireStaff(["admin"], "/admin");
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="border-b border-line bg-paper-2 lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:shrink-0 lg:border-r lg:border-b-0">
-        <div className="flex items-center justify-between gap-4 px-4 py-4 lg:block lg:px-5 lg:py-6">
+      {/* En escritorio: columna fija a la altura de la pantalla, con el menú desplazable
+          y el pie (cuenta y accesos) siempre visible abajo */}
+      <aside className="border-b border-line bg-paper-2 lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-b-0">
+        <div className="flex items-center justify-between gap-4 px-4 py-4 lg:block lg:shrink-0 lg:px-5 lg:pt-6 lg:pb-4">
           <Link href="/admin" aria-label="Resumen">
             <Wordmark className="[&_span:last-child]:text-xl" />
           </Link>
-          <p className="text-xs text-ink-mute lg:mt-2">Administración</p>
+          <p className="hidden text-xs text-ink-mute lg:mt-2 lg:block">Administración</p>
+          {/* En celular: accesos en la barra superior */}
+          <div className="flex items-center gap-3 text-sm text-ink-soft lg:hidden">
+            <Link href="/feria" className="hover:text-ink">Feria</Link>
+            <Link href="/" className="hover:text-ink">Tienda</Link>
+            <form action={signOut}>
+              <button className="hover:text-accent">Salir</button>
+            </form>
+          </div>
         </div>
-        <AdminNav />
-        <div className="hidden px-5 pt-6 text-sm lg:block">
+        <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pb-3">
+          <AdminNav />
+        </div>
+        <div className="hidden shrink-0 border-t border-line px-5 py-4 text-sm lg:block">
           <p className="truncate font-medium">{staff.name}</p>
           <p className="truncate text-xs text-ink-mute">{staff.email}</p>
-          <div className="mt-3 flex flex-col items-start gap-1.5 text-ink-soft">
-            <Link href="/feria" className="hover:text-ink">Ir a la feria →</Link>
-            <Link href="/" className="hover:text-ink">Ver la tienda →</Link>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 whitespace-nowrap text-ink-soft">
+            <Link href="/feria" className="hover:text-ink">Feria →</Link>
+            <Link href="/" className="hover:text-ink">Tienda →</Link>
             <form action={signOut}>
               <button className="hover:text-accent">Cerrar sesión</button>
             </form>

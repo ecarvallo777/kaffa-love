@@ -13,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...catalog.products
       .filter((p) => p.type !== "preparado")
       .map((p) => ({ url: `${url}${productHref(p)}`, changeFrequency: "weekly" as const, priority: p.type === "cafe" ? 0.9 : 0.7 })),
-    ...["/contacto", "/legal/terminos", "/legal/cambios-y-devoluciones", "/legal/privacidad"].map((path) => ({
+    ...["/nosotros", "/contacto", "/legal/terminos", "/legal/cambios-y-devoluciones", "/legal/privacidad"].map((path) => ({
       url: `${url}${path}`,
       changeFrequency: "yearly" as const,
       priority: 0.2,

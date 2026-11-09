@@ -2,7 +2,7 @@
 
 ## 1. Productos y categorías
 
-El catálogo actual ya está cargado en Supabase (`supabase/seed.sql`, tomado de kaffalove.cl). Para productos nuevos o cambios de stock usa **Administración → Cargar compras** con la plantilla Excel, y sube las fotos en cada producto.
+El catálogo actual ya está cargado en Supabase (`supabase/seed.sql`, tomado de kaffalove.cl). Los productos nuevos se crean en **Administración → Productos → Nuevo producto** (con su stock inicial y fotos), y el stock se cuadra o se suma en **Administración → Inventario**.
 
 ## 2. Clientes
 

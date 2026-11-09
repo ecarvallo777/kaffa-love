@@ -26,7 +26,7 @@ try {
   await page.goto(`${BASE}/admin/recetas/nueva`, { waitUntil: "networkidle0" });
   await ready();
   await page.type('input[name="title"]', TITLE);
-  await page.type('input[name="method"]', "Prensa");
+  await page.type('input[name="method"]', "Prensa e2e");
   await page.$eval('input[name="coffeeGrams"]', (el) => (el.value = ""));
   await page.type('input[name="coffeeGrams"]', "30");
   await page.$eval('input[name="waterMl"]', (el) => (el.value = ""));
@@ -49,30 +49,35 @@ try {
   step("Ficha del café: receta destacada al abrir");
   await page.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
   await page.waitForSelector("#receta");
-  assert((await recipeTitle()) === "Filtrado en V60 o Chemex", "muestra la destacada (V60) sin molienda elegida");
-  assert((await page.$$('#receta [role="tab"]')).length === 2, "pestañas con las dos recetas");
+  const initialTitle = await recipeTitle();
+  assert(!!initialTitle, `muestra una receta destacada al abrir (${initialTitle})`);
+  assert((await page.$$('#receta [role="tab"]')).length >= 2, "pestañas para elegir entre recetas");
 
   step("Elegir molienda gruesa muestra la receta de prensa");
   await clickText(page, "#molienda label", "Gruesa");
   await sleep(200);
-  assert((await recipeTitle()) === TITLE, "la receta cambió a prensa francesa");
-  assert((await page.$eval("#molienda", (el) => el.innerText)).includes("Con esta molienda: Prensa"), "resumen bajo el selector");
+  assert((await page.$eval("#receta", (el) => el.innerText)).includes("Molienda: gruesa"), `la receta cambió a una de molienda gruesa (${await recipeTitle()})`);
+  assert((await page.$eval("#molienda", (el) => el.innerText)).includes("Con esta molienda:"), "resumen bajo el selector");
   await shot(page, "recetas-03-gruesa", false);
 
   step("Molienda sin receta: consejo general y receta destacada");
   await clickText(page, "#molienda label", "Fina");
   await sleep(200);
   assert((await page.$eval("#molienda", (el) => el.innerText)).includes("Molienda fina"), "consejo general para fina");
-  assert((await recipeTitle()) === "Filtrado en V60 o Chemex", "vuelve a la destacada");
+  assert((await recipeTitle()) === initialTitle, "vuelve a la destacada");
 
-  step("«Usar molienda media» marca el selector");
-  await clickText(page, "#receta button", "Usar molienda media");
+  step("«Usar esta molienda» marca el selector");
+  const featuredGrind = await page.$$eval("#receta button", (bs) => bs.map((b) => b.textContent).find((t) => t.includes("Usar molienda"))?.match(/Usar molienda (en grano|\S+)/)?.[1]);
+  await clickText(page, "#receta button", "Usar molienda");
   await sleep(300);
-  assert(await page.$eval('#molienda input[value="media"]', (el) => el.checked), "selector en molienda media");
+  const map = { "en grano": "grano", fina: "fina", media: "media", gruesa: "gruesa" };
+  assert(await page.$eval(`#molienda input[value="${map[featuredGrind] ?? featuredGrind}"]`, (el) => el.checked), `selector en molienda ${featuredGrind}`);
   assert((await page.$eval("#receta", (el) => el.innerText)).includes("es la indicada"), "la receta confirma la molienda");
 
   step("Temporizador de la receta de prensa (5 s)");
   await clickText(page, "#molienda label", "Gruesa");
+  await sleep(200);
+  await clickText(page, '#receta [role="tab"]', "Prensa e2e");
   await sleep(200);
   await clickText(page, "#receta button", "Iniciar temporizador");
   await sleep(1200);

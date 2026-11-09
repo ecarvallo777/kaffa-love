@@ -9,6 +9,8 @@ import { reconcilePendingPayments } from "@/lib/payments";
 import { lowStock, salesSince } from "@/lib/admin-data";
 import { mercadoPagoConfigured, siteUrl } from "@/lib/env";
 import { getPickupLocations } from "@/lib/pickup";
+import { getSettings } from "@/lib/settings";
+import { getProductCosts } from "@/lib/costs";
 import { Card, Empty, PageHeader, Pill, Stat, StatusPill } from "@/components/admin/ui";
 
 export default async function AdminHome() {
@@ -20,7 +22,7 @@ export default async function AdminHome() {
   const week = daysAgoIso(7);
   const month = daysAgoIso(30);
 
-  const [salesToday, salesWeek, toPrepare, alerts, low, recent, settingsFile, pickups] = await Promise.all([
+  const [salesToday, salesWeek, toPrepare, alerts, low, recent, settingsFile, pickups, settings, costs, sellable] = await Promise.all([
     salesSince(today),
     salesSince(week),
     db.from("orders").select("id", { count: "exact", head: true }).eq("channel", "online").in("status", ["pagado", "en_preparacion"]),
@@ -29,7 +31,11 @@ export default async function AdminHome() {
     db.from("orders").select("id, number, channel, status, total_clp, created_at, customers (name)").order("created_at", { ascending: false }).limit(8),
     db.storage.from("config").list("", { search: "settings.json" }),
     getPickupLocations(),
+    getSettings(),
+    getProductCosts(),
+    db.from("products").select("id").eq("active", true).neq("type", "promocion"),
   ]);
+  const withoutCost = (sellable.data ?? []).filter((p) => costs[p.id] === undefined).length;
 
   const setup = [
     { ok: mercadoPagoConfigured(), label: "Credenciales de Mercado Pago (MP_ACCESS_TOKEN)", href: null },
@@ -39,6 +45,8 @@ export default async function AdminHome() {
     { ok: !!settingsFile.data?.some((f) => f.name === "settings.json"), label: "Tarifas de despacho revisadas y guardadas", href: "/admin/configuracion" },
     { ok: !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM, label: "Correos de confirmación (RESEND_API_KEY y EMAIL_FROM)", href: null },
     { ok: !!process.env.CRON_SECRET, label: "Tarea programada para liberar reservas (CRON_SECRET)", href: null },
+    { ok: settings.mpFeriaPct > 0 && settings.mpTiendaPct > 0, label: "Comisiones de Mercado Pago para la utilidad real", href: "/admin/configuracion" },
+    { ok: withoutCost === 0, label: withoutCost ? `Costo unitario de los productos (faltan ${withoutCost})` : "Costo unitario de los productos", href: "/admin/productos" },
   ];
   const pendingSetup = setup.filter((s) => !s.ok);
 

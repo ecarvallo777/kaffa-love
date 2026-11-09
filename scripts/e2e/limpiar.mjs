@@ -47,9 +47,32 @@ if (testMoves?.length) {
 }
 
 if (testSessionIds.size) {
+  // Gastos ingresados para jornadas de prueba
+  const { data: file } = await db.storage.from("config").download("gastos-ferias.json");
+  if (file) {
+    const all = JSON.parse(await file.text());
+    for (const id of testSessionIds) delete all[id];
+    const body = new Blob([JSON.stringify(all, null, 2)], { type: "application/json" });
+    if (Object.keys(all).length) await db.storage.from("config").upload("gastos-ferias.json", body, { upsert: true });
+    else await db.storage.from("config").remove(["gastos-ferias.json"]);
+  }
   await db.from("events").delete().in("entity_id", [...testSessionIds]);
   await db.from("fair_sessions").delete().in("id", [...testSessionIds]);
   console.log(`${testSessionIds.size} jornada(s) de prueba eliminada(s)`);
+}
+
+// Recetas de prueba (título con [PRUEBA]); las demás no se tocan
+{
+  const { data: file } = await db.storage.from("config").download("recetas.json");
+  if (file) {
+    const all = JSON.parse(await file.text());
+    const keep = all.filter((r) => !String(r.title).includes("[PRUEBA]"));
+    if (keep.length !== all.length) {
+      const body = new Blob([JSON.stringify(keep, null, 2)], { type: "application/json" });
+      await db.storage.from("config").upload("recetas.json", body, { upsert: true });
+      console.log(`${all.length - keep.length} receta(s) de prueba eliminada(s)`);
+    }
+  }
 }
 
 // Usuarios de prueba (solo con --usuarios)
