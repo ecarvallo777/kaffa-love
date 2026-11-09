@@ -30,6 +30,10 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
   if (!(mpFeriaPct >= 0 && mpFeriaPct <= 20) || !(mpTiendaPct >= 0 && mpTiendaPct <= 20)) {
     return { error: "Las comisiones de Mercado Pago deben ser porcentajes entre 0 y 20." };
   }
+  const repurchaseDays = Number(form.get("repurchaseDays"));
+  if (!Number.isInteger(repurchaseDays) || repurchaseDays < 5 || repurchaseDays > 90) {
+    return { error: "Los días para el recordatorio de recompra deben estar entre 5 y 90." };
+  }
 
   try {
     await saveSettings({
@@ -43,6 +47,9 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
       ivaPct,
       mpFeriaPct,
       mpTiendaPct,
+      emailAbandonedCart: form.get("emailAbandonedCart") === "on",
+      emailRepurchase: form.get("emailRepurchase") === "on",
+      repurchaseDays,
     });
   } catch (e) {
     return { error: (e as Error).message };

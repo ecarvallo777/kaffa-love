@@ -13,6 +13,7 @@ import type { CustomerProfile, SavedAddress } from "@/lib/customer-auth";
 import { ProductArt } from "@/components/product-art";
 import { useSyncedCart } from "@/components/use-synced-cart";
 import { placeOrder } from "./actions";
+import { track } from "@/lib/track";
 
 const DRAFT_KEY = "kaffa-checkout-v1";
 
@@ -107,6 +108,14 @@ export function CheckoutForm({
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
 
   const subtotal = lines.reduce((s, l) => s + l.priceClp * l.qty, 0);
+
+  // Medición: inició el checkout (una vez por visita, con productos en el carrito)
+  const tracked = useRef(false);
+  useEffect(() => {
+    if (tracked.current || !lines.length) return;
+    tracked.current = true;
+    track("inicio_checkout", { items: lines.reduce((s, l) => s + l.qty, 0), total: subtotal });
+  }, [lines, subtotal]);
   const rate = rates.find((r) => r.region === draft.region);
   const freeShipping = freeShippingFromClp !== null && subtotal >= freeShippingFromClp;
   const shipping = draft.delivery === "despacho" ? (rate ? (freeShipping ? 0 : rate.priceClp) : null) : 0;

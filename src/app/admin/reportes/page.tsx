@@ -140,7 +140,7 @@ export default async function ReportsPage({ searchParams }: PageProps<"/admin/re
       {showOnline && (
         <div className="mt-6 grid gap-6 xl:grid-cols-3">
           <Card title="Embudo de la tienda online">
-            <Funnel f={r.funnel} />
+            <Funnel f={r.funnel} v={r.visitors} />
           </Card>
           <Card title="Clientes online">
             <dl className="grid grid-cols-2 gap-3 text-center">
@@ -171,6 +171,9 @@ export default async function ReportsPage({ searchParams }: PageProps<"/admin/re
             ) : (
               <Empty />
             )}
+          </Card>
+          <Card title="Correos automáticos" className="xl:col-span-3">
+            <Automations items={r.automations} />
           </Card>
         </div>
       )}
@@ -267,30 +270,72 @@ function Tile({ label, value, now, before, hint }: { label: string; value: strin
   );
 }
 
-function Funnel({ f }: { f: Report["funnel"] }) {
+function Funnel({ f, v }: { f: Report["funnel"]; v: Report["visitors"] }) {
+  // Visitantes únicos (anónimos) y luego pedidos: el último paso compara con quienes iniciaron el pago
   const steps: [string, number][] = [
-    ["Pedidos iniciados", f.created],
-    ["Fueron a pagar", f.wentToPay],
+    ["Vieron un producto", v.viewed],
+    ["Agregaron al carrito", v.added],
+    ["Llegaron al pago", v.checkout],
     ["Pagaron", f.paid],
   ];
-  const max = Math.max(1, f.created);
+  const max = Math.max(1, ...steps.map((s) => s[1]));
   return (
-    <div>
+    <div data-testid="embudo">
       <ul className="space-y-3">
-        {steps.map(([l, v]) => (
-          <li key={l}>
-            <div className="flex justify-between text-sm">
-              <span className="text-ink-soft">{l}</span>
-              <span className="tabular-nums">{v} <span className="text-xs text-ink-mute">({pct(v / max)})</span></span>
-            </div>
-            <div className="mt-1 h-3 rounded-r-[4px] bg-paper-2">
-              <div className="h-3 rounded-r-[4px]" style={{ width: `${(v / max) * 100}%`, backgroundColor: SERIES_COLORS.online }} />
-            </div>
-          </li>
-        ))}
+        {steps.map(([l, n], i) => {
+          const prev = i > 0 ? steps[i - 1][1] : null;
+          return (
+            <li key={l}>
+              <div className="flex justify-between text-sm">
+                <span className="text-ink-soft">{l}</span>
+                <span className="tabular-nums">
+                  {n}
+                  {prev ? <span className="text-xs text-ink-mute"> ({pct(n / prev)} del paso anterior)</span> : null}
+                </span>
+              </div>
+              <div className="mt-1 h-3 rounded-r-[4px] bg-paper-2">
+                <div className="h-3 rounded-r-[4px]" style={{ width: `${(n / max) * 100}%`, backgroundColor: SERIES_COLORS.online }} />
+              </div>
+            </li>
+          );
+        })}
       </ul>
       <p className="mt-4 text-sm">
-        <b className="tabular-nums">{f.abandoned}</b> <span className="text-ink-soft">abandonados (la reserva venció sin pago).</span>
+        <b className="tabular-nums">{f.abandoned}</b> <span className="text-ink-soft">de {f.created} pedidos se abandonaron (la reserva venció sin pago).</span>
+      </p>
+      <p className="mt-2 text-xs text-ink-mute">Visitantes únicos por navegador, sin datos personales. Medición desde el lanzamiento de esta función.</p>
+    </div>
+  );
+}
+
+function Automations({ items }: { items: Report["automations"] }) {
+  const names = { abandono: "Carrito abandonado", recompra: "Recompra" } as const;
+  return (
+    <div className="overflow-x-auto" data-testid="automatizaciones">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs text-ink-mute">
+            <th className="pb-2 font-normal">Correo</th>
+            <th className="pb-2 text-right font-normal">Enviados</th>
+            <th className="pb-2 text-right font-normal">Clics</th>
+            <th className="pb-2 text-right font-normal">Compras</th>
+            <th className="pb-2 text-right font-normal">Ventas</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {items.map((a) => (
+            <tr key={a.kind}>
+              <td className="py-2">{names[a.kind]}</td>
+              <td className="py-2 text-right tabular-nums">{a.sent}</td>
+              <td className="py-2 text-right tabular-nums">{a.clicks}</td>
+              <td className="py-2 text-right tabular-nums">{a.purchases}</td>
+              <td className="py-2 text-right tabular-nums">{clp(a.revenue)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-3 text-xs text-ink-mute">
+        Compras: el cliente pagó un pedido online dentro de 7 días después del correo. Se activan en Configuración → Correos automáticos.
       </p>
     </div>
   );
@@ -308,8 +353,15 @@ function Insights({ r }: { r: Report }) {
   if (totalGrind > 0 && topGrind.units) out.push(`El ${pct(topGrind.units / totalGrind)} del café se pide en molienda ${grindLabel(topGrind.grind)?.toLowerCase()}: tenla lista antes de cada feria y despacho.`);
   if (r.funnel.created >= 3) {
     const rate = r.funnel.abandoned / r.funnel.created;
-    if (rate >= 0.25) out.push(`${pct(rate)} de los pedidos online se abandonan antes de pagar: un correo de carrito abandonado podría recuperar parte.`);
+    if (rate >= 0.25) out.push(`${pct(rate)} de los pedidos online se abandonan antes de pagar: revisa que el correo de carrito abandonado esté activo y mira cuántos recupera.`);
   }
+  if (r.visitors.viewed >= 30) {
+    const add = r.visitors.added / r.visitors.viewed;
+    if (add < 0.05) out.push(`Solo ${pct(add)} de quienes ven un producto lo agrega al carrito: prueba mejores fotos, notas de cata más claras o un precio de entrada.`);
+    else if (r.visitors.added >= 10 && r.visitors.checkout / r.visitors.added < 0.4) out.push(`Muchos agregan al carrito pero pocos llegan al pago (${pct(r.visitors.checkout / r.visitors.added)}): el costo de envío suele ser la causa; considera un monto de despacho gratis.`);
+  }
+  const recovered = r.automations.reduce((s, a) => s + a.revenue, 0);
+  if (recovered > 0) out.push(`Los correos automáticos generaron ${clp(recovered)} en ventas en este período.`);
   const losing = r.fairs.filter((f) => f.profit < 0 && f.hasExpenses);
   if (losing.length) out.push(`${losing.map((f) => f.name).join(", ")} dejó pérdida: evalúa si conviene repetir o negociar el stand.`);
   if (r.fairs.length > 1 && r.fairs[0].profit > 0) out.push(`La feria más rentable fue ${r.fairs[0].name} (${clp(r.fairs[0].profit)} de utilidad).`);

@@ -184,6 +184,9 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **6.6** Espera a que ambos dominios aparezcan como **Valid Configuration**. El certificado https se emite solo, en minutos.
 - [ ] **6.7** Actualiza en cron-job.org la URL a `https://kaffalove.cl/api/cron/expirar-reservas` y el secreto al `CRON_SECRET` de **Production**.
 
+- [ ] **6.7b** En Vercel, pestaña **Analytics → Enable** (Web Analytics, plan gratis). Mide visitas y páginas; el embudo de compra (vio producto → agregó al carrito → llegó al pago) se ve en **Reportes** sin hacer nada.
+- [ ] **6.7c** Revisa en **Configuración → Correos automáticos** que «Carrito abandonado» y «Recompra» estén como quieres. Solo **Production** los envía (la base de datos es compartida y el sitio de pruebas mandaría enlaces que no son kaffalove.cl); para probarlos en otro entorno, define `AUTOMATION_EMAILS=on` en ese entorno. Van solo a clientes que aceptaron novedades e incluyen un enlace de baja.
+
 **Verificación inmediata**
 
 - [ ] **6.8** Compra real de bajo monto en `https://kaffalove.cl`: debe quedar **Pagado**. Devuélvela desde Mercado Pago.
@@ -271,6 +274,7 @@ node scripts/e2e/equipo.mjs           # login, permisos, feria y administración
 node scripts/e2e/cuenta.mjs           # datos guardados en el checkout y carrito entre dispositivos
 node scripts/e2e/recetas.mjs          # recetas en la administración, receta según molienda y temporizador
 node scripts/e2e/utilidad.mjs         # costos, utilidad real de feria, reportes, inventario y Nosotros
+node scripts/e2e/ventas.mjs           # embudo anónimo, sugerencias del carrito, "retomar compra" y baja firmada
 node scripts/e2e/limpiar.mjs --usuarios
 ```
 

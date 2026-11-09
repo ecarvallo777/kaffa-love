@@ -76,6 +76,33 @@ export default async function SettingsPage() {
             </Field>
           </div>
         </Card>
+        <Card title="Correos automáticos">
+          <p className="mb-4 text-sm text-ink-soft">
+            Solo se envían a clientes que aceptaron recibir novedades, una vez por pedido y nunca si ya volvieron a comprar. Cada correo
+            incluye un enlace para darse de baja.
+          </p>
+          <div className="space-y-3">
+            <label className="flex items-start gap-3">
+              <input type="checkbox" name="emailAbandonedCart" defaultChecked={s.emailAbandonedCart} className="mt-1 size-4 accent-accent" />
+              <span>
+                <span className="font-medium">Carrito abandonado</span>
+                <span className="block text-sm text-ink-soft">Si un pedido vence sin pagarse, unas horas después le recordamos sus productos con un botón para retomar la compra.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3">
+              <input type="checkbox" name="emailRepurchase" defaultChecked={s.emailRepurchase} className="mt-1 size-4 accent-accent" />
+              <span>
+                <span className="font-medium">Recordatorio de recompra</span>
+                <span className="block text-sm text-ink-soft">Cuando el café de su último pedido debería estar por acabarse, le ofrecemos repetirlo con la misma molienda.</span>
+              </span>
+            </label>
+          </div>
+          <div className="mt-4 max-w-xs">
+            <Field label="Días después de la compra" hint="Una bolsa de 250 g dura unas 2 a 3 semanas.">
+              <input name="repurchaseDays" type="number" min={5} max={90} defaultValue={s.repurchaseDays} className={field} />
+            </Field>
+          </div>
+        </Card>
         <button className={btn.primary}>Guardar configuración</button>
       </ActionForm>
     </>

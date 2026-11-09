@@ -7,6 +7,7 @@ import { clp } from "@/lib/catalog-utils";
 import { GRINDS } from "@/lib/grinds";
 import { GrindGlyph } from "@/components/grind-glyph";
 import { setSelectedGrind, useSelectedGrind } from "@/lib/grind-selection";
+import { track } from "@/lib/track";
 
 /** Resumen de una receta del café, para mostrarla al elegir su molienda */
 export type RecipeHint = {
@@ -51,6 +52,11 @@ export function AddToCart({ product, available, maxQty, recipes = [] }: Props) {
     return () => io.disconnect();
   }, []);
 
+  // Medición: vio la ficha de este producto
+  useEffect(() => {
+    track("vista_producto", { product_id: product.id });
+  }, [product.id]);
+
   function submit() {
     if (!available) return;
     if (product.isCoffee && !grind) {
@@ -71,6 +77,7 @@ export function AddToCart({ product, available, maxQty, recipes = [] }: Props) {
       },
       qty,
     );
+    track("agrego_carrito", { product_id: product.id, qty });
     setQty(1);
   }
 

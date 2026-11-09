@@ -31,6 +31,12 @@ export type Settings = {
   mpFeriaPct: number;
   /** Comisión de Mercado Pago Checkout Pro en la tienda online (% sobre lo cobrado) */
   mpTiendaPct: number;
+  /** Correo automático al vencer un carrito sin pago (solo a quien aceptó novedades) */
+  emailAbandonedCart: boolean;
+  /** Correo automático de recompra después de comprar café (solo a quien aceptó novedades) */
+  emailRepurchase: boolean;
+  /** Días después de la compra para el correo de recompra */
+  repurchaseDays: number;
 };
 
 const BUCKET = "config";
@@ -53,6 +59,10 @@ export const DEFAULT_SETTINGS: Settings = {
   // Sin valor por defecto: se ingresan desde la administración según el contrato con Mercado Pago
   mpFeriaPct: 0,
   mpTiendaPct: 0,
+  emailAbandonedCart: true,
+  emailRepurchase: true,
+  // Una bolsa de 250 g dura unas 2 a 3 semanas
+  repurchaseDays: 18,
 };
 
 export async function getSettings(): Promise<Settings> {

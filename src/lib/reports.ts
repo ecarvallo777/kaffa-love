@@ -35,6 +35,10 @@ export type Report = {
   products: { productId: string; name: string; units: number; revenue: number; profit: number | null; margin: number | null }[];
   grinds: { grind: Grind; units: number }[];
   funnel: { created: number; wentToPay: number; paid: number; abandoned: number };
+  /** Visitantes únicos (anónimos) en cada paso, desde el registro de la tienda */
+  visitors: { viewed: number; added: number; checkout: number };
+  /** Correos automáticos: enviados, clics en el enlace y compras posteriores (hasta 7 días después) */
+  automations: { kind: "abandono" | "recompra"; sent: number; clicks: number; purchases: number; revenue: number }[];
   customers: { buyers: number; newBuyers: number; returning: number; repeatRate: number | null };
   communes: { name: string; orders: number; revenue: number }[];
   delivery: { retiro: number; despacho: number };
@@ -61,6 +65,28 @@ function bucketFor(d: Date, unit: Report["bucketUnit"]): { key: string; label: s
   return { key, label: `sem. ${new Intl.DateTimeFormat("es-CL", { timeZone: "UTC", day: "numeric", month: "short" }).format(local)}` };
 }
 
+type EventRow = { type: string; entity_id: string | null; created_at: string; data: Record<string, unknown> | null };
+
+/** Eventos del período por tipo, paginando (pueden ser miles de vistas) */
+async function getEvents(types: string[], fromIso: string, toIso: string) {
+  const db = createAdminClient();
+  const out: EventRow[] = [];
+  for (let page = 0; page < 30; page++) {
+    const { data, error } = await db
+      .from("events")
+      .select("type, entity_id, created_at, data")
+      .in("type", types)
+      .gte("created_at", fromIso)
+      .lte("created_at", toIso)
+      .order("created_at")
+      .range(page * 1000, page * 1000 + 999);
+    if (error || !data?.length) break;
+    out.push(...(data as EventRow[]));
+    if (data.length < 1000) break;
+  }
+  return out;
+}
+
 export async function getReport(period: PeriodKey, channel: Channel): Promise<Report> {
   const days = PERIODS[period];
   const now = new Date();
@@ -68,7 +94,7 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
   const prevFrom = new Date(from.getTime() - days * 86400_000);
   const db = createAdminClient();
 
-  const [all, prevAll, costs, settings, { data: bundleItems }, { data: createdOrders }, { data: payStarts }] = await Promise.all([
+  const [all, prevAll, costs, settings, { data: bundleItems }, { data: createdOrders }, { data: payStarts }, events] = await Promise.all([
     getPaidOrders(from.toISOString(), now.toISOString()),
     getPaidOrders(prevFrom.toISOString(), from.toISOString()),
     getProductCosts(),
@@ -76,6 +102,11 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
     db.from("bundle_items").select("bundle_id, product_id, quantity"),
     db.from("orders").select("id, status").eq("channel", "online").gte("created_at", from.toISOString()).lte("created_at", now.toISOString()),
     db.from("events").select("entity_id").eq("type", "pago_iniciado").gte("created_at", from.toISOString()),
+    getEvents(
+      ["vista_producto", "agrego_carrito", "inicio_checkout", "recupero_carrito", "correo_abandono", "correo_recompra"],
+      from.toISOString(),
+      now.toISOString(),
+    ),
   ]);
   const costOf = makeCostResolver(costs, bundleItems ?? []);
   const pick = (os: SaleOrder[]) => (channel === "todos" ? os : os.filter((o) => o.channel === channel));
@@ -137,6 +168,36 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
     paid: created.filter((o) => ["pagado", "en_preparacion", "despachado", "listo_retiro", "entregado"].includes(o.status)).length,
     abandoned: created.filter((o) => o.status === "expirado").length,
   };
+
+  // Visitantes únicos por paso
+  const uniq = (type: string) => new Set(events.filter((e) => e.type === type).map((e) => e.data?.aid)).size;
+  const visitors = { viewed: uniq("vista_producto"), added: uniq("agrego_carrito"), checkout: uniq("inicio_checkout") };
+
+  // Correos automáticos y lo que generaron
+  const onlinePaid = all.filter((o) => o.channel === "online" && o.customer_id);
+  const automations = (["abandono", "recompra"] as const).map((kind) => {
+    const mails = events.filter((e) => e.type === `correo_${kind}`);
+    let purchases = 0;
+    let revenue = 0;
+    for (const m of mails) {
+      const t = new Date(m.created_at).getTime();
+      const order = onlinePaid.find((o) => {
+        const ot = new Date(o.created_at).getTime();
+        return o.customer_id === m.data?.customer_id && ot > t && ot - t <= 7 * 86400_000;
+      });
+      if (order) {
+        purchases++;
+        revenue += order.order_items.reduce((s, i) => s + i.unit_price_clp * i.quantity, 0);
+      }
+    }
+    return {
+      kind,
+      sent: mails.length,
+      clicks: events.filter((e) => e.type === "recupero_carrito" && e.data?.origen === kind).length,
+      purchases,
+      revenue,
+    };
+  });
 
   // Clientes (tienda online): nuevos = su primera compra pagada cae en el período
   const onlineOrders = all.filter((o) => o.channel === "online" && o.customer_id);
@@ -225,6 +286,8 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
     products,
     grinds: (["grano", "fina", "media", "gruesa"] as Grind[]).map((g) => ({ grind: g, units: grindUnits.get(g) ?? 0 })),
     funnel,
+    visitors,
+    automations,
     customers: { buyers: buyerIds.length, newBuyers, returning: buyerIds.length - newBuyers, repeatRate: buyerIds.length ? repeaters / buyerIds.length : null },
     communes: [...communes.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 8),
     delivery,

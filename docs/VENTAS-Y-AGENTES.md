@@ -13,6 +13,14 @@ La tienda ya registra cada hecho importante (pedidos, pagos, carritos que vencie
 5. **Subir el ticket.** Despacho gratis desde un monto y, en el carrito: *"Te faltan $3.200 para el despacho gratis: ¿agregas filtros?"*. Sugerir el método o filtro de la receta del café que se compra.
 6. **Escasez real.** "Quedan 3" ya existe; sumar "lote de temporada" y "Avísame cuando vuelva" en cafés agotados.
 
+### Estado (9 de noviembre de 2026)
+
+- ✅ **Medición:** Vercel Analytics y embudo anónimo en **Reportes** (vio producto, agregó al carrito, llegó al pago, pagó).
+- ✅ **Carrito abandonado** y **recompra** (configurables en **Configuración → Correos automáticos**; días de recompra ajustables). Una vez por pedido, nunca si el cliente ya volvió a comprar, con enlace "Retomar mi compra" que rearma el carrito y baja en un clic. Resultados (enviados, clics, compras y ventas) en **Reportes**.
+- ✅ **Subir el ticket:** barra de despacho gratis (aparece al definir el monto en Configuración) y hasta 3 sugerencias en el carrito, primero las que completan el despacho gratis.
+- ⏳ Secuencia post-compra, QR de feria y "Avísame cuando vuelva": después del lanzamiento.
+- ⏳ Agentes con IA: después del lanzamiento, cuando haya datos del embudo.
+
 ## Segunda capa: agentes con IA
 
 Regla del PRD: los agentes **sugieren**, una persona **aprueba**. Se conectan a la API de solo lectura `/api/v1` (sin datos personales).
