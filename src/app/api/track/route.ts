@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeSource } from "@/lib/source";
 
 /**
  * Recibe eventos anónimos del embudo de compra (ver src/lib/track.ts).
@@ -47,6 +48,8 @@ export async function POST(request: NextRequest) {
   if (typeof d.items === "number" && Number.isInteger(d.items) && d.items >= 0 && d.items < 100) data.items = d.items;
   if (typeof d.total === "number" && Number.isInteger(d.total) && d.total >= 0 && d.total < 10_000_000) data.total = d.total;
   if (typeof d.origen === "string" && /^[a-z_]{1,20}$/.test(d.origen)) data.origen = d.origen;
+  const fuente = normalizeSource(d.fuente);
+  if (fuente) data.fuente = fuente;
 
   const { error } = await createAdminClient().from("events").insert({ type: body.type, entity: "visitor", entity_id: null, data });
   if (error) console.error("[track]", error.message);

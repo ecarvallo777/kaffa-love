@@ -39,6 +39,8 @@ export type Report = {
   visitors: { viewed: number; added: number; checkout: number };
   /** Correos automáticos: enviados, clics en el enlace y compras posteriores (hasta 7 días después) */
   automations: { kind: "abandono" | "recompra"; sent: number; clicks: number; purchases: number; revenue: number }[];
+  /** Canal de llegada (QR de feria, Instagram, Google…): visitantes y ventas online pagadas */
+  sources: { source: string; visitors: number; orders: number; revenue: number }[];
   customers: { buyers: number; newBuyers: number; returning: number; repeatRate: number | null };
   communes: { name: string; orders: number; revenue: number }[];
   delivery: { retiro: number; despacho: number };
@@ -199,6 +201,38 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
     };
   });
 
+  // Canal de llegada: visitantes por su canal y pedidos pagados según el canal guardado al crearlos
+  const sourceRows = new Map<string, { source: string; visitors: Set<string>; orders: number; revenue: number }>();
+  const sourceRow = (s: string) => {
+    const cur = sourceRows.get(s) ?? { source: s, visitors: new Set<string>(), orders: 0, revenue: 0 };
+    sourceRows.set(s, cur);
+    return cur;
+  };
+  for (const e of events) {
+    if (e.type === "vista_producto" && e.data?.aid) sourceRow(String(e.data.fuente ?? "directo")).visitors.add(String(e.data.aid));
+  }
+  const paidOnline = all.filter((o) => o.channel === "online");
+  const orderSource = new Map<string, string>();
+  for (let i = 0; i < paidOnline.length; i += 200) {
+    const { data } = await db
+      .from("events")
+      .select("entity_id, data")
+      .eq("type", "pedido_creado")
+      .in("entity_id", paidOnline.slice(i, i + 200).map((o) => o.id));
+    for (const e of data ?? []) {
+      const f = (e.data as { fuente?: string } | null)?.fuente;
+      if (e.entity_id && f) orderSource.set(e.entity_id, f);
+    }
+  }
+  for (const o of paidOnline) {
+    const row = sourceRow(orderSource.get(o.id) ?? "directo");
+    row.orders++;
+    row.revenue += o.order_items.reduce((s, i) => s + i.unit_price_clp * i.quantity, 0);
+  }
+  const sources = [...sourceRows.values()]
+    .map((r) => ({ source: r.source, visitors: r.visitors.size, orders: r.orders, revenue: r.revenue }))
+    .sort((a, b) => b.revenue - a.revenue || b.visitors - a.visitors);
+
   // Clientes (tienda online): nuevos = su primera compra pagada cae en el período
   const onlineOrders = all.filter((o) => o.channel === "online" && o.customer_id);
   const buyerIds = [...new Set(onlineOrders.map((o) => o.customer_id!))];
@@ -288,6 +322,7 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
     funnel,
     visitors,
     automations,
+    sources,
     customers: { buyers: buyerIds.length, newBuyers, returning: buyerIds.length - newBuyers, repeatRate: buyerIds.length ? repeaters / buyerIds.length : null },
     communes: [...communes.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 8),
     delivery,

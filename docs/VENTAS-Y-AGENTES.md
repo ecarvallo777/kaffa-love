@@ -42,6 +42,7 @@ Antes de recuperar carritos o pedir recompras, alguien tiene que llegar a la tie
 
 - ✅ **Medición:** Vercel Analytics y embudo anónimo en **Reportes** (vio producto, agregó al carrito, llegó al pago, pagó).
 - ✅ **Carrito abandonado** y **recompra** (configurables en **Configuración → Correos automáticos**; días de recompra ajustables). Una vez por pedido, nunca si el cliente ya volvió a comprar, con enlace "Retomar mi compra" que rearma el carrito y baja en un clic. Resultados (enviados, clics, compras y ventas) en **Reportes**.
+- ✅ **Ventas por canal:** cada visita recuerda por 30 días de dónde llegó (enlace con `?utm_source=`, o Google, Instagram, Facebook o WhatsApp según el sitio de origen) y cada pedido lo guarda. **Reportes → De dónde llegan los clientes** muestra visitantes, pedidos pagados y ventas por canal. Los correos automáticos llegan etiquetados como «Correos».
 - ✅ **Subir el ticket:** barra de despacho gratis (aparece al definir el monto en Configuración) y hasta 3 sugerencias en el carrito, primero las que completan el despacho gratis.
 - ⏳ Secuencia post-compra, QR de feria y "Avísame cuando vuelva": después del lanzamiento.
 - ⏳ Agentes con IA: después del lanzamiento, cuando haya datos del embudo.

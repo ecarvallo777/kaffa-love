@@ -21,7 +21,8 @@ async function eventsFor(aid) {
   // El registro se guarda de forma asÃ­ncrona (sendBeacon): se espera un poco
   for (let i = 0; i < 20; i++) {
     const { data } = await db.from("events").select("type").eq("data->>aid", aid);
-    if (data?.length >= 2) return data.map((e) => e.type);
+    const types = (data ?? []).map((e) => e.type);
+    if (types.includes("vista_producto") && types.includes("agrego_carrito")) return types;
     await sleep(500);
   }
   const { data } = await db.from("events").select("type").eq("data->>aid", aid);

@@ -120,7 +120,7 @@ Se usan dos ramas de git:
 - [ ] **2.5** *(pendiente)* **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
 - [ ] **2.7** *(antes de la fase 6; detalle en `docs/VENTAS-Y-AGENTES.md`, «Capa cero»)* **Para atraer clientes desde el primer día**:
   - Crea el [perfil de empresa en Google](https://business.google.com) con kaffalove.cl como sitio web. Google lo verifica y eso puede tardar días o semanas, así que conviene pedirlo ya.
-  - Encarga tarjetas con un código QR a `https://kaffalove.cl/?utm_source=feria&utm_medium=qr` para el stand y las bolsas.
+  - Encarga tarjetas con un código QR a `https://kaffalove.cl/?utm_source=feria&utm_medium=qr` para el stand y las bolsas. Las ventas que lleguen por ahí se ven en **Reportes → De dónde llegan los clientes**. Para Instagram usa `?utm_source=instagram` en el enlace de la bio.
   - Deja preparado el cambio de la bio de Instagram a kaffalove.cl, para hacerlo el día del lanzamiento.
 
 ---
@@ -216,7 +216,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **7.3** En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
 - [ ] **7.4** Activa los respaldos de Supabase (plan Pro) o exporta la base periódicamente.
 - [ ] **7.5** Cuando tengas el logo y los colores definitivos, se cambian en `src/app/globals.css` y `src/components/wordmark.tsx`.
-- [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md` (feed para Google Shopping e Instagram, descuento de bienvenida del QR, ventas por canal en **Reportes** y pedido de reseñas).
+- [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md` (feed para Google Shopping e Instagram, descuento de bienvenida del QR y pedido de reseñas).
 
 ---
 
@@ -290,6 +290,7 @@ node scripts/e2e/recetas.mjs          # recetas en la administración, receta se
 node scripts/e2e/utilidad.mjs         # costos, utilidad real de feria, reportes, inventario y Nosotros
 node scripts/e2e/envio.mjs            # tarifas XS/S por región en el checkout y en el pedido
 node scripts/e2e/ventas.mjs           # embudo anónimo, sugerencias del carrito, "retomar compra" y baja firmada
+node scripts/e2e/canales.mjs          # canal de llegada (QR de feria) hasta la venta en Reportes
 node scripts/e2e/limpiar.mjs --usuarios
 ```
 

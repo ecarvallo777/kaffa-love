@@ -3,6 +3,7 @@ import Link from "next/link";
 import { clp } from "@/lib/catalog-utils";
 import { fmtDate } from "@/lib/format";
 import { grindLabel } from "@/lib/grinds";
+import { sourceName } from "@/lib/source";
 import { getReport, PERIODS, type Channel, type PeriodKey, type Report } from "@/lib/reports";
 import { Card, PageHeader } from "@/components/admin/ui";
 import { HBars, Legend, StackedColumns, TableView } from "@/components/admin/charts";
@@ -175,6 +176,9 @@ export default async function ReportsPage({ searchParams }: PageProps<"/admin/re
           <Card title="Correos automáticos" className="xl:col-span-3">
             <Automations items={r.automations} />
           </Card>
+          <Card title="De dónde llegan los clientes" className="xl:col-span-3">
+            <Sources items={r.sources} />
+          </Card>
         </div>
       )}
 
@@ -341,6 +345,38 @@ function Automations({ items }: { items: Report["automations"] }) {
   );
 }
 
+function Sources({ items }: { items: Report["sources"] }) {
+  if (!items.length) return <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink-mute">Sin visitas ni ventas online en este período.</p>;
+  return (
+    <div className="overflow-x-auto" data-testid="canales">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs text-ink-mute">
+            <th className="pb-2 font-normal">Canal</th>
+            <th className="pb-2 text-right font-normal">Visitantes</th>
+            <th className="pb-2 text-right font-normal">Pedidos pagados</th>
+            <th className="pb-2 text-right font-normal">Ventas</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {items.map((s) => (
+            <tr key={s.source}>
+              <td className="py-2">{sourceName(s.source)}</td>
+              <td className="py-2 text-right tabular-nums">{s.visitors}</td>
+              <td className="py-2 text-right tabular-nums">{s.orders}</td>
+              <td className="py-2 text-right tabular-nums">{clp(s.revenue)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-3 text-xs text-ink-mute">
+        El canal sale de los enlaces etiquetados (por ejemplo, el QR de feria con <code>?utm_source=feria</code>) o del sitio de donde llegó la persona, y se recuerda por 30 días.
+        Los pedidos anteriores a esta medición aparecen como «Directo o sin dato».
+      </p>
+    </div>
+  );
+}
+
 /** Conclusiones automáticas: lo que conviene mirar o hacer */
 function Insights({ r }: { r: Report }) {
   const out: string[] = [];
@@ -361,6 +397,8 @@ function Insights({ r }: { r: Report }) {
     else if (r.visitors.added >= 10 && r.visitors.checkout / r.visitors.added < 0.4) out.push(`Muchos agregan al carrito pero pocos llegan al pago (${pct(r.visitors.checkout / r.visitors.added)}): el costo de envío suele ser la causa; considera un monto de despacho gratis.`);
   }
   const recovered = r.automations.reduce((s, a) => s + a.revenue, 0);
+  const tagged = r.sources.filter((s) => s.source !== "directo" && s.orders > 0);
+  if (tagged.length) out.push(`${sourceName(tagged[0].source)} es el canal que más vende (${clp(tagged[0].revenue)} en el período): refuérzalo.`);
   if (recovered > 0) out.push(`Los correos automáticos generaron ${clp(recovered)} en ventas en este período.`);
   const losing = r.fairs.filter((f) => f.profit < 0 && f.hasExpenses);
   if (losing.length) out.push(`${losing.map((f) => f.name).join(", ")} dejó pérdida: evalúa si conviene repetir o negociar el stand.`);

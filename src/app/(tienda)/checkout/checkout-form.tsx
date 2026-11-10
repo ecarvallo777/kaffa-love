@@ -13,7 +13,7 @@ import type { CustomerProfile, SavedAddress } from "@/lib/customer-auth";
 import { ProductArt } from "@/components/product-art";
 import { useSyncedCart } from "@/components/use-synced-cart";
 import { placeOrder } from "./actions";
-import { track } from "@/lib/track";
+import { currentSource, track } from "@/lib/track";
 import { parcelSize, rateFor, ratePrice, type CommuneRate } from "@/lib/shipping";
 
 const DRAFT_KEY = "kaffa-checkout-v1";
@@ -137,6 +137,7 @@ export function CheckoutForm({
         name: draft.name,
         phone: draft.phone,
         marketing,
+        source: currentSource(),
         delivery: draft.delivery,
         pickupLocationId: draft.delivery === "retiro" ? draft.pickupLocationId : undefined,
         address:

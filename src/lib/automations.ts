@@ -95,7 +95,7 @@ export function abandonEmail(c: Pick<Customer, "email" | "name">, items: Item[],
       `${name ? `${escapeHtml(name)}, t` : "T"}u café te está esperando`,
       `<p>Dejaste estos productos en tu carrito y no alcanzaste a pagar. Los guardamos para que retomes tu compra con un clic:</p>
 ${itemsTable(items)}
-${button(`${siteUrl()}/carrito/recuperar?pedido=${orderId}&origen=abandono`, "Retomar mi compra")}
+${button(`${siteUrl()}/carrito/recuperar?pedido=${orderId}&origen=abandono&utm_source=correo`, "Retomar mi compra")}
 <p style="color:#8b7c70;font-size:13px">Los precios y el stock se confirman al pagar. Si tuviste algún problema con el pago, responde este correo y te ayudamos.</p>
 ${footer(c.email)}`,
     ),
@@ -106,7 +106,7 @@ export function repurchaseEmail(c: Pick<Customer, "email" | "name">, coffeeItems
   const name = firstName(c);
   const shortName = main.name.split(",")[0];
   const stillSold = main.active && main.visible_online;
-  const more = `<a href="${siteUrl()}/categoria/cafe-de-especialidad" style="color:#b4432c">Mira los cafés de esta temporada</a>`;
+  const more = `<a href="${siteUrl()}/categoria/cafe-de-especialidad?utm_source=correo" style="color:#b4432c">Mira los cafés de esta temporada</a>`;
   return {
     subject: `¿Se te está acabando el ${shortName}?`,
     html: emailLayout(
@@ -114,8 +114,8 @@ export function repurchaseEmail(c: Pick<Customer, "email" | "name">, coffeeItems
       `<p>${name ? `Hola ${escapeHtml(name)}: h` : "H"}ace unas semanas te llevaste:</p>
 ${itemsTable(coffeeItems)}
 <p>Una bolsa de 250 g rinde más o menos ${days} días de café diario. Si quieres repetir, lo dejamos listo con la misma molienda:</p>
-${button(`${siteUrl()}/carrito/recuperar?pedido=${orderId}&origen=recompra`, "Repetir mi pedido")}
-<p>${stillSold ? `¿Quieres probar algo distinto? ${more} o <a href="${siteUrl()}/producto/${main.slug}#receta" style="color:#b4432c">la receta de tu café</a>.` : `${more}.`}</p>
+${button(`${siteUrl()}/carrito/recuperar?pedido=${orderId}&origen=recompra&utm_source=correo`, "Repetir mi pedido")}
+<p>${stillSold ? `¿Quieres probar algo distinto? ${more} o <a href="${siteUrl()}/producto/${main.slug}?utm_source=correo#receta" style="color:#b4432c">la receta de tu café</a>.` : `${more}.`}</p>
 ${footer(c.email)}`,
     ),
   };

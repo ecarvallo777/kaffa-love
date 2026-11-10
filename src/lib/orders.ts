@@ -5,6 +5,7 @@ import { logEvent } from "@/lib/events";
 import { refreshCatalog } from "@/lib/catalog-revalidate";
 import { getSettings, shippingQuote } from "@/lib/settings";
 import { parcelSize } from "@/lib/shipping";
+import { normalizeSource } from "@/lib/source";
 import { REGIONES } from "@/lib/chile";
 import { clp } from "@/lib/catalog-utils";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
@@ -149,6 +150,8 @@ export type CheckoutInput = {
   name: string;
   phone: string;
   marketing: boolean;
+  /** Canal de llegada del visitante (ver src/lib/source.ts) */
+  source?: string | null;
   delivery: "retiro" | "despacho";
   pickupLocationId?: string;
   address?: {
@@ -303,6 +306,7 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
     channel: "online",
     total_clp: order.total_clp,
     delivery: input.delivery,
+    fuente: normalizeSource(input.source) ?? "directo",
     items: priced.lines.map((l) => ({ product_id: l.product.id, qty: l.qty, grind: l.grind })),
   });
 
