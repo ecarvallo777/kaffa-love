@@ -120,7 +120,7 @@ Se usan dos ramas de git:
 - [ ] **2.5** *(pendiente)* **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
 - [ ] **2.7** *(antes de la fase 6; detalle en `docs/VENTAS-Y-AGENTES.md`, «Capa cero»)* **Para atraer clientes desde el primer día**:
   - Crea el [perfil de empresa en Google](https://business.google.com) con kaffalove.cl como sitio web. Google lo verifica y eso puede tardar días o semanas, así que conviene pedirlo ya.
-  - Encarga tarjetas con un código QR a `https://kaffalove.cl/?utm_source=feria&utm_medium=qr` para el stand y las bolsas. Las ventas que lleguen por ahí se ven en **Reportes → De dónde llegan los clientes**. Para Instagram usa `?utm_source=instagram` en el enlace de la bio.
+  - Encarga tarjetas con un código QR a `https://kaffalove.cl/?utm_source=feria&utm_medium=qr` para el stand y las bolsas. Quien lo escanea ve el aviso de **10 % en su primera compra online**, que el pago descuenta solo. Las ventas que lleguen por ahí se ven en **Reportes → De dónde llegan los clientes**. Para Instagram usa `?utm_source=instagram` en el enlace de la bio.
   - Deja preparado el cambio de la bio de Instagram a kaffalove.cl, para hacerlo el día del lanzamiento.
 
 ---
@@ -170,7 +170,7 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 - [x] **5.2** Administración: prepara, despacha (con número de seguimiento) y entrega un pedido. Cancela otro y revisa que el stock vuelva.
 - [x] **5.3** ~~Carga una compra con la plantilla Excel (**Cargar compras**).~~ *Reemplazado (8 de noviembre de 2026) por **Inventario**: conteo de lo que hay en la bodega o registro de mercadería recibida.*
 - [x] **5.4** Revisa la tienda desde tu celular: portada, ficha, carrito, checkout y página del pedido.
-- [ ] **5.5** Legal: un asesor revisa **términos**, **cambios y devoluciones** (plazo actual: 10 días) y **privacidad** (`src/app/(tienda)/legal/`).
+- [ ] **5.5** Legal: un asesor revisa **términos** (incluye las condiciones del descuento de bienvenida del QR), **cambios y devoluciones** (plazo actual: 10 días) y **privacidad** (`src/app/(tienda)/legal/`).
 - [ ] **5.6** El contador confirma la configuración de boletas en Mercado Pago (online y Point).
 - [ ] **5.7** Si cambiaste algo en el código, pásalo a producción: `git push origin master:main`.
 
@@ -221,7 +221,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
   - **Tienda de Instagram:** en el Administrador de ventas de Meta crea un catálogo con la fuente `https://kaffalove.cl/feed/productos.xml?canal=instagram`.
   - El feed ya está listo y se actualiza solo. **Solo incluye productos con foto** (Google y Meta rechazan los que no tienen), así que antes sube las fotos (paso 2.4).
   - **Reseñas:** el correo ya está listo. Pega el enlace de reseñas de tu perfil de Google en **Configuración → Correos automáticos**.
-  - Falta programar el **descuento de bienvenida del QR**, cuando decidas el monto y las condiciones.
+  - **Descuento de bienvenida del QR:** listo, 10 % en la primera compra online. Se cambia o se desactiva en **Configuración → Bienvenida del QR de feria**.
 
 ---
 
@@ -298,6 +298,7 @@ node scripts/e2e/ventas.mjs           # embudo anónimo, sugerencias del carrito
 node scripts/e2e/canales.mjs          # canal de llegada (QR de feria) hasta la venta en Reportes
 node scripts/e2e/feed.mjs             # feed de productos para Google Shopping e Instagram
 node scripts/e2e/resenas.mjs          # enlace de reseñas en Configuración y tarea periódica
+node scripts/e2e/bienvenida.mjs       # 10 % de bienvenida del QR: aviso, checkout, cobro y segunda compra sin descuento
 node scripts/e2e/limpiar.mjs --usuarios
 ```
 

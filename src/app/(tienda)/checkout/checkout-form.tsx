@@ -15,6 +15,7 @@ import { useSyncedCart } from "@/components/use-synced-cart";
 import { placeOrder } from "./actions";
 import { currentSource, track } from "@/lib/track";
 import { parcelSize, rateFor, ratePrice, type CommuneRate } from "@/lib/shipping";
+import { WELCOME_SOURCE, welcomeDiscount } from "@/lib/welcome";
 
 const DRAFT_KEY = "kaffa-checkout-v1";
 
@@ -63,6 +64,7 @@ export function CheckoutForm({
   rates,
   communeRates,
   freeShippingFromClp,
+  welcomePct,
   profile,
 }: {
   catalog: Catalog;
@@ -70,6 +72,7 @@ export function CheckoutForm({
   rates: ShippingRate[];
   communeRates: CommuneRate[];
   freeShippingFromClp: number | null;
+  welcomePct: number;
   profile: CustomerProfile | null;
 }) {
   const { lines, notices } = useSyncedCart(catalog);
@@ -110,7 +113,16 @@ export function CheckoutForm({
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
 
-  const subtotal = lines.reduce((s, l) => s + l.priceClp * l.qty, 0);
+  // Bienvenida del QR de feria: se lee del navegador después de cargar (evita diferencias con el servidor)
+  const [welcome, setWelcome] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lectura única desde localStorage
+    setWelcome(welcomePct > 0 && currentSource() === WELCOME_SOURCE);
+  }, [welcomePct]);
+
+  const itemsTotal = lines.reduce((s, l) => s + l.priceClp * l.qty, 0);
+  const discount = welcome ? welcomeDiscount(lines, welcomePct) : 0;
+  const subtotal = itemsTotal - discount;
 
   // Medición: inició el checkout (una vez por visita, con productos en el carrito)
   const tracked = useRef(false);
@@ -138,6 +150,7 @@ export function CheckoutForm({
         phone: draft.phone,
         marketing,
         source: currentSource(),
+        welcome,
         delivery: draft.delivery,
         pickupLocationId: draft.delivery === "retiro" ? draft.pickupLocationId : undefined,
         address:
@@ -158,6 +171,7 @@ export function CheckoutForm({
         clearCart();
         window.location.assign(res.redirectTo);
       } else {
+        if (res.code === "bienvenida_usada") setWelcome(false);
         setErrors(res.errors);
         requestAnimationFrame(() => errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
       }
@@ -343,8 +357,17 @@ export function CheckoutForm({
         <dl className="mt-6 space-y-2 border-t border-line pt-5 text-sm">
           <div className="flex justify-between">
             <dt className="text-ink-soft">Productos</dt>
-            <dd className="tabular-nums">{clp(subtotal)}</dd>
+            <dd className="tabular-nums">{clp(itemsTotal)}</dd>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-leaf" data-testid="bienvenida">
+              <dt>
+                Bienvenida de la feria (−{welcomePct} %)
+                <span className="block text-xs text-ink-mute">Solo en tu primera compra online</span>
+              </dt>
+              <dd className="tabular-nums">−{clp(discount)}</dd>
+            </div>
+          )}
           <div className="flex justify-between">
             <dt className="text-ink-soft">{draft.delivery === "retiro" ? "Retiro" : "Despacho"}</dt>
             <dd className="tabular-nums">

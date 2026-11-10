@@ -6,6 +6,7 @@ import { refreshCatalog } from "@/lib/catalog-revalidate";
 import { getSettings, shippingQuote } from "@/lib/settings";
 import { parcelSize } from "@/lib/shipping";
 import { normalizeSource } from "@/lib/source";
+import { WELCOME_SOURCE, welcomeUnitPrice } from "@/lib/welcome";
 import { REGIONES } from "@/lib/chile";
 import { clp } from "@/lib/catalog-utils";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
@@ -152,6 +153,8 @@ export type CheckoutInput = {
   marketing: boolean;
   /** Canal de llegada del visitante (ver src/lib/source.ts) */
   source?: string | null;
+  /** El checkout mostró el descuento de bienvenida del QR de feria */
+  welcome?: boolean;
   delivery: "retiro" | "despacho";
   pickupLocationId?: string;
   address?: {
@@ -167,7 +170,7 @@ export type CheckoutInput = {
 
 export type CheckoutResult =
   | { ok: true; orderId: string; orderNumber: number; totalClp: number }
-  | { ok: false; errors: string[] };
+  | { ok: false; errors: string[]; code?: "bienvenida_usada" };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -200,6 +203,37 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
 
   const db = createAdminClient();
   const email = input.email.trim().toLowerCase();
+
+  // Descuento de bienvenida (QR de feria): solo en la primera compra online del correo
+  let welcomeDiscountClp = 0;
+  if (input.welcome) {
+    const pct = (await getSettings()).welcomePct;
+    if (pct > 0 && normalizeSource(input.source) === WELCOME_SOURCE) {
+      const { data: prev } = await db.from("customers").select("id").eq("email", email).maybeSingle();
+      const { count } = prev
+        ? await db
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .eq("customer_id", prev.id)
+            .eq("channel", "online")
+            .in("status", ["pagado", "en_preparacion", "despachado", "listo_retiro", "entregado"])
+        : { count: 0 };
+      if ((count ?? 0) > 0) {
+        return {
+          ok: false,
+          code: "bienvenida_usada",
+          errors: ["El descuento de bienvenida es para la primera compra online y este correo ya compró antes. Revisa el total y vuelve a pagar."],
+        };
+      }
+      const lines = priced.lines.map((l) => {
+        const unitPriceClp = welcomeUnitPrice(l.unitPriceClp, pct);
+        return { ...l, unitPriceClp, totalClp: unitPriceClp * l.qty };
+      });
+      const subtotal = lines.reduce((s, l) => s + l.totalClp, 0);
+      welcomeDiscountClp = priced.subtotal - subtotal;
+      priced = { ...priced, lines, subtotal };
+    }
+  }
 
   // Entrega
   let shippingClp = 0;
@@ -307,6 +341,7 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
     total_clp: order.total_clp,
     delivery: input.delivery,
     fuente: normalizeSource(input.source) ?? "directo",
+    ...(welcomeDiscountClp ? { descuento_bienvenida: welcomeDiscountClp } : {}),
     items: priced.lines.map((l) => ({ product_id: l.product.id, qty: l.qty, grind: l.grind })),
   });
 

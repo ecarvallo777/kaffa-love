@@ -53,6 +53,8 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
     return { error: "Los días para el recordatorio de recompra deben estar entre 5 y 90." };
   }
 
+  const welcomePct = Number(form.get("welcomePct"));
+  if (!Number.isInteger(welcomePct) || welcomePct < 0 || welcomePct > 50) return { error: "El descuento de bienvenida debe ser un porcentaje entero entre 0 y 50." };
   const reviewUrl = String(form.get("reviewUrl") ?? "").trim();
   if (reviewUrl && !/^https:\/\/\S+$/.test(reviewUrl)) return { error: "El enlace para reseñas debe empezar con https://" };
 
@@ -74,6 +76,7 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
       repurchaseDays,
       emailReview: form.get("emailReview") === "on",
       reviewUrl,
+      welcomePct,
     });
   } catch (e) {
     return { error: (e as Error).message };

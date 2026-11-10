@@ -5,7 +5,7 @@ import { startPayment } from "@/lib/payments";
 
 export type PlaceOrderResult =
   | { ok: true; redirectTo: string }
-  | { ok: false; errors: string[] };
+  | { ok: false; errors: string[]; code?: "bienvenida_usada" };
 
 export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult> {
   try {

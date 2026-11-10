@@ -103,6 +103,17 @@ export default async function SettingsPage() {
             </Field>
           </div>
         </Card>
+        <Card title="Bienvenida del QR de feria">
+          <p className="mb-4 text-sm text-ink-soft">
+            Quien llega escaneando el QR de la feria (<code>kaffalove.cl/?utm_source=feria</code>) ve este descuento en el carrito y en el pago. Se aplica
+            solo si su correo no tiene compras online anteriores. Ponlo en 0 para desactivarlo.
+          </p>
+          <div className="max-w-xs">
+            <Field label="Descuento en la primera compra online (%)">
+              <input name="welcomePct" type="number" min={0} max={50} defaultValue={s.welcomePct} className={field} />
+            </Field>
+          </div>
+        </Card>
         <Card title="Correos automáticos">
           <p className="mb-4 text-sm text-ink-soft">
             Solo se envían a clientes que aceptaron recibir novedades, una vez por pedido y nunca si ya volvieron a comprar. Cada correo

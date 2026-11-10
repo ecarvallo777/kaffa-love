@@ -35,6 +35,7 @@ async function Checkout() {
       rates={settings.shippingRates.filter((r) => r.enabled)}
       communeRates={settings.communeRates}
       freeShippingFromClp={settings.freeShippingFromClp}
+      welcomePct={settings.welcomePct}
       profile={profile}
     />
   );

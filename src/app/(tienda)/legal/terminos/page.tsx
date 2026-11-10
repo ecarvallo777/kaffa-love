@@ -21,6 +21,18 @@ export default async function TermsPage() {
         <li>La disponibilidad depende del stock al momento de pagar. Si un producto se agota mientras compras, te avisaremos antes del pago.</li>
       </ul>
 
+      {s.welcomePct > 0 && (
+        <>
+          <h2>Descuento de bienvenida de la feria</h2>
+          <p>
+            Si llegas a la tienda escaneando el código QR de nuestro stand o de nuestras bolsas, tienes {s.welcomePct} % de descuento sobre el precio
+            de los productos en tu primera compra online. Se aplica una vez por correo electrónico, solo si ese correo no tiene compras online
+            anteriores, no incluye el despacho y no es canjeable por dinero. El descuento se muestra antes de pagar. Vigente mientras se informe en
+            este sitio.
+          </p>
+        </>
+      )}
+
       <h2>Pago</h2>
       <p>
         Los pagos se procesan a través de Mercado Pago. Kaffa Love no recibe ni almacena los datos de tu tarjeta. Un pedido se confirma solo

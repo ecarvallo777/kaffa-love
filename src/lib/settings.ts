@@ -47,6 +47,8 @@ export type Settings = {
   emailReview: boolean;
   /** Enlace para dejar la reseña (perfil de empresa en Google); sin enlace no se envía */
   reviewUrl: string;
+  /** % de descuento en la primera compra online para quien llega por el QR de feria (0 = sin descuento) */
+  welcomePct: number;
 };
 
 const BUCKET = "config";
@@ -91,6 +93,7 @@ export const DEFAULT_SETTINGS: Settings = {
   repurchaseDays: 18,
   emailReview: true,
   reviewUrl: "",
+  welcomePct: 10,
 };
 
 export async function getSettings(): Promise<Settings> {
