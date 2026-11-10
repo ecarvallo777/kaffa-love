@@ -198,7 +198,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **6.7** Actualiza en cron-job.org la URL a `https://kaffalove.cl/api/cron/expirar-reservas` y el secreto al `CRON_SECRET` de **Production**.
 
 - [ ] **6.7b** En Vercel, pestaña **Analytics → Enable** (Web Analytics, plan gratis). Mide visitas y páginas; el embudo de compra (vio producto → agregó al carrito → llegó al pago) se ve en **Reportes** sin hacer nada.
-- [ ] **6.7c** Revisa en **Configuración → Correos automáticos** que «Carrito abandonado» y «Recompra» estén como quieres. Solo **Production** los envía (la base de datos es compartida y el sitio de pruebas mandaría enlaces que no son kaffalove.cl); para probarlos en otro entorno, define `AUTOMATION_EMAILS=on` en ese entorno. Van solo a clientes que aceptaron novedades e incluyen un enlace de baja.
+- [ ] **6.7c** Revisa en **Configuración → Correos automáticos** que «Carrito abandonado», «Recompra» y «Pedido de reseña» estén como quieres. El de reseña necesita el **enlace para dejar la reseña** de tu perfil de Google (paso 2.7); sin él no se envía. Solo **Production** los envía (la base de datos es compartida y el sitio de pruebas mandaría enlaces que no son kaffalove.cl); para probarlos en otro entorno, define `AUTOMATION_EMAILS=on` en ese entorno. Van solo a clientes que aceptaron novedades e incluyen un enlace de baja.
 
 **Verificación inmediata**
 
@@ -220,7 +220,8 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
   - **Google Shopping gratis:** en [Merchant Center](https://merchants.google.com) agrega kaffalove.cl, verifica el sitio y en *Productos → Fuentes* agrega el feed programado `https://kaffalove.cl/feed/productos.xml` (diario).
   - **Tienda de Instagram:** en el Administrador de ventas de Meta crea un catálogo con la fuente `https://kaffalove.cl/feed/productos.xml?canal=instagram`.
   - El feed ya está listo y se actualiza solo. **Solo incluye productos con foto** (Google y Meta rechazan los que no tienen), así que antes sube las fotos (paso 2.4).
-  - Falta programar: descuento de bienvenida del QR y pedido de reseñas.
+  - **Reseñas:** el correo ya está listo. Pega el enlace de reseñas de tu perfil de Google en **Configuración → Correos automáticos**.
+  - Falta programar el **descuento de bienvenida del QR**, cuando decidas el monto y las condiciones.
 
 ---
 
@@ -296,6 +297,7 @@ node scripts/e2e/envio.mjs            # tarifas XS/S por región en el checkout 
 node scripts/e2e/ventas.mjs           # embudo anónimo, sugerencias del carrito, "retomar compra" y baja firmada
 node scripts/e2e/canales.mjs          # canal de llegada (QR de feria) hasta la venta en Reportes
 node scripts/e2e/feed.mjs             # feed de productos para Google Shopping e Instagram
+node scripts/e2e/resenas.mjs          # enlace de reseñas en Configuración y tarea periódica
 node scripts/e2e/limpiar.mjs --usuarios
 ```
 

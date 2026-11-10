@@ -53,6 +53,9 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
     return { error: "Los días para el recordatorio de recompra deben estar entre 5 y 90." };
   }
 
+  const reviewUrl = String(form.get("reviewUrl") ?? "").trim();
+  if (reviewUrl && !/^https:\/\/\S+$/.test(reviewUrl)) return { error: "El enlace para reseñas debe empezar con https://" };
+
   try {
     await saveSettings({
       ...current,
@@ -69,6 +72,8 @@ export async function saveStoreSettings(_prev: ActionResult, form: FormData): Pr
       emailAbandonedCart: form.get("emailAbandonedCart") === "on",
       emailRepurchase: form.get("emailRepurchase") === "on",
       repurchaseDays,
+      emailReview: form.get("emailReview") === "on",
+      reviewUrl,
     });
   } catch (e) {
     return { error: (e as Error).message };

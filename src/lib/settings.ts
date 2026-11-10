@@ -43,6 +43,10 @@ export type Settings = {
   emailRepurchase: boolean;
   /** Días después de la compra para el correo de recompra */
   repurchaseDays: number;
+  /** Correo pidiendo una reseña una semana después de comprar (solo a quien aceptó novedades) */
+  emailReview: boolean;
+  /** Enlace para dejar la reseña (perfil de empresa en Google); sin enlace no se envía */
+  reviewUrl: string;
 };
 
 const BUCKET = "config";
@@ -85,6 +89,8 @@ export const DEFAULT_SETTINGS: Settings = {
   emailRepurchase: true,
   // Una bolsa de 250 g dura unas 2 a 3 semanas
   repurchaseDays: 18,
+  emailReview: true,
+  reviewUrl: "",
 };
 
 export async function getSettings(): Promise<Settings> {

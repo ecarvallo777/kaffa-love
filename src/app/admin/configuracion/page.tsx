@@ -129,12 +129,24 @@ export default async function SettingsPage() {
               <input name="repurchaseDays" type="number" min={5} max={90} defaultValue={s.repurchaseDays} className={field} />
             </Field>
           </div>
+          <label className="mt-5 flex items-start gap-3">
+            <input type="checkbox" name="emailReview" defaultChecked={s.emailReview} className="mt-1 size-4 accent-accent" />
+            <span>
+              <span className="font-medium">Pedido de reseña</span>
+              <span className="block text-sm text-ink-soft">Una semana después de pagar, le pedimos que cuente cómo le fue con una reseña. Como máximo una vez cada 90 días por cliente.</span>
+            </span>
+          </label>
+          <div className="mt-4">
+            <Field label="Enlace para dejar la reseña" hint="En tu perfil de empresa de Google: «Pedir reseñas» → copia el enlace. Sin enlace, este correo no se envía.">
+              <input name="reviewUrl" type="url" placeholder="https://g.page/r/…/review" defaultValue={s.reviewUrl} className={field} />
+            </Field>
+          </div>
         </Card>
         <button className={btn.primary}>Guardar configuración</button>
       </ActionForm>
       <Card title="Ver los correos automáticos" className="mt-6">
         <p className="mb-4 text-sm text-ink-soft">
-          Te enviamos un ejemplo de cada uno (carrito abandonado y recompra), armado con el último pedido online con café. No se envía nada a
+          Te enviamos un ejemplo de cada uno (carrito abandonado, recompra y reseña), armado con el último pedido online con café. No se envía nada a
           clientes.
         </p>
         <ActionForm action={sendSampleEmails} className="flex flex-wrap items-end gap-3">

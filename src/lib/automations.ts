@@ -14,6 +14,7 @@ import type { Grind } from "@/lib/catalog-types";
  * Correos automáticos para vender más (docs/VENTAS-Y-AGENTES.md):
  *  - Carrito abandonado: reserva vencida sin pago → "tu café te está esperando".
  *  - Recompra: N días después de comprar café → "¿se te está acabando?".
+ *  - Reseña: una semana después de pagar → "¿cómo estuvo tu café?" (enlace de Google).
  * Solo a clientes que aceptaron novedades, una vez por pedido, sin insistir:
  * no se envían si el cliente ya compró después, y hay un mínimo de días entre correos.
  * Los ejecuta la tarea periódica (/api/cron/expirar-reservas).
@@ -121,6 +122,22 @@ ${footer(c.email)}`,
   };
 }
 
+export function reviewEmail(c: Pick<Customer, "email" | "name">, items: Item[], reviewUrl: string) {
+  const name = firstName(c);
+  return {
+    subject: "¿Cómo estuvo tu café?",
+    html: emailLayout(
+      `${name ? `${escapeHtml(name)}, ¿c` : "¿C"}ómo estuvo tu café?`,
+      `<p>Hace unos días recibiste tu pedido de Kaffa Love:</p>
+${itemsTable(items)}
+<p>Somos un tostador pequeño y tu opinión nos ayuda mucho a que más gente nos encuentre. ¿Nos dejas una reseña? Toma menos de un minuto.</p>
+${button(escapeHtml(reviewUrl), "Dejar mi reseña")}
+<p style="color:#8b7c70;font-size:13px">Si algo no salió bien, responde este correo y lo solucionamos.</p>
+${footer(c.email)}`,
+    ),
+  };
+}
+
 /** Envía un ejemplo de cada correo (con el último pedido online real que tenga café) a `to` */
 export async function sendAutomationSamples(to: string, name: string | null) {
   const db = createAdminClient();
@@ -140,7 +157,11 @@ export async function sendAutomationSamples(to: string, name: string | null) {
   const items = order.order_items as Item[];
   const coffeeItems = items.filter((i) => coffeeById.has(i.product_id));
   const who = { email: to, name };
-  const mails = [abandonEmail(who, items, order.id), repurchaseEmail(who, coffeeItems, order.id, coffeeById.get(coffeeItems[0].product_id)!, settings.repurchaseDays)];
+  const mails = [
+    abandonEmail(who, items, order.id),
+    repurchaseEmail(who, coffeeItems, order.id, coffeeById.get(coffeeItems[0].product_id)!, settings.repurchaseDays),
+    reviewEmail(who, items, settings.reviewUrl || `${siteUrl()}/?falta=enlace-de-resenas`),
+  ];
   for (const m of mails) {
     const ok = await sendEmail({ to, subject: `[Ejemplo] ${m.subject}`, html: m.html });
     if (!ok) return { error: "No se pudo enviar: revisa RESEND_API_KEY y EMAIL_FROM en este entorno." };
@@ -216,6 +237,38 @@ export async function runRepurchaseEmails() {
     const ok = await sendEmail({ to: c.email, ...repurchaseEmail(c, coffeeItems, o.id, coffeeById.get(coffeeItems[0].product_id)!, days) });
     if (!ok) break;
     await logEvent("correo_recompra", "order", o.id, { customer_id: o.customer_id, pedido: o.number, dias: days });
+    sent++;
+  }
+  return sent;
+}
+
+// Reseñas --------------------------------------------------------------------------------
+
+export async function runReviewEmails() {
+  const settings = await getSettings();
+  if (!automationsActive() || !settings.emailReview || !settings.reviewUrl) return 0;
+  const now = Date.now();
+  const { data } = await createAdminClient()
+    .from("orders")
+    .select(ORDER_SELECT)
+    .eq("channel", "online")
+    .in("status", ["despachado", "listo_retiro", "entregado"])
+    .eq("customers.marketing_consent", true)
+    .gte("paid_at", new Date(now - 12 * DAY).toISOString())
+    .lte("paid_at", new Date(now - 7 * DAY).toISOString())
+    .order("paid_at")
+    .limit(100);
+
+  let sent = 0;
+  for (const o of (data ?? []) as unknown as Row[]) {
+    if (sent >= MAX_PER_RUN) break;
+    if (!o.order_items.length) continue;
+    if (await alreadyContacted("correo_resena", o.id, o.customer_id, 90)) continue;
+
+    const c = o.customers;
+    const ok = await sendEmail({ to: c.email, ...reviewEmail(c, o.order_items, settings.reviewUrl) });
+    if (!ok) break;
+    await logEvent("correo_resena", "order", o.id, { customer_id: o.customer_id, pedido: o.number });
     sent++;
   }
   return sent;

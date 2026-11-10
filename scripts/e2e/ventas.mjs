@@ -52,6 +52,16 @@ try {
     .lte("paid_at", new Date(now - 18 * 86400_000).toISOString())
     .limit(5);
   assert(!q2.error, `consulta de recompra vÃ¡lida${q2.error ? `: ${q2.error.message}` : ""}`);
+  const q4 = await db
+    .from("orders")
+    .select(ORDER_SELECT)
+    .eq("channel", "online")
+    .in("status", ["despachado", "listo_retiro", "entregado"])
+    .eq("customers.marketing_consent", true)
+    .gte("paid_at", new Date(now - 12 * 86400_000).toISOString())
+    .lte("paid_at", new Date(now - 7 * 86400_000).toISOString())
+    .limit(5);
+  assert(!q4.error, `consulta de pedido de reseñas válida${q4.error ? `: ${q4.error.message}` : ""}`);
   assert((q1.data ?? []).every((o) => o.customers.marketing_consent), "solo trae clientes que aceptaron novedades");
   const q3 = await db.from("events").select("id", { count: "exact", head: true }).eq("type", "correo_abandono").eq("data->>customer_id", crypto.randomUUID());
   assert(!q3.error, "consulta de correos ya enviados vÃ¡lida");
