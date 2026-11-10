@@ -4,6 +4,31 @@
 
 La tienda ya registra cada hecho importante (pedidos, pagos, carritos que vencieron, ventas de feria), conoce a sus clientes (con consentimiento de novedades) y tiene recetas por café. Eso es la materia prima para vender más. Dos capas: **automatizaciones simples** (sin IA) y **agentes con IA** encima.
 
+## Capa cero: atraer clientes nuevos
+
+Antes de recuperar carritos o pedir recompras, alguien tiene que llegar a la tienda y confiar en ella. Para una tostadora que ya vende en ferias, en orden de impacto:
+
+1. **De la feria a la tienda online (lo primero).** La feria es el mejor canal: la gente prueba el café y le gusta, pero la venta termina en el stand.
+   - **Tarjeta con QR** en cada bolsa y en el stand, con descuento en la primera compra online.
+   - **Automatización:** al usar el código, el cliente recibe una bienvenida y queda dentro de recompra y carrito abandonado.
+   - **Automatización:** publicar cada semana "dónde estaremos este fin de semana", armado desde las jornadas de feria ya cargadas.
+2. **Que Google te encuentre (gratis y acumulativo).**
+   - **Google Shopping gratis (Merchant Center):** feed de productos generado solo desde el catálogo.
+   - **Perfil de empresa en Google**, con fotos y reseñas.
+   - **Recetas como páginas propias:** responden lo que la gente busca ("cómo preparar café en V60", "molienda para prensa francesa").
+   - **Agente de SEO:** cada semana revisa las búsquedas en Search Console y propone qué guía o receta escribir; una persona aprueba.
+3. **Instagram con constancia, sin que consuma el día.**
+   - **El mismo feed del catálogo para la tienda de Instagram**, así los posts tienen etiquetas de producto.
+   - **Agente de contenido:** redacta posts e historias desde las notas de cata, los lotes nuevos, las recetas y la agenda de ferias; una persona revisa y publica.
+4. **Que los clientes traigan clientes.**
+   - **Pedido automático de reseñas** unos días después de la entrega, en Google y en la ficha del producto.
+   - **Referidos:** "regala $3.000 y recibe $3.000", con un enlace propio para cada cliente.
+5. **Publicidad pagada (después, con datos).** Con poco presupuesto en Meta: remarketing a quien vio un producto y no compró, y anuncios del catálogo en Santiago. No antes de tener datos del embudo.
+
+**Medición:** cada canal con su enlace etiquetado (QR de feria, Instagram, Google), para que **Reportes** muestre de dónde viene cada venta.
+
+**Primer mes después del lanzamiento:** QR de feria con bienvenida, Google Shopping gratis y perfil de Google, pedido de reseñas y enlaces etiquetados. Todo gratis. Los agentes de contenido y SEO vienen después, cuando haya un ritmo.
+
 ## Primera capa: automatizaciones de alto impacto
 
 1. **Recompra (la más importante).** Una bolsa de 250 g dura unas 2 a 3 semanas. A los ~18 días de cada compra: *"¿Se te está acabando el Caicedo? Repítelo con un clic"*, con enlace a "volver a comprar".
@@ -20,6 +45,7 @@ La tienda ya registra cada hecho importante (pedidos, pagos, carritos que vencie
 - ✅ **Subir el ticket:** barra de despacho gratis (aparece al definir el monto en Configuración) y hasta 3 sugerencias en el carrito, primero las que completan el despacho gratis.
 - ⏳ Secuencia post-compra, QR de feria y "Avísame cuando vuelva": después del lanzamiento.
 - ⏳ Agentes con IA: después del lanzamiento, cuando haya datos del embudo.
+- ⏳ Capa cero (atraer clientes): primer mes después del lanzamiento.
 
 ## Segunda capa: agentes con IA
 
