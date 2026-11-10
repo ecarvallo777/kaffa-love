@@ -216,7 +216,11 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **7.3** En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
 - [ ] **7.4** Activa los respaldos de Supabase (plan Pro) o exporta la base periódicamente.
 - [ ] **7.5** Cuando tengas el logo y los colores definitivos, se cambian en `src/app/globals.css` y `src/components/wordmark.tsx`.
-- [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md` (feed para Google Shopping e Instagram, descuento de bienvenida del QR y pedido de reseñas).
+- [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md`.
+  - **Google Shopping gratis:** en [Merchant Center](https://merchants.google.com) agrega kaffalove.cl, verifica el sitio y en *Productos → Fuentes* agrega el feed programado `https://kaffalove.cl/feed/productos.xml` (diario).
+  - **Tienda de Instagram:** en el Administrador de ventas de Meta crea un catálogo con la fuente `https://kaffalove.cl/feed/productos.xml?canal=instagram`.
+  - El feed ya está listo y se actualiza solo. **Solo incluye productos con foto** (Google y Meta rechazan los que no tienen), así que antes sube las fotos (paso 2.4).
+  - Falta programar: descuento de bienvenida del QR y pedido de reseñas.
 
 ---
 
@@ -291,6 +295,7 @@ node scripts/e2e/utilidad.mjs         # costos, utilidad real de feria, reportes
 node scripts/e2e/envio.mjs            # tarifas XS/S por región en el checkout y en el pedido
 node scripts/e2e/ventas.mjs           # embudo anónimo, sugerencias del carrito, "retomar compra" y baja firmada
 node scripts/e2e/canales.mjs          # canal de llegada (QR de feria) hasta la venta en Reportes
+node scripts/e2e/feed.mjs             # feed de productos para Google Shopping e Instagram
 node scripts/e2e/limpiar.mjs --usuarios
 ```
 
