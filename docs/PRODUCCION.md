@@ -118,6 +118,10 @@ Se usan dos ramas de git:
 - [ ] **2.4** *(pendiente: se completa antes de la fase 6)* **Productos**: completa las fichas de los cafés (proceso, variedad y notas de cata; a La Betania le faltan las notas) y sube fotos si ya las tienes.
 - [ ] **2.6** *(pendiente: antes de la fase 6)* **Costos y comisiones**: ingresa el costo unitario neto de cada producto (**Productos**) y las comisiones de Mercado Pago para feria y tienda (**Configuración → Impuestos y comisiones**). Sin esto, la utilidad de **Ferias** y **Reportes** sale más alta de lo real.
 - [ ] **2.5** *(pendiente)* **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
+- [ ] **2.7** *(antes de la fase 6; detalle en `docs/VENTAS-Y-AGENTES.md`, «Capa cero»)* **Para atraer clientes desde el primer día**:
+  - Crea el [perfil de empresa en Google](https://business.google.com) con kaffalove.cl como sitio web. Google lo verifica y eso puede tardar días o semanas, así que conviene pedirlo ya.
+  - Encarga tarjetas con un código QR a `https://kaffalove.cl/?utm_source=feria&utm_medium=qr` para el stand y las bolsas.
+  - Deja preparado el cambio de la bio de Instagram a kaffalove.cl, para hacerlo el día del lanzamiento.
 
 ---
 
@@ -212,6 +216,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **7.3** En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
 - [ ] **7.4** Activa los respaldos de Supabase (plan Pro) o exporta la base periódicamente.
 - [ ] **7.5** Cuando tengas el logo y los colores definitivos, se cambian en `src/app/globals.css` y `src/components/wordmark.tsx`.
+- [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md` (feed para Google Shopping e Instagram, descuento de bienvenida del QR, ventas por canal en **Reportes** y pedido de reseñas).
 
 ---
 
