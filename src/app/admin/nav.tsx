@@ -11,6 +11,7 @@ const ITEMS = [
   ["/admin/recetas", "Recetas"],
   ["/admin/stock", "Stock"],
   ["/admin/inventario", "Inventario"],
+  ["/admin/compras", "Compras"],
   ["/admin/ferias", "Ferias"],
   ["/admin/retiro", "Lugares de retiro"],
   ["/admin/configuracion", "Configuración"],

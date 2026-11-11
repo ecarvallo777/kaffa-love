@@ -57,6 +57,8 @@ export const EVENT_LABELS: Record<string, string> = {
   jornada_cerrada: "Jornada cerrada",
   stock_ajustado: "Stock ajustado",
   compra_cargada: "Compra cargada",
+  factura_leida: "Factura de compra leída",
+  compra_registrada: "Compra registrada desde factura",
   producto_creado: "Producto creado",
   producto_editado: "Producto editado",
   receta_creada: "Receta creada",
