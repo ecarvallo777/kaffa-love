@@ -83,8 +83,9 @@ export default async function SettingsPage() {
         </Card>
         <Card title="Impuestos y comisiones">
           <p className="mb-4 text-sm text-ink-soft">
-            Se usan para calcular la utilidad real de cada feria y de la tienda. Revisa las comisiones en tu cuenta de Mercado Pago
-            (incluye el IVA de la comisión si corresponde).
+            Se usan para calcular la utilidad real de cada feria y de la tienda. Revisa las comisiones en tu cuenta de Mercado Pago e
+            ingrésalas <b>sin IVA</b> (netas), igual que los costos: el IVA de la comisión se recupera como crédito fiscal. Si la tasa
+            ya incluye IVA, divídela por 1,19.
           </p>
           {(s.mpFeriaPct === 0 || s.mpTiendaPct === 0) && (
             <p className="mb-4 rounded-xl bg-crema/15 px-3 py-2 text-sm text-[#8a5a1c]">
@@ -95,10 +96,10 @@ export default async function SettingsPage() {
             <Field label="IVA (%)" hint="Incluido en los precios.">
               <input name="ivaPct" inputMode="decimal" defaultValue={s.ivaPct} className={field} />
             </Field>
-            <Field label="Comisión Point en feria (%)" hint="Mercado Pago Point.">
+            <Field label="Comisión Point en feria (%)" hint="Mercado Pago Point, sin IVA.">
               <input name="mpFeriaPct" inputMode="decimal" defaultValue={s.mpFeriaPct} className={field} />
             </Field>
-            <Field label="Comisión tienda online (%)" hint="Mercado Pago Checkout Pro.">
+            <Field label="Comisión tienda online (%)" hint="Mercado Pago Checkout Pro, sin IVA.">
               <input name="mpTiendaPct" inputMode="decimal" defaultValue={s.mpTiendaPct} className={field} />
             </Field>
           </div>
