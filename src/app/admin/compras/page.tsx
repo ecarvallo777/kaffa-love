@@ -47,7 +47,7 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
 
       {aplicada && (
         <p role="status" className="mb-6 rounded-xl bg-leaf/10 px-3 py-2 text-sm text-leaf">
-          Compra registrada: se actualizaron los costos y el stock.
+          {aplicada === "costo" ? "Costos actualizados. El stock no cambió." : "Compra registrada: se actualizaron los costos y el stock."}
         </p>
       )}
 

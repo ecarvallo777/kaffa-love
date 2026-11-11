@@ -27,6 +27,7 @@ const CONFIDENCE = { alta: "", media: "Revisa: relación probable", baja: "Revis
 export function ReviewForm({ purchase: p, products, categories }: { purchase: Purchase; products: Product[]; categories: Category[] }) {
   const byId = useMemo(() => new Map(products.map((x) => [x.id, x])), [products]);
   const [spread, setSpread] = useState(p.otherChargesNetClp !== 0);
+  const [costOnly, setCostOnly] = useState(false);
   const [rows, setRows] = useState<Row[]>(() =>
     p.lines.map((l) => ({
       action: l.productId ? "existente" : l.lineNetClp > 0 ? "nuevo" : "ignorar",
@@ -73,6 +74,26 @@ export function ReviewForm({ purchase: p, products, categories }: { purchase: Pu
     <ActionForm action={confirmPurchase} className="space-y-4">
       <input type="hidden" name="id" value={p.id} />
       <input type="hidden" name="lines" value={JSON.stringify(payload.filter((_, i) => !p.lines[i].applied))} />
+      {costOnly && <input type="hidden" name="soloCosto" value="1" />}
+
+      <fieldset className="grid gap-3 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium">¿Esta compra ya está en tu inventario?</legend>
+        {[
+          { v: false, t: "No, es mercadería nueva", d: "Suma las unidades al stock y promedia el costo con lo que ya tienes." },
+          { v: true, t: "Sí, ya la conté", d: "Solo guarda el costo de cada producto. El stock no cambia (para facturas antiguas)." },
+        ].map((o) => (
+          <label
+            key={String(o.v)}
+            className={`flex items-start gap-3 rounded-2xl border p-4 text-sm ${costOnly === o.v ? "border-accent bg-white" : "border-line bg-white/60"}`}
+          >
+            <input type="radio" name="modo" checked={costOnly === o.v} onChange={() => setCostOnly(o.v)} className="mt-0.5 size-4 accent-accent" />
+            <span>
+              <b className="block">{o.t}</b>
+              <span className="text-ink-soft">{o.d}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
 
       {p.otherChargesNetClp !== 0 && (
         <label className="flex items-start gap-3 rounded-2xl border border-line bg-white/60 p-4 text-sm">
@@ -136,7 +157,7 @@ export function ReviewForm({ purchase: p, products, categories }: { purchase: Pu
                   {r.action !== "ignorar" && (
                     <>
                       <label className="block text-sm">
-                        <span className="mb-1 block font-medium">Unidades que entran</span>
+                        <span className="mb-1 block font-medium">{costOnly ? "Unidades en la factura" : "Unidades que entran"}</span>
                         <input className={field} inputMode="numeric" value={r.units} onChange={(e) => set(i, { units: e.target.value })} />
                       </label>
                       <label className="block text-sm">
@@ -187,12 +208,17 @@ export function ReviewForm({ purchase: p, products, categories }: { purchase: Pu
                   </div>
                 )}
 
-                {prod && (
-                  <p className="mt-2 text-xs text-ink-mute">
-                    Hoy: {prod.stock} en stock, costo {prod.cost !== null ? clp(prod.cost) : "sin registrar"} → quedará en {prod.stock + units} y costo promedio{" "}
-                    <b>{clp(avg)}</b>.
-                  </p>
-                )}
+                {prod &&
+                  (costOnly ? (
+                    <p className="mt-2 text-xs text-ink-mute">
+                      Hoy: costo {prod.cost !== null ? clp(prod.cost) : "sin registrar"} → quedará en <b>{clp(uc)}</b>. El stock sigue en {prod.stock}.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs text-ink-mute">
+                      Hoy: {prod.stock} en stock, costo {prod.cost !== null ? clp(prod.cost) : "sin registrar"} → quedará en {prod.stock + units} y costo
+                      promedio <b>{clp(avg)}</b>.
+                    </p>
+                  ))}
               </>
             )}
           </section>
@@ -200,8 +226,8 @@ export function ReviewForm({ purchase: p, products, categories }: { purchase: Pu
       })}
 
       <div className="flex flex-wrap items-center gap-4 pt-2">
-        <button className={btn.primary}>Confirmar compra</button>
-        <span className="text-sm text-ink-soft">Entran {totalUnits} unidades al inventario.</span>
+        <button className={btn.primary}>{costOnly ? "Guardar costos" : "Confirmar compra"}</button>
+        <span className="text-sm text-ink-soft">{costOnly ? "El stock no cambia." : `Entran ${totalUnits} unidades al inventario.`}</span>
       </div>
     </ActionForm>
   );

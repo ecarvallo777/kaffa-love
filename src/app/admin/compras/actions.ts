@@ -29,13 +29,13 @@ export async function confirmPurchase(_prev: ActionResult, form: FormData): Prom
     return { error: "No se pudo leer la revisión." };
   }
   try {
-    await applyPurchase(id, lines, staff);
+    await applyPurchase(id, lines, staff, { costOnly: form.get("soloCosto") === "1" });
   } catch (e) {
     refresh();
     return { error: (e as Error).message };
   }
   updateTag("catalog");
-  redirect(`/admin/compras?aplicada=${encodeURIComponent(id)}`);
+  redirect(`/admin/compras?aplicada=${form.get("soloCosto") === "1" ? "costo" : "stock"}`);
 }
 
 export async function discardPurchase(_prev: ActionResult, form: FormData): Promise<ActionResult> {

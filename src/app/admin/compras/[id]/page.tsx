@@ -97,7 +97,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
                 <th>Producto</th>
                 <th className="text-right">Unidades</th>
                 <th className="text-right">Costo unitario</th>
-                <th className="text-right">Costo promedio</th>
+                <th className="text-right">Costo que quedó</th>
               </tr>
             </thead>
             <tbody>
@@ -107,7 +107,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
                   <tr key={i}>
                     <td>{l.description}</td>
                     <td>{a ? names.get(a.productId) ?? "—" : <span className="text-ink-mute">{l.applied ? "Ignorada" : "—"}</span>}</td>
-                    <td className="text-right tabular-nums">{a?.units ?? "—"}</td>
+                    <td className="text-right tabular-nums">{a ? (a.costOnly ? "solo costo" : a.units) : "—"}</td>
                     <td className="text-right tabular-nums">{a ? clp(a.unitCostClp) : "—"}</td>
                     <td className="text-right tabular-nums">{a ? clp(a.costClp) : "—"}</td>
                   </tr>

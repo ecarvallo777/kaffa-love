@@ -43,7 +43,8 @@ export type PurchaseLine = {
   productId: string | null;
   confidence: "alta" | "media" | "baja";
   newProduct: { name: string; type: "cafe" | "accesorio" } | null;
-  applied?: { productId: string; units: number; unitCostClp: number; costClp: number } | { ignored: true };
+  /** costOnly: la factura solo fijó el costo, sin sumar stock (compras que ya estaban en el inventario) */
+  applied?: { productId: string; units: number; unitCostClp: number; costClp: number; costOnly?: boolean } | { ignored: true };
 };
 
 /** Lo que costó leer la factura con Claude */
@@ -414,7 +415,12 @@ async function uniqueSlug(name: string) {
  * Aplica una factura revisada. Cada línea se marca apenas se aplica, así que si algo
  * falla a mitad de camino se puede volver a confirmar sin duplicar stock ni costos.
  */
-export async function applyPurchase(id: string, decisions: ApplyLine[], staff: { userId: string; email: string }) {
+export async function applyPurchase(
+  id: string,
+  decisions: ApplyLine[],
+  staff: { userId: string; email: string },
+  { costOnly = false }: { costOnly?: boolean } = {},
+) {
   const p = await getPurchase(id);
   if (!p) throw new Error("No se encontró la factura.");
   if (p.status !== "pendiente") throw new Error("Esta factura ya no está pendiente.");
@@ -431,7 +437,7 @@ export async function applyPurchase(id: string, decisions: ApplyLine[], staff: {
     const d = byIndex.get(i);
     if (!d) throw new Error(`Falta decidir qué hacer con «${line.description}».`);
     if (d.action === "ignorar") continue;
-    if (!Number.isInteger(d.units) || d.units <= 0) throw new Error(`Revisa las unidades de «${line.description}».`);
+    if (!costOnly && (!Number.isInteger(d.units) || d.units <= 0)) throw new Error(`Revisa las unidades de «${line.description}».`);
     if (!Number.isFinite(d.unitCostClp) || d.unitCostClp < 0) throw new Error(`Revisa el costo de «${line.description}».`);
     if (d.action === "existente" && !d.productId) throw new Error(`Elige el producto de «${line.description}».`);
     if (d.action === "nuevo") {
@@ -480,26 +486,36 @@ export async function applyPurchase(id: string, decisions: ApplyLine[], staff: {
     const { data: prod, error } = await db.from("products").select("name, stock, track_stock").eq("id", productId).single();
     if (error || !prod) throw new Error(`No se encontró el producto de «${line.description}».`);
 
-    // Costo promedio ponderado con lo que ya hay en bodega
+    // Compra nueva: costo promedio ponderado con lo que ya hay en bodega.
+    // Solo costo: el stock ya incluye esta compra, así que el costo de la factura pasa a ser el costo.
     const costs = await getProductCosts();
     const prev = costs[productId];
     const stockBefore = Math.max(0, prod.stock);
-    const newCost = prev !== undefined && stockBefore > 0 ? Math.round((prev * stockBefore + unitCost * d.units) / (stockBefore + d.units)) : unitCost;
+    const newCost =
+      !costOnly && prev !== undefined && stockBefore > 0 ? Math.round((prev * stockBefore + unitCost * d.units) / (stockBefore + d.units)) : unitCost;
     await setProductCost(productId, newCost);
-    if (prod.track_stock) await adjustStock({ productId, delta: d.units, reason: "compra", note, userId: staff.userId });
+    if (!costOnly && prod.track_stock) await adjustStock({ productId, delta: d.units, reason: "compra", note, userId: staff.userId });
 
-    line.applied = { productId, units: d.units, unitCostClp: unitCost, costClp: newCost };
+    const units = costOnly ? 0 : d.units;
+    line.applied = { productId, units, unitCostClp: unitCost, costClp: newCost, ...(costOnly && { costOnly: true }) };
     await savePurchase(p);
     aliases[aliasKey(line)] = productId;
     await writeConfigJson(ALIASES, aliases);
-    summary.push({ producto: prod.name, unidades: d.units, costo: newCost });
+    summary.push({ producto: prod.name, unidades: units, costo: newCost });
   }
 
   p.status = "aplicada";
   p.appliedAt = new Date().toISOString();
   p.appliedBy = staff.email;
   await savePurchase(p);
-  await logEvent("compra_registrada", "purchase", null, { proveedor: p.supplier, folio: p.folio, lineas: summary, nuevos: created, por: staff.email });
+  await logEvent("compra_registrada", "purchase", null, {
+    proveedor: p.supplier,
+    folio: p.folio,
+    lineas: summary,
+    nuevos: created,
+    ...(costOnly && { solo_costo: true }),
+    por: staff.email,
+  });
   return { lines: summary.length, units: summary.reduce((s, l) => s + l.unidades, 0), created };
 }
 
