@@ -46,8 +46,20 @@ export type PurchaseLine = {
   applied?: { productId: string; units: number; unitCostClp: number; costClp: number } | { ignored: true };
 };
 
+/** Lo que costó leer la factura con Claude */
+export type ReadUsage = {
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  /** null si el modelo no está en la tabla de precios */
+  costUsd: number | null;
+  /** true si Claude no la procesó y la terminó otro modelo */
+  fallback: boolean;
+};
+
 export type Purchase = {
   id: string; // id del archivo en Drive
+  usage?: ReadUsage;
   fileName: string;
   fileUrl: string | null;
   status: "pendiente" | "aplicada" | "descartada" | "error";
@@ -146,6 +158,59 @@ Reglas:
 - Si el documento no es de compra (o es ilegible), is_purchase_document = false, sin líneas, y explica por qué en notes.
 - notes: breve, en español, solo lo que el revisor deba saber (diferencias de totales, montos dudosos, nota de crédito, etc.).`;
 
+// Precios por millón de tokens en USD (platform.claude.com/pricing, noviembre de 2026).
+// Escribir caché cuesta 1,25 veces la entrada; leerla, lo indicado en cacheRead.
+const PRICES: Record<string, { input: number; output: number; cacheRead: number }> = {
+  "claude-opus-5-5": { input: 4, output: 20, cacheRead: 0.2 },
+  "claude-opus-5": { input: 5, output: 25, cacheRead: 0.5 },
+  "claude-opus-4-8": { input: 5, output: 25, cacheRead: 0.5 },
+  "claude-sonnet-5-5": { input: 2, output: 10, cacheRead: 0.2 },
+  "claude-haiku-5-5": { input: 0.1, output: 0.5, cacheRead: 0.01 },
+  "claude-fable-5-1": { input: 10, output: 50, cacheRead: 0.25 },
+};
+
+type Tokens = { model: string | null; input_tokens: number; output_tokens: number; cache_creation_input_tokens: number | null; cache_read_input_tokens: number | null };
+
+function usageOf(response: Anthropic.Beta.BetaMessage): ReadUsage {
+  const u = response.usage;
+  // Si hubo reintento con otro modelo, cada intento trae su propio consumo
+  const parts: Tokens[] = (u.iterations ?? [])
+    .filter((it) => it.type === "message" || it.type === "fallback_message")
+    .map((it) => ({ ...(it as Tokens), model: (it as Tokens).model ?? response.model }));
+  if (!parts.length) parts.push({ ...u, model: response.model });
+  let cost: number | null = 0;
+  for (const t of parts) {
+    const p = PRICES[t.model ?? ""];
+    if (!p || cost === null) {
+      cost = null;
+      continue;
+    }
+    cost +=
+      (t.input_tokens * p.input +
+        (t.cache_creation_input_tokens ?? 0) * p.input * 1.25 +
+        (t.cache_read_input_tokens ?? 0) * p.cacheRead +
+        t.output_tokens * p.output) /
+      1_000_000;
+  }
+  return {
+    model: response.model,
+    inputTokens: parts.reduce((s, t) => s + t.input_tokens + (t.cache_creation_input_tokens ?? 0) + (t.cache_read_input_tokens ?? 0), 0),
+    outputTokens: parts.reduce((s, t) => s + t.output_tokens, 0),
+    costUsd: cost === null ? null : Math.round(cost * 10000) / 10000,
+    fallback: (u.iterations ?? []).some((it) => it.type === "fallback_message"),
+  };
+}
+
+/** Error de lectura que igual consumió tokens (se cobra) */
+class ReadError extends Error {
+  constructor(
+    message: string,
+    readonly usage: ReadUsage,
+  ) {
+    super(message);
+  }
+}
+
 async function readInvoice(file: Buffer, kind: (typeof SUPPORTED)[string]) {
   const [settings, aliases, { data: products, error }] = await Promise.all([
     getSettings(),
@@ -184,14 +249,16 @@ async function readInvoice(file: Buffer, kind: (typeof SUPPORTED)[string]) {
       },
     ],
   });
-  if (response.stop_reason === "refusal") throw new Error("Claude no pudo procesar este documento.");
-  if (response.stop_reason === "max_tokens") throw new Error("La factura es demasiado larga para leerla de una vez.");
+  const usage = usageOf(response);
+  if (response.stop_reason === "refusal") throw new ReadError("Claude no pudo procesar este documento.", usage);
+  if (response.stop_reason === "max_tokens") throw new ReadError("La factura es demasiado larga para leerla de una vez.", usage);
   const out = response.parsed_output;
-  if (!out) throw new Error("No se pudo leer la respuesta de Claude.");
+  if (!out) throw new ReadError("No se pudo leer la respuesta de Claude.", usage);
 
   const ids = new Set(catalog.map((c) => c.id));
   return {
     out,
+    usage,
     lines: out.lines.map((l): PurchaseLine => {
       const line = {
         description: l.description.trim(),
@@ -233,9 +300,10 @@ async function processFile(f: { id: string; name: string; mimeType: string; size
   try {
     if (!kind) throw new Error("Formato no soportado: sube la factura como PDF, JPG o PNG.");
     if (f.size > MAX_BYTES) throw new Error("El archivo pesa más de 20 MB.");
-    const { out, lines } = await readInvoice(await downloadFile(f.id), kind);
+    const { out, lines, usage } = await readInvoice(await downloadFile(f.id), kind);
     const p: Purchase = {
       ...base,
+      usage,
       status: out.is_purchase_document ? "pendiente" : "error",
       error: out.is_purchase_document ? undefined : out.notes || "No parece un documento de compra.",
       supplier: out.supplier.trim(),
@@ -249,11 +317,32 @@ async function processFile(f: { id: string; name: string; mimeType: string; size
       lines,
     };
     await savePurchase(p);
-    await logEvent("factura_leida", "purchase", null, { archivo: f.name, proveedor: p.supplier, folio: p.folio, lineas: lines.length });
+    await logEvent("factura_leida", "purchase", null, {
+      archivo: f.name,
+      proveedor: p.supplier,
+      folio: p.folio,
+      lineas: lines.length,
+      modelo: usage.model,
+      tokens_entrada: usage.inputTokens,
+      tokens_salida: usage.outputTokens,
+      costo_usd: usage.costUsd,
+    });
     return p;
   } catch (e) {
-    const p: Purchase = { ...base, status: "error", error: (e as Error).message };
+    const usage = e instanceof ReadError ? e.usage : undefined;
+    const p: Purchase = { ...base, status: "error", error: (e as Error).message, usage };
     await savePurchase(p);
+    // Una lectura fallida igual se cobra: queda registrada para el total del mes
+    if (usage) {
+      await logEvent("factura_leida", "purchase", null, {
+        archivo: f.name,
+        error: p.error,
+        modelo: usage.model,
+        tokens_entrada: usage.inputTokens,
+        tokens_salida: usage.outputTokens,
+        costo_usd: usage.costUsd,
+      });
+    }
     return p;
   }
 }
@@ -274,6 +363,24 @@ export async function syncDriveInvoices(max = 2) {
     read++;
   }
   return { configured: true as const, read, waiting: fresh.length - read };
+}
+
+/** Lo gastado en leer facturas desde una fecha (incluye lecturas fallidas y reintentos) */
+export async function readingSpendSince(sinceIso: string) {
+  const { data, error } = await createAdminClient()
+    .from("events")
+    .select("data")
+    .eq("type", "factura_leida")
+    .gte("created_at", sinceIso);
+  if (error) throw new Error(error.message);
+  let usd = 0;
+  let unknown = 0;
+  for (const e of data ?? []) {
+    const c = (e.data as { costo_usd?: number | null }).costo_usd;
+    if (typeof c === "number") usd += c;
+    else unknown++;
+  }
+  return { reads: data?.length ?? 0, usd: Math.round(usd * 100) / 100, unknown };
 }
 
 // Confirmación ----------------------------------------------------------------------------

@@ -21,6 +21,14 @@ export function startOfTodayChile(now = new Date()) {
   return new Date(guess.getTime() - offsetMin * 60_000).toISOString();
 }
 
+/** Inicio del mes en curso en Chile, como ISO (UTC) */
+export function startOfMonthChile(now = new Date()) {
+  const day = Number(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, day: "numeric" }).format(now));
+  // Mediodía de hoy menos (día − 1) días cae siempre en el día 1, aunque cambie la hora oficial
+  const noonToday = new Date(startOfTodayChile(now)).getTime() + 12 * 3600_000;
+  return startOfTodayChile(new Date(noonToday - (day - 1) * 86400_000));
+}
+
 function tzOffsetMinutes(d: Date) {
   const local = new Date(d.toLocaleString("en-US", { timeZone: TZ }));
   const utc = new Date(d.toLocaleString("en-US", { timeZone: "UTC" }));

@@ -122,6 +122,14 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
           Aplicada el {fmtDateTime(p.appliedAt)} por {p.appliedBy}.
         </p>
       )}
+      {p.usage && (
+        <p className="mt-4 text-sm text-ink-mute">
+          Lectura: {p.usage.inputTokens.toLocaleString("es-CL")} tokens de entrada y {p.usage.outputTokens.toLocaleString("es-CL")} de salida con{" "}
+          {p.usage.model}
+          {p.usage.fallback ? " (la terminó un modelo de respaldo)" : ""}
+          {p.usage.costUsd !== null ? ` · USD ${p.usage.costUsd.toLocaleString("es-CL", { maximumFractionDigits: 4 })}` : " · precio desconocido"}.
+        </p>
+      )}
     </>
   );
 }
