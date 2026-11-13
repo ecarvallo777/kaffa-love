@@ -177,7 +177,7 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 - [x] **5.4** Revisa la tienda desde tu celular: portada, ficha, carrito, checkout y página del pedido.
 - [ ] **5.5** Legal: un asesor revisa **términos** (incluye las condiciones del descuento de bienvenida del QR), **cambios y devoluciones** (plazo actual: 10 días) y **privacidad** (`src/app/(tienda)/legal/`).
 - [ ] **5.6** El contador confirma la configuración de boletas en Mercado Pago (online y Point).
-- [ ] **5.7** Si cambiaste algo en el código, pásalo a producción: `git push origin master:main`.
+- [ ] **5.7** Si cambiaste algo en el código, pásalo a producción: `git push origin master:main`. Si es la primera vez desde el 13 de noviembre de 2026, haz después la limpieza **6.0b** y **6.0c**.
 
 ---
 
@@ -188,6 +188,11 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 **Requisitos pendientes de la fase 2**
 
 - [ ] **6.0** Fichas de café completas (2.4), operadores de feria creados (2.5) y costos y comisiones ingresados (2.6).
+
+**Limpieza al pasar `master` a `main`** (la primera vez que se haga `git push origin master:main` después del 13 de noviembre de 2026)
+
+- [ ] **6.0b** Cuando el despliegue de `main` termine, abre en producción **Productos → cualquier producto** y confirma que muestra su costo. Desde ese momento producción lee los costos desde la tabla `product_costs`. Entonces borra el archivo `costos-productos.json` del bucket `config` en Supabase → **Storage**; ya no se actualiza desde el 13 de noviembre. No antes: el código anterior de `main` todavía lo lee.
+- [ ] **6.0c** En producción, abre **Compras**: no debe aparecer «Falta conectar» (las variables de la 2.6b ya están en **Production**).
 
 **Credenciales reales**
 
