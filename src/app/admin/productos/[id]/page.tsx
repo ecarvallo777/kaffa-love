@@ -4,8 +4,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listCategories, listProducts } from "@/lib/admin-data";
 import { getProductCosts } from "@/lib/costs";
-import { getSettings } from "@/lib/settings";
-import { PageHeader } from "@/components/admin/ui";
+import { getSettings } from "@/lib/settings";import { PageHeader } from "@/components/admin/ui";
 import { ProductForm, type ProductRow } from "../product-form";
 
 export const metadata = { title: "Editar producto" };

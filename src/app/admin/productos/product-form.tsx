@@ -18,6 +18,12 @@ export type ProductRow = {
   process: string | null;
   variety: string | null;
   tasting_notes: string | null;
+  farm: string | null;
+  region: string | null;
+  altitude: string | null;
+  drying: string | null;
+  harvest: string | null;
+  sca_score: number | null;
   price_clp: number;
   track_stock: boolean;
   stock: number;
@@ -137,6 +143,12 @@ export function ProductForm({
               <F label="Origen"><input name="origin" defaultValue={product?.origin ?? ""} placeholder="Colombia" className={field} /></F>
               <F label="Proceso"><input name="process" defaultValue={product?.process ?? ""} placeholder="Lavado" className={field} /></F>
               <F label="Variedad"><input name="variety" defaultValue={product?.variety ?? ""} placeholder="Caturra" className={field} /></F>
+              <F label="Región"><input name="region" defaultValue={product?.region ?? ""} placeholder="Huila" className={field} /></F>
+              <F label="Finca"><input name="farm" defaultValue={product?.farm ?? ""} placeholder="La Betania" className={field} /></F>
+              <F label="Altura"><input name="altitude" defaultValue={product?.altitude ?? ""} placeholder="1.800 m s. n. m." className={field} /></F>
+              <F label="Secado"><input name="drying" defaultValue={product?.drying ?? ""} placeholder="Camas africanas" className={field} /></F>
+              <F label="Cosecha"><input name="harvest" defaultValue={product?.harvest ?? ""} placeholder="2026" className={field} /></F>
+              <F label="Puntaje SCA"><input name="sca_score" inputMode="decimal" defaultValue={product?.sca_score != null ? String(product.sca_score).replace(".", ",") : ""} placeholder="86,5" className={field} /></F>
               <F label="Notas de cata" className="sm:col-span-3" hint="Separadas por coma. Ej.: chocolate, mandarina, caña de azúcar">
                 <input name="tasting_notes" defaultValue={product?.tasting_notes ?? ""} className={field} />
               </F>

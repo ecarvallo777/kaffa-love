@@ -20,6 +20,14 @@ export type Product = {
   process: string | null;
   variety: string | null;
   tasting_notes: string | null;
+  // Ficha extendida del café: solo la trae el catálogo de la tienda (feria y pedidos no la necesitan)
+  farm?: string | null;
+  region?: string | null;
+  altitude?: string | null;
+  drying?: string | null;
+  harvest?: string | null;
+  /** Puntaje de catación SCA (0–100) */
+  sca_score?: number | null;
   price_clp: number;
   track_stock: boolean;
   stock: number;

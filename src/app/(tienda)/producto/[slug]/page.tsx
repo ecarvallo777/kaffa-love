@@ -21,7 +21,6 @@ import { AddToCart } from "@/components/add-to-cart";
 import { GrindGuide } from "@/components/grind-guide";
 import { RecipeTabs } from "@/components/recipe-card";
 import { recipeRatio, recipesForProduct } from "@/lib/recipes";
-
 export async function generateStaticParams() {
   const catalog = await getCatalog();
   return catalog.products.map((p) => ({ slug: p.slug }));
@@ -245,8 +244,14 @@ function Perk({ icon, title, text }: { icon: "truck" | "store" | "lock"; title: 
 function CoffeeDetails({ product, notes }: { product: Product; notes: string[] }) {
   const specs = [
     ["Origen", product.origin],
-    ["Proceso", product.process],
+    ["Región", product.region],
+    ["Finca", product.farm],
+    ["Altura", product.altitude],
     ["Variedad", product.variety],
+    ["Proceso", product.process],
+    ["Secado", product.drying],
+    ["Cosecha", product.harvest],
+    ["Puntaje SCA", product.sca_score != null ? `${Number(product.sca_score).toLocaleString("es-CL", { maximumFractionDigits: 2 })} puntos` : null],
     ["Formato", "Bolsa de 250 g"],
   ].filter((s): s is [string, string] => !!s[1]);
 

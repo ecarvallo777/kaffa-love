@@ -6,8 +6,7 @@ import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/events";
 import { slugify } from "@/lib/slug";
-import { setProductCost } from "@/lib/costs";
-import type { ActionResult } from "@/components/admin/action-form";
+import { setProductCost } from "@/lib/costs";import type { ActionResult } from "@/components/admin/action-form";
 
 const TYPES = ["cafe", "accesorio", "promocion", "preparado"] as const;
 const IMAGE_BUCKET = "productos";
@@ -66,6 +65,8 @@ export async function saveProduct(_prev: ActionResult, form: FormData): Promise<
   // Costo unitario neto (las promociones lo calculan desde sus productos)
   const cost = isBundle ? null : int(form, "cost_clp");
   if (cost !== null && (Number.isNaN(cost) || cost < 0)) return { error: "El costo debe ser un número en pesos." };
+  const sca = type === "cafe" ? num(form, "sca_score") : null;
+  if (sca !== null && (Number.isNaN(sca) || sca < 0 || sca > 100)) return { error: "El puntaje SCA debe ser un número entre 0 y 100." };
   const trackStock = isBundle ? false : form.get("track_stock") === "on";
   const lowStock = int(form, "low_stock_threshold") ?? 3;
   const dims = { weight_g: num(form, "weight_g"), length_cm: num(form, "length_cm"), width_cm: num(form, "width_cm"), height_cm: num(form, "height_cm") };
@@ -105,6 +106,12 @@ export async function saveProduct(_prev: ActionResult, form: FormData): Promise<
     process: type === "cafe" ? optStr(form, "process") : null,
     variety: type === "cafe" ? optStr(form, "variety") : null,
     tasting_notes: type === "cafe" ? optStr(form, "tasting_notes") : null,
+    farm: type === "cafe" ? optStr(form, "farm") : null,
+    region: type === "cafe" ? optStr(form, "region") : null,
+    altitude: type === "cafe" ? optStr(form, "altitude") : null,
+    drying: type === "cafe" ? optStr(form, "drying") : null,
+    harvest: type === "cafe" ? optStr(form, "harvest") : null,
+    sca_score: sca,
     price_clp: price,
     track_stock: trackStock,
     low_stock_threshold: lowStock,

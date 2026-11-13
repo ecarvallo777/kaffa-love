@@ -20,7 +20,7 @@ export async function getCatalog(): Promise<Catalog> {
     db
       .from("products")
       .select(
-        "id, name, slug, type, category_id, description, origin, process, variety, tasting_notes, price_clp, track_stock, stock, low_stock_threshold, image_urls",
+        "id, name, slug, type, category_id, description, origin, process, variety, tasting_notes, farm, region, altitude, drying, harvest, sca_score, price_clp, track_stock, stock, low_stock_threshold, image_urls",
       )
       .order("name"),
     db.from("bundle_items").select("bundle_id, product_id, quantity"),

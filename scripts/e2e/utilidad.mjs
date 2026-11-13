@@ -28,8 +28,9 @@ const readJson = async (file) => {
   const { data } = await db.storage.from("config").download(file);
   return data ? JSON.parse(await data.text()) : null;
 };
-const costsBefore = await readJson("costos-productos.json");
 const { data: americano } = await db.from("products").select("id").eq("slug", "americano").single();
+const costOf = async (id) => (await db.from("product_costs").select("cost_clp").eq("product_id", id).maybeSingle()).data?.cost_clp ?? null;
+const costBefore = await costOf(americano.id);
 
 try {
   step("Producto: costo unitario y margen");
@@ -41,7 +42,7 @@ try {
   assert((await text()).includes("margen bruto"), "muestra el margen al escribir el costo");
   await clickText(page, "button", "Guardar cambios");
   await page.waitForFunction(() => document.body.innerText.includes("Cambios guardados"), { timeout: 20000 });
-  assert((await readJson("costos-productos.json"))?.[americano.id] === 800, "costo guardado");
+  assert((await costOf(americano.id)) === 800, "costo guardado");
 
   step("Feria de prueba: 2 americanos");
   await login("e2e-operador@kaffalove.test");
@@ -126,9 +127,8 @@ try {
   console.error(e.message);
   process.exitCode = 1;
 } finally {
-  // Restaurar costos como estaban
-  const body = new Blob([JSON.stringify(costsBefore ?? {}, null, 2)], { type: "application/json" });
-  if (costsBefore) await db.storage.from("config").upload("costos-productos.json", body, { upsert: true });
-  else await db.storage.from("config").remove(["costos-productos.json"]);
+  // Restaurar el costo del americano como estaba
+  if (costBefore === null) await db.from("product_costs").delete().eq("product_id", americano.id);
+  else await db.from("product_costs").upsert({ product_id: americano.id, cost_clp: costBefore });
   await browser.close();
 }

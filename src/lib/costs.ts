@@ -3,13 +3,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 /*
  * Costos para calcular la utilidad real (ferias y tienda):
- *  - costo unitario NETO (sin IVA) de cada producto
- *  - gastos de cada jornada de feria (stand, transporte, comida, insumos, otros)
- * Se guardan como JSON privado en Supabase Storage (config/), igual que la configuración.
+ *  - costo unitario NETO (sin IVA) de cada producto, en la tabla product_costs
+ *  - gastos de cada jornada de feria (stand, transporte, comida, insumos, otros),
+ *    como JSON privado en Supabase Storage (config/), igual que la configuración
  */
 
 const BUCKET = "config";
-const PRODUCT_COSTS = "costos-productos.json";
 const FAIR_EXPENSES = "gastos-ferias.json";
 
 export const EXPENSE_CATEGORIES = ["Stand", "Transporte", "Comida", "Insumos", "Otro"] as const;
@@ -39,16 +38,22 @@ async function writeJson(file: string, value: unknown) {
 
 // Costos de productos ----------------------------------------------------------------
 
+// Tabla product_costs: cerrada al público (products sí es de lectura pública)
+
 /** productId → costo unitario neto en CLP */
 export async function getProductCosts(): Promise<Record<string, number>> {
-  return readJson<Record<string, number>>(PRODUCT_COSTS, {});
+  const { data, error } = await createAdminClient().from("product_costs").select("product_id, cost_clp");
+  if (error) throw new Error(`No se pudieron leer los costos: ${error.message}`);
+  return Object.fromEntries((data ?? []).map((r) => [r.product_id as string, r.cost_clp as number]));
 }
 
 export async function setProductCost(productId: string, costClp: number | null) {
-  const costs = await getProductCosts();
-  if (costClp === null) delete costs[productId];
-  else costs[productId] = costClp;
-  await writeJson(PRODUCT_COSTS, costs);
+  const db = createAdminClient();
+  const { error } =
+    costClp === null
+      ? await db.from("product_costs").delete().eq("product_id", productId)
+      : await db.from("product_costs").upsert({ product_id: productId, cost_clp: costClp, updated_at: new Date().toISOString() });
+  if (error) throw new Error(`No se pudo guardar el costo: ${error.message}`);
 }
 
 // Gastos de ferias ----------------------------------------------------------------------
