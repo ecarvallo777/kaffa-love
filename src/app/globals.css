@@ -15,9 +15,9 @@
   --color-ink-soft: #5b4d44;
   --color-ink-mute: #8b7c70;
   --color-line: #dacdb9;
-  /* Acentos: cereza de café, hoja y crema */
-  --color-accent: #b4432c;
-  --color-accent-deep: #8c311f;
+  /* Acentos: verde del logo (más profundo para el contraste del texto), hoja y crema */
+  --color-accent: #3a6b43;
+  --color-accent-deep: #2e5535;
   --color-leaf: #3d5944;
   --color-crema: #c4873a;
 

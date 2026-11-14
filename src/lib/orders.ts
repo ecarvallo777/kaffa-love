@@ -455,7 +455,7 @@ async function sendOrderConfirmation(order: OrderWithDetails) {
 <tr><td style="padding:6px 0;color:#8b7c70">Envío</td><td align="right">${clp(order.shipping_clp)}</td></tr>
 <tr><td style="padding:6px 0"><b>Total</b></td><td align="right"><b>${clp(order.total_clp)}</b></td></tr></table>
 ${delivery}
-<p><a href="${siteUrl()}/pedido/${order.id}" style="color:#b4432c">Ver el estado de tu pedido</a></p>
+<p><a href="${siteUrl()}/pedido/${order.id}" style="color:#3a6b43">Ver el estado de tu pedido</a></p>
 <p style="color:#8b7c70;font-size:13px">La boleta te llega directamente desde Mercado Pago.</p>`,
     ),
   });
@@ -501,7 +501,7 @@ export async function notifyStatusChange(order: OrderWithDetails, status: string
   await sendEmail({
     to: customer.email,
     subject: m[0],
-    html: emailLayout(m[0], `${m[1]}<p><a href="${siteUrl()}/pedido/${order.id}" style="color:#b4432c">Ver el estado de tu pedido</a></p>`),
+    html: emailLayout(m[0], `${m[1]}<p><a href="${siteUrl()}/pedido/${order.id}" style="color:#3a6b43">Ver el estado de tu pedido</a></p>`),
   });
 }
 

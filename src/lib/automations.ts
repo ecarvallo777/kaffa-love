@@ -77,7 +77,7 @@ function itemsTable(items: Item[]) {
 }
 
 const button = (href: string, label: string) =>
-  `<p style="margin:24px 0"><a href="${href}" style="background:#b4432c;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">${label}</a></p>`;
+  `<p style="margin:24px 0"><a href="${href}" style="background:#3a6b43;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">${label}</a></p>`;
 
 const footer = (email: string) =>
   `<p style="color:#8b7c70;font-size:12px;margin-top:28px">Te escribimos porque aceptaste recibir novedades de Kaffa Love. <a href="${unsubscribeUrl(email)}" style="color:#8b7c70">Dejar de recibir estos correos</a>.</p>`;
@@ -107,7 +107,7 @@ export function repurchaseEmail(c: Pick<Customer, "email" | "name">, coffeeItems
   const name = firstName(c);
   const shortName = main.name.split(",")[0];
   const stillSold = main.active && main.visible_online;
-  const more = `<a href="${siteUrl()}/categoria/cafe-de-especialidad?utm_source=correo" style="color:#b4432c">Mira los cafés de esta temporada</a>`;
+  const more = `<a href="${siteUrl()}/categoria/cafe-de-especialidad?utm_source=correo" style="color:#3a6b43">Mira los cafés de esta temporada</a>`;
   return {
     subject: `¿Se te está acabando el ${shortName}?`,
     html: emailLayout(
@@ -116,7 +116,7 @@ export function repurchaseEmail(c: Pick<Customer, "email" | "name">, coffeeItems
 ${itemsTable(coffeeItems)}
 <p>Una bolsa de 250 g rinde más o menos ${days} días de café diario. Si quieres repetir, lo dejamos listo con la misma molienda:</p>
 ${button(`${siteUrl()}/carrito/recuperar?pedido=${orderId}&origen=recompra&utm_source=correo`, "Repetir mi pedido")}
-<p>${stillSold ? `¿Quieres probar algo distinto? ${more} o <a href="${siteUrl()}/producto/${main.slug}?utm_source=correo#receta" style="color:#b4432c">la receta de tu café</a>.` : `${more}.`}</p>
+<p>${stillSold ? `¿Quieres probar algo distinto? ${more} o <a href="${siteUrl()}/producto/${main.slug}?utm_source=correo#receta" style="color:#3a6b43">la receta de tu café</a>.` : `${more}.`}</p>
 ${footer(c.email)}`,
     ),
   };
