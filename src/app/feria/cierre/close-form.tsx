@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { clp } from "@/lib/catalog-utils";
 import { closeSessionAction } from "../actions";
+import { submitKeepingValues } from "@/lib/forms";
 
 export function CloseSessionForm({ sessionId, expected }: { sessionId: string; expected: number }) {
   const [error, action, pending] = useActionState(closeSessionAction, null);
@@ -11,7 +12,14 @@ export function CloseSessionForm({ sessionId, expected }: { sessionId: string; e
   const diff = point && Number.isFinite(pointNum) ? pointNum - expected : null;
 
   return (
-    <form action={action} className="mt-8 space-y-4" onSubmit={(e) => { if (!confirm("¿Cerrar la jornada? Después no podrás registrar más ventas en ella.")) e.preventDefault(); }}>
+    <form
+      action={action}
+      className="mt-8 space-y-4"
+      onSubmit={(e) => {
+        if (!confirm("¿Cerrar la jornada? Después no podrás registrar más ventas en ella.")) return e.preventDefault();
+        submitKeepingValues(e, action);
+      }}
+    >
       <input type="hidden" name="sessionId" value={sessionId} />
       <label className="block">
         <span className="mb-1.5 block font-medium">Total del día según Mercado Pago Point</span>

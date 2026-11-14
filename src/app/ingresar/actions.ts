@@ -12,7 +12,11 @@ export async function signIn(_prev: string | null, form: FormData): Promise<stri
 
   const auth = await createAuthClient();
   const { error } = await auth.auth.signInWithPassword({ email, password });
-  if (error) return "Correo o contraseña incorrectos.";
+  if (error) {
+    // Sin respuesta de Supabase (status 0 o 5xx): no culpar a la contraseña
+    if (!error.status || error.status >= 500) return "No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.";
+    return "Correo o contraseña incorrectos.";
+  }
 
   const staff = await getStaff();
   if (!staff) {

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { openSessionAction } from "./actions";
+import { submitKeepingValues } from "@/lib/forms";
 
 export function OpenSessionForm({ preparados }: { preparados: { id: string; name: string; stock: number }[] }) {
   const [error, action, pending] = useActionState(openSessionAction, null);
@@ -9,7 +10,7 @@ export function OpenSessionForm({ preparados }: { preparados: { id: string; name
     <div className="mx-auto max-w-lg px-4 py-10">
       <h1 className="font-display text-4xl">Abrir jornada</h1>
       <p className="mt-2 text-ink-soft">Cuando abras la jornada podrás registrar ventas. Al final la cierras para cuadrar con Point.</p>
-      <form action={action} className="mt-8 space-y-5">
+      <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="mt-8 space-y-5">
         <label className="block">
           <span className="mb-1.5 block font-medium">Nombre de la feria</span>
           <input name="name" required placeholder="Ej.: Feria Parque Bustamante" className="h-14 w-full rounded-2xl border border-line bg-white px-4 text-lg" />

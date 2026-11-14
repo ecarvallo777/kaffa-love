@@ -42,7 +42,8 @@ export async function customerSignIn(_prev: string | null, form: FormData): Prom
   const password = String(form.get("password") ?? "");
   const auth = await createAuthClient();
   const { error } = await auth.auth.signInWithPassword({ email, password });
-  if (error) return "Correo o contraseña incorrectos.";
+  // Sin respuesta de Supabase (status 0 o 5xx): no culpar a la contraseña
+  if (error) return !error.status || error.status >= 500 ? "No se pudo conectar con el servidor. Intenta de nuevo en unos segundos." : "Correo o contraseña incorrectos.";
   if (!(await getCustomer())) {
     await auth.auth.signOut();
     return "No encontramos compras asociadas a este correo.";

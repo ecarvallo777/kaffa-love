@@ -2,11 +2,12 @@
 
 import { useActionState } from "react";
 import { signIn } from "./actions";
+import { submitKeepingValues } from "@/lib/forms";
 
 export function LoginForm({ next, initialError }: { next: string; initialError: string | null }) {
   const [error, action, pending] = useActionState(signIn, initialError);
   return (
-    <form action={action} className="mt-8 w-full space-y-4">
+    <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="mt-8 w-full space-y-4">
       <input type="hidden" name="next" value={next} />
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium">Correo</span>

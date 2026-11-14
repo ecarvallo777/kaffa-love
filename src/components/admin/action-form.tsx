@@ -1,8 +1,26 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { submitKeepingValues } from "@/lib/forms";
 
 export type ActionResult = { ok?: string; error?: string } | null;
+
+/** Mensaje de resultado: etiqueta verde si salió bien, roja si hubo un error */
+export function ActionMessage({ state, className = "mt-3" }: { state: ActionResult; className?: string }) {
+  if (state?.error)
+    return (
+      <p role="alert" className={`${className} rounded-xl bg-accent/10 px-3 py-2 text-sm text-accent-deep`}>
+        {state.error}
+      </p>
+    );
+  if (state?.ok)
+    return (
+      <p role="status" className={`${className} rounded-xl bg-leaf/10 px-3 py-2 text-sm text-leaf`}>
+        {state.ok}
+      </p>
+    );
+  return null;
+}
 
 /**
  * Formulario que llama a una Server Action y muestra su resultado.
@@ -34,22 +52,14 @@ export function ActionForm({
       action={formAction}
       className={className}
       onSubmit={(e) => {
-        if (confirm && !window.confirm(confirm)) e.preventDefault();
+        if (confirm && !window.confirm(confirm)) return e.preventDefault();
+        submitKeepingValues(e, formAction);
       }}
     >
       <fieldset disabled={pending} className="contents">
         {children}
       </fieldset>
-      {state?.error && (
-        <p role="alert" className="mt-3 rounded-xl bg-accent/10 px-3 py-2 text-sm text-accent-deep">
-          {state.error}
-        </p>
-      )}
-      {state?.ok && (
-        <p role="status" className="mt-3 rounded-xl bg-leaf/10 px-3 py-2 text-sm text-leaf">
-          {state.ok}
-        </p>
-      )}
+      <ActionMessage state={state} />
     </form>
   );
 }

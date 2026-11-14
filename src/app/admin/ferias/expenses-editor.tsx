@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { btn, field } from "@/components/admin/ui";
 import { saveFairExpenses } from "./actions";
+import { submitKeepingValues } from "@/lib/forms";
 
 type Expense = { id: string; category: string; concept: string; amountClp: number };
 const CATEGORIES = ["Stand", "Transporte", "Comida", "Insumos", "Otro"];
@@ -22,7 +23,7 @@ export function ExpensesEditor({ sessionId, initial }: { sessionId: string; init
   const update = (i: number, patch: Partial<Expense>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   return (
-    <form action={action}>
+    <form action={action} onSubmit={(e) => submitKeepingValues(e, action)}>
       <input type="hidden" name="sessionId" value={sessionId} />
       <input type="hidden" name="expenses" value={JSON.stringify(rows)} />
       <ul className="space-y-2">

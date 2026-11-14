@@ -2,12 +2,13 @@
 
 import { useActionState } from "react";
 import { unsubscribe } from "./actions";
+import { submitKeepingValues } from "@/lib/forms";
 
 export function UnsubscribeForm({ email }: { email: string | null }) {
   const [done, action, pending] = useActionState(unsubscribe, null);
   if (done === "ok") return <p className="rounded-2xl bg-leaf/10 p-4 text-leaf">Listo. No te enviaremos más novedades.</p>;
   return (
-    <form action={action} className="flex flex-wrap gap-3">
+    <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="flex flex-wrap gap-3">
       {email ? (
         <>
           <input type="hidden" name="email" value={email} />

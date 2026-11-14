@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { btn, field, textarea } from "@/components/admin/ui";
+import { ActionMessage } from "@/components/admin/action-form";
+import { submitKeepingValues } from "@/lib/forms";
 import { saveProduct } from "./actions";
 
 type Category = { id: string; name: string; parent_id: string | null };
@@ -59,6 +61,11 @@ export function ProductForm({
   ivaPct?: number;
 }) {
   const [state, action, pending] = useActionState(saveProduct, null);
+  const files = useRef<HTMLInputElement>(null);
+  // Las fotos nuevas ya se subieron: se vacía el selector para no subirlas dos veces
+  useEffect(() => {
+    if (state?.ok && files.current) files.current.value = "";
+  }, [state]);
   const [type, setType] = useState(product?.type ?? "cafe");
   const [trackStock, setTrackStock] = useState(product?.track_stock ?? true);
   const [bundle, setBundle] = useState(initialBundle.length ? initialBundle : [{ product_id: "", quantity: 1 }]);
@@ -78,7 +85,7 @@ export function ProductForm({
   const bundleRegular = bundle.reduce((s, b) => s + (options.find((o) => o.id === b.product_id)?.price_clp ?? 0) * b.quantity, 0);
 
   return (
-    <form action={action} className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+    <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
       {product && <input type="hidden" name="id" value={product.id} />}
       <div className="space-y-6">
         <Section title="Básico">
@@ -210,7 +217,7 @@ export function ProductForm({
           ) : (
             <p className="mb-3 text-sm text-ink-mute">Sin fotos: la tienda muestra una ilustración.</p>
           )}
-          <input type="file" name="images" accept="image/*" multiple className="text-sm" />
+          <input ref={files} type="file" name="images" accept="image/*" multiple className="text-sm" />
         </Section>
       </div>
 
@@ -257,8 +264,7 @@ export function ProductForm({
         )}
 
         <div className="sticky bottom-4 rounded-2xl border border-line bg-paper p-4 shadow-lg">
-          {state?.error && <p role="alert" className="mb-3 text-sm text-accent-deep">{state.error}</p>}
-          {state?.ok && <p role="status" className="mb-3 text-sm text-leaf">{state.ok}</p>}
+          <ActionMessage state={state} className="mb-3" />
           <button disabled={pending} className={`${btn.primary} w-full`}>
             {pending ? "Guardando…" : product ? "Guardar cambios" : "Crear producto"}
           </button>

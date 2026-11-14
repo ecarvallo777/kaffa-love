@@ -6,6 +6,7 @@ import { GRINDS } from "@/lib/grinds";
 import { btn, field, textarea } from "@/components/admin/ui";
 import { ActionForm } from "@/components/admin/action-form";
 import { deleteRecipe, saveRecipe } from "./actions";
+import { submitKeepingValues } from "@/lib/forms";
 
 export type RecipeFormData = {
   id: string;
@@ -63,7 +64,7 @@ export function RecipeForm({ recipe, coffees }: { recipe: RecipeFormData | null;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-      <form action={action} id="recipe-form" className="space-y-6">
+      <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} id="recipe-form" className="space-y-6">
         {r.id && <input type="hidden" name="id" value={r.id} />}
         <input type="hidden" name="steps" value={JSON.stringify(steps)} />
 

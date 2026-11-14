@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import type { InventoryRow } from "@/lib/inventory";
 import { btn, field } from "@/components/admin/ui";
 import { applyCount } from "./actions";
+import { submitKeepingValues } from "@/lib/forms";
 
 const DRAFT_KEY = "kaffa-inventario-borrador";
 const TYPE_LABEL: Record<string, string> = { cafe: "Café", accesorio: "Accesorios", preparado: "Preparados de feria" };
@@ -77,7 +78,7 @@ export function CountSheet({ rows }: { rows: InventoryRow[] }) {
   );
 
   return (
-    <form action={action}>
+    <form action={action} onSubmit={(e) => submitKeepingValues(e, action)}>
       <input type="hidden" name="counts" value={payload} />
       <input type="hidden" name="reason" value={reason} />
 
