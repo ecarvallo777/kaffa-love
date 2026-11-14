@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 /*
- * Identidad visual PROVISORIA de Kaffa Love.
- * Todos los colores y fuentes salen de estas variables: para cambiar la marca
- * basta con editar este bloque.
+ * Identidad visual de Kaffa Love Roasters 11:11 (logo en public/brand/).
+ * El acento es el verde del logo (#508858), más profundo para que el texto chico
+ * tenga buen contraste sobre el crema. Todos los colores y fuentes salen de estas
+ * variables: para cambiar la marca basta con editar este bloque.
  */
 @theme {
   /* Papel: fondos cálidos */

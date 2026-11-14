@@ -234,7 +234,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **7.2** Migra los clientes de PrestaShop y envíales la bienvenida: `scripts/prestashop/README.md`.
 - [ ] **7.3** En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
 - [ ] **7.4** Activa los respaldos de Supabase (plan Pro) o exporta la base periódicamente.
-- [ ] **7.5** Cuando tengas el logo y los colores definitivos, se cambian en `src/app/globals.css` y `src/components/wordmark.tsx`.
+- [x] **7.5** *(14 de noviembre de 2026)* Logo original de Kaffa Love Roasters 11:11 (versión horizontal, clara e ícono en `public/brand/` y `src/app/`) y acento verde del logo en `src/app/globals.css`.
 - [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md`.
   - **Google Shopping gratis:** en [Merchant Center](https://merchants.google.com) agrega kaffalove.cl, verifica el sitio y en *Productos → Fuentes* agrega el feed programado `https://kaffalove.cl/feed/productos.xml` (diario).
   - **Tienda de Instagram:** en el Administrador de ventas de Meta crea un catálogo con la fuente `https://kaffalove.cl/feed/productos.xml?canal=instagram`.
