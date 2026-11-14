@@ -42,7 +42,7 @@ export function escapeHtml(s: string) {
 function emailLogo() {
   const site = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
   if (!site) return `<p style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px">Kaffa <i>Love</i></p>`;
-  return `<p style="margin:0 0 24px"><img src="${site}/brand/logo-horizontal.png" alt="Kaffa Love" width="214" height="32" style="display:block;border:0;height:32px;width:214px"></p>`;
+  return `<p style="margin:0 0 24px"><img src="${site}/brand/logo-horizontal.png" alt="Kaffa Love" width="181" height="32" style="display:block;border:0;height:32px;width:181px"></p>`;
 }
 
 /** Plantilla simple y legible en cualquier cliente de correo */

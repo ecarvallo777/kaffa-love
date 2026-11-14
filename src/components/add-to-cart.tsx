@@ -151,7 +151,7 @@ export function AddToCart({ product, available, maxQty, recipes = [] }: Props) {
           type="button"
           onClick={submit}
           disabled={!available}
-          className="flex h-13 flex-1 items-center justify-between gap-3 rounded-full bg-accent px-6 font-medium text-white shadow-[0_8px_20px_-8px_rgba(58,107,67,0.6)] transition-all hover:bg-accent-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-ink-mute disabled:shadow-none"
+          className="flex h-13 flex-1 items-center justify-between gap-3 rounded-full bg-accent px-6 font-medium text-white shadow-[0_8px_20px_-8px_rgba(56,123,77,0.6)] transition-all hover:bg-accent-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-ink-mute disabled:shadow-none"
         >
           <span className="whitespace-nowrap">
             {available ? (

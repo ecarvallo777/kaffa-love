@@ -131,7 +131,7 @@ export function CartView({ catalog, freeShippingFromClp }: { catalog: Catalog; f
         <p className="mt-1 text-xs text-ink-mute">IVA incluido</p>
         <Link
           href="/checkout"
-          className="mt-6 flex h-13 items-center justify-center rounded-full bg-accent font-medium text-white shadow-[0_8px_20px_-8px_rgba(58,107,67,0.6)] transition-colors hover:bg-accent-deep"
+          className="mt-6 flex h-13 items-center justify-center rounded-full bg-accent font-medium text-white shadow-[0_8px_20px_-8px_rgba(56,123,77,0.6)] transition-colors hover:bg-accent-deep"
         >
           Continuar con la compra
         </Link>

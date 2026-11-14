@@ -392,7 +392,7 @@ export function CheckoutForm({
         <button
           type="submit"
           disabled={busy || shipping === null}
-          className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-accent font-medium text-white shadow-[0_8px_20px_-8px_rgba(58,107,67,0.6)] transition-colors hover:bg-accent-deep disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-accent font-medium text-white shadow-[0_8px_20px_-8px_rgba(56,123,77,0.6)] transition-colors hover:bg-accent-deep disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? (
             <>

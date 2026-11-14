@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 /*
- * Identidad visual de Kaffa Love Roasters 11:11 (logo en public/brand/).
- * El acento es el verde del logo (#508858), más profundo para que el texto chico
- * tenga buen contraste sobre el crema. Todos los colores y fuentes salen de estas
- * variables: para cambiar la marca basta con editar este bloque.
+ * Identidad visual de Kaffa Love Roasters 11:11. Logo original (Canva) en
+ * public/brand/logo-original-canva.png; las versiones de la tienda salen de él.
+ * El acento es el verde exacto del logo (#387b4d), que tiene buen contraste
+ * sobre el crema (4,5:1). Todos los colores y fuentes salen de estas variables:
+ * para cambiar la marca basta con editar este bloque.
  */
 @theme {
   /* Papel: fondos cálidos */
@@ -16,9 +17,9 @@
   --color-ink-soft: #5b4d44;
   --color-ink-mute: #8b7c70;
   --color-line: #dacdb9;
-  /* Acentos: verde del logo (más profundo para el contraste del texto), hoja y crema */
-  --color-accent: #3a6b43;
-  --color-accent-deep: #2e5535;
+  /* Acentos: verde del logo (accent-deep para hover), hoja y crema */
+  --color-accent: #387b4d;
+  --color-accent-deep: #2b5f3c;
   --color-leaf: #3d5944;
   --color-crema: #c4873a;
 
