@@ -23,8 +23,8 @@ try {
   await shot(page, `${tag}01-toast`, false);
   assert((await page.$eval('[role="status"]', (el) => el.textContent)).includes("Agregado"), "aviso de agregado");
 
-  step("Agregar promoción Cafetera + Tetera");
-  await page.goto(`${BASE}/producto/promo-cafetera-tetera`, { waitUntil: "networkidle0" });
+  step("Agregar promoción V60 + Filtros + Tetera");
+  await page.goto(`${BASE}/producto/promo-v60-filtros-tetera`, { waitUntil: "networkidle0" });
   await clickText(page, "button", "Agregar");
   await sleep(300);
 
@@ -34,7 +34,7 @@ try {
   const lines = await page.$$eval("main li", (els) => els.length);
   assert(lines >= 2, `carrito con ${lines} líneas`);
   const cartText = await page.$eval("main", (el) => el.textContent);
-  assert(cartText.includes("$55.550"), "subtotal $55.550 (2 × 13.300 + 28.950)");
+  assert(cartText.includes("$66.850"), "subtotal $66.850 (2 × 13.500 + 39.850)");
   await shot(page, `${tag}02-carrito`);
 
   step("Checkout con retiro");
@@ -53,7 +53,8 @@ try {
   const { data: moves } = await db.from("stock_movements").select("delta, products(slug)").eq("order_id", orderId);
   const moved = Object.fromEntries(moves.map((m) => [m.products.slug, m.delta]));
   assert(moved["gabriela-colombia"] === -2, "reservó 2 La Gabriela");
-  assert(moved["cafetera-chemex-400"] === -1, "reservó 1 Chemex (promo)");
+  assert(moved["set-v60-300-ml-tornasol"] === -1, "reservó 1 set V60 (promo)");
+  assert(moved["filtros-01-100-unidades"] === -1, "reservó 1 paquete de filtros (promo)");
   assert(moved["tetera-cisne-350"] === -1, "reservó 1 tetera (promo)");
 
   step("Aprobar pago simulado");
@@ -65,7 +66,7 @@ try {
 
   const { data: order } = await db.from("orders").select("status, total_clp, mp_payment_id, order_items(grind, quantity)").eq("id", orderId).single();
   assert(order.status === "pagado", "pedido pagado en la base");
-  assert(order.total_clp === 55550, "total $55.550 con retiro gratis");
+  assert(order.total_clp === 66850, "total $66.850 con retiro gratis");
   assert(order.order_items.some((i) => i.grind === "media" && i.quantity === 2), "molienda guardada");
   const { data: events } = await db.from("events").select("type").eq("entity_id", orderId);
   const types = events.map((e) => e.type);
@@ -87,7 +88,7 @@ try {
   await clickText(page, "button", "Volver a comprar");
   await page.waitForFunction(() => location.pathname === "/carrito", { timeout: 20000 });
   await sleep(500);
-  assert((await page.$eval("main", (el) => el.textContent)).includes("$55.550"), "carrito con el pedido anterior");
+  assert((await page.$eval("main", (el) => el.textContent)).includes("$66.850"), "carrito con el pedido anterior");
 
   console.log(`\nOK · pedido ${orderId}`);
 } catch (e) {
