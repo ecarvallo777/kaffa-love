@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requireStaff } from "@/lib/auth";
 import { signOut } from "@/app/ingresar/actions";
+import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = { title: "Feria", robots: { index: false } };
 export const viewport: Viewport = { themeColor: "#1d1511", width: "device-width", initialScale: 1, maximumScale: 1 };
@@ -22,8 +23,9 @@ async function FairShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-paper">
       <header className="flex items-center justify-between gap-4 bg-ink px-4 py-2.5 text-paper">
-        <Link href="/feria" className="font-display text-lg">
-          Kaffa <span className="italic">Love</span> <span className="text-sm text-paper/60">· Feria</span>
+        <Link href="/feria" className="flex items-center gap-2" aria-label="Kaffa Love · Feria">
+          <Wordmark light className="h-7" />
+          <span className="text-sm text-paper/60">· Feria</span>
         </Link>
         <div className="flex items-center gap-4 text-sm text-paper/80">
           <span className="hidden sm:inline">{staff.name}</span>

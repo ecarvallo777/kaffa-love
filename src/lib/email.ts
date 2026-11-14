@@ -38,12 +38,19 @@ export function escapeHtml(s: string) {
   );
 }
 
+/** Logo del encabezado: la imagen alojada en el sitio (con texto alternativo); sin URL del sitio, el nombre en texto */
+function emailLogo() {
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (!site) return `<p style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px">Kaffa <i>Love</i></p>`;
+  return `<p style="margin:0 0 24px"><img src="${site}/brand/logo-horizontal.png" alt="Kaffa Love" width="214" height="32" style="display:block;border:0;height:32px;width:214px"></p>`;
+}
+
 /** Plantilla simple y legible en cualquier cliente de correo */
 export function emailLayout(title: string, body: string) {
   return `<!doctype html><html lang="es"><body style="margin:0;background:#f6f0e7;font-family:Arial,Helvetica,sans-serif;color:#1d1511">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:16px;padding:32px" cellpadding="0" cellspacing="0"><tr><td>
-<p style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px">Kaffa <i>Love</i></p>
+${emailLogo()}
 <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-weight:normal;font-size:26px">${escapeHtml(title)}</h1>
 ${body}
 </td></tr></table>

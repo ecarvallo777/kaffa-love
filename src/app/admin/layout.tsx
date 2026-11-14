@@ -27,7 +27,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
       <aside className="border-b border-line bg-paper-2 lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between gap-4 px-4 py-4 lg:block lg:shrink-0 lg:px-5 lg:pt-6 lg:pb-4">
           <Link href="/admin" aria-label="Resumen">
-            <Wordmark className="[&_span:last-child]:text-xl" />
+            <Wordmark className="h-8" />
           </Link>
           <p className="hidden text-xs text-ink-mute lg:mt-2 lg:block">Administración</p>
           {/* En celular: accesos en la barra superior */}

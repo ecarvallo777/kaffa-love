@@ -19,7 +19,7 @@ export function SiteHeader() {
       </div>
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
         <Link href="/" className="shrink-0" aria-label="Kaffa Love, inicio">
-          <Wordmark />
+          <Wordmark className="h-8 sm:h-10" priority />
         </Link>
         <nav
           aria-label="Menú principal"
