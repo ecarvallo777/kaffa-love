@@ -133,7 +133,7 @@ Se usan dos ramas de git:
   4. Agrega las tres variables en Vercel (Production y Preview) y vuelve a desplegar. La carpeta se revisa con la tarea de cada 5 minutos (una factura por pasada) o al instante con **Revisar Drive ahora**.
 - [x] **2.5** **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
 - [ ] **2.7** *(antes de la fase 6; detalle en `docs/VENTAS-Y-AGENTES.md`, «Capa cero»)* **Para atraer clientes desde el primer día**:
-  - Crea el [perfil de empresa en Google](https://business.google.com) con kaffalove.cl como sitio web. Google lo verifica y eso puede tardar días o semanas, así que conviene pedirlo ya.
+  - ✅ [Perfil de empresa en Google](https://business.google.com) creado (14 de noviembre de 2026). Su enlace de reseñas (`https://g.page/r/Cf-Uy3Uhs8GFECE/review`) está en **Configuración → Pedido de reseña**, así que el correo automático de reseñas ya se envía. Merchant Center (Google Shopping) se conecta después del lanzamiento, cuando kaffalove.cl muestre la tienda nueva.
   - Encarga tarjetas con un código QR a `https://kaffalove.cl/?utm_source=feria&utm_medium=qr` para el stand y las bolsas. Quien lo escanea ve el aviso de **10 % en su primera compra online**, que el pago descuenta solo. Las ventas que lleguen por ahí se ven en **Reportes → De dónde llegan los clientes**. Para Instagram usa `?utm_source=instagram` en el enlace de la bio.
   - Deja preparado el cambio de la bio de Instagram a kaffalove.cl, para hacerlo el día del lanzamiento.
 
