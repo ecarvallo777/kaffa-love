@@ -15,7 +15,7 @@ const email = `prueba+bienvenida${Date.now()}@kaffalove.test`;
 async function buyViaQr(p) {
   await p.goto(`${BASE}/?utm_source=feria&utm_medium=qr`, { waitUntil: "networkidle0" });
   await p.evaluate(() => localStorage.removeItem("kaffa-cart-v1"));
-  await p.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
+  await p.goto(`${BASE}/producto/gabriela-colombia`, { waitUntil: "networkidle0" });
   await clickText(p, "#molienda label", "Media");
   await clickText(p, "button", "Agregar al carrito");
   await p.waitForSelector('[role="status"]');
@@ -50,7 +50,7 @@ try {
   const ctx0 = browser.defaultBrowserContext();
   await ctx0.deleteCookie(...(await ctx0.cookies()));
 
-  const { data: product } = await db.from("products").select("price_clp").eq("slug", "caicedo-blend-colombia").single();
+  const { data: product } = await db.from("products").select("price_clp").eq("slug", "gabriela-colombia").single();
   const unit = product.price_clp - Math.round((product.price_clp * pct) / 100);
 
   step("Llegar por el QR muestra la bienvenida una vez");
@@ -96,7 +96,7 @@ try {
   step("Sin venir del QR no hay descuento");
   const ctx3 = await browser.createBrowserContext();
   const p3 = await ctx3.newPage();
-  await p3.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
+  await p3.goto(`${BASE}/producto/gabriela-colombia`, { waitUntil: "networkidle0" });
   await clickText(p3, "#molienda label", "Media");
   await clickText(p3, "button", "Agregar al carrito");
   await p3.waitForSelector('[role="status"]');

@@ -5,7 +5,7 @@ import { BASE, assert, sleep, step } from "./lib.mjs";
 import { adminDb } from "./db.mjs";
 
 const db = adminDb();
-const { data: product } = await db.from("products").select("id, slug, price_clp, image_urls").eq("slug", "caicedo-blend-colombia").single();
+const { data: product } = await db.from("products").select("id, slug, price_clp, image_urls").eq("slug", "gabriela-colombia").single();
 const original = product.image_urls;
 const photo = "https://kaffalove.cl/e2e-foto-de-prueba.jpg";
 

@@ -62,18 +62,18 @@ try {
   await page.type(`input[name="prep_${torta.id}"]`, "5");
   await Promise.all([page.waitForNavigation({ waitUntil: "networkidle0" }), clickText(page, "button", "Abrir jornada")]);
   assert((await text()).includes("[PRUEBA] Feria e2e"), "jornada abierta");
-  const before = await stockOf(db, ["caicedo-blend-colombia", "torta"]);
+  const before = await stockOf(db, ["gabriela-colombia", "torta"]);
   assert(before.torta === 5, "torta con 5 unidades");
 
-  step("Venta: 1 Caicedo (gruesa), 2 americanos, 1 torta");
-  await clickText(page, "button", "Caicedo Blend");
+  step("Venta: 1 La Gabriela (gruesa), 2 americanos, 1 torta");
+  await clickText(page, "button", "La Gabriela");
   await page.waitForSelector(".fixed");
   await clickText(page, ".fixed button", "Gruesa");
   await clickText(page, "button", "Preparados");
   await clickText(page, "button", "Americano");
   await clickText(page, "button", "Americano");
   await clickText(page, "button", "Torta");
-  assert((await text()).includes("$21.800"), "total $21.800 (13.300 + 2×2.500 + 3.500)");
+  assert((await text()).includes("$22.000"), "total $22.000 (13.500 + 2×2.500 + 3.500)");
   await shot(page, "feria-01-carrito", false);
   await clickText(page, "button", "Cobrar");
   await page.waitForFunction(() => document.body.textContent.includes("Ingresa en Mercado Pago Point"));
@@ -82,16 +82,16 @@ try {
   await page.waitForFunction(() => document.body.textContent.includes("registrada"), { timeout: 20000 });
   await sleep(800);
   await shot(page, "feria-03-venta-ok", false);
-  let after = await stockOf(db, ["caicedo-blend-colombia", "torta"]);
-  assert(after["caicedo-blend-colombia"] === before["caicedo-blend-colombia"] - 1, "descontó 1 Caicedo del stock compartido");
+  let after = await stockOf(db, ["gabriela-colombia", "torta"]);
+  assert(after["gabriela-colombia"] === before["gabriela-colombia"] - 1, "descontó 1 La Gabriela del stock compartido");
   assert(after.torta === 4, "descontó 1 torta");
 
   step("Anular la venta devuelve el stock");
   await page.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => b.textContent.trim() === "Anular"), { timeout: 20000 });
   await clickText(page, "button", "Anular");
   await page.waitForFunction(() => document.body.textContent.includes("anulada"), { timeout: 20000 });
-  after = await stockOf(db, ["caicedo-blend-colombia", "torta"]);
-  assert(after["caicedo-blend-colombia"] === before["caicedo-blend-colombia"] && after.torta === 5, "stock devuelto");
+  after = await stockOf(db, ["gabriela-colombia", "torta"]);
+  assert(after["gabriela-colombia"] === before["gabriela-colombia"] && after.torta === 5, "stock devuelto");
 
   step("Segunda venta y cierre con diferencia");
   await clickText(page, "button", "Preparados");

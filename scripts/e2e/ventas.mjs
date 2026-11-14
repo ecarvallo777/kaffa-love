@@ -68,7 +68,7 @@ try {
   console.log(`  (hoy calificarÃ­an ${q1.data?.length ?? 0} carritos y ${q2.data?.length ?? 0} recompras; solo producciÃ³n envÃ­a)`);
 
   step("Embudo: ver un cafÃ© y agregarlo al carrito");
-  await page.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/producto/gabriela-colombia`, { waitUntil: "networkidle0" });
   await clickText(page, "#molienda label", "Media");
   await clickText(page, "button", "Agregar al carrito");
   await page.waitForSelector('[role="status"]');
@@ -89,7 +89,7 @@ try {
   const sug = await page.$$eval('[data-testid="sugerencias"] li', (els) => els.length);
   assert(sug >= 1 && sug <= 3, `muestra ${sug} sugerencias`);
   const sugText = await page.$eval('[data-testid="sugerencias"]', (el) => el.innerText.toLowerCase());
-  assert(!sugText.includes("caicedo"), "no sugiere lo que ya estÃ¡ en el carrito");
+  assert(!sugText.includes("gabriela"), "no sugiere lo que ya estÃ¡ en el carrito");
   await shot(page, "ventas-carrito");
 
   step("Checkout registra el inicio");

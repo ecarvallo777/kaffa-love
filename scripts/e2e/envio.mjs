@@ -50,7 +50,7 @@ try {
   await ctx.deleteCookie(...(await ctx.cookies()));
 
   step("1 bolsa de café → XS");
-  await page.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/producto/gabriela-colombia`, { waitUntil: "networkidle0" });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: "networkidle0" });
   await clickText(page, "#molienda label", "Media");

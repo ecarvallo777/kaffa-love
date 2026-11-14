@@ -10,7 +10,7 @@ const tag = process.argv.includes("--mobile") ? "m-" : "";
 
 try {
   step("Ficha de café: agregar sin molienda debe pedirla");
-  await page.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/producto/gabriela-colombia`, { waitUntil: "networkidle0" });
   await clickText(page, "button", "Agregar");
   await page.waitForSelector('[role="alert"]');
   assert(await page.$eval('[role="alert"]', (el) => el.textContent.includes("molienda")), "pide elegir molienda");
@@ -52,7 +52,7 @@ try {
   // Se revisan los movimientos de ESTE pedido (otras compras pueden ocurrir en paralelo)
   const { data: moves } = await db.from("stock_movements").select("delta, products(slug)").eq("order_id", orderId);
   const moved = Object.fromEntries(moves.map((m) => [m.products.slug, m.delta]));
-  assert(moved["caicedo-blend-colombia"] === -2, "reservó 2 Caicedo");
+  assert(moved["gabriela-colombia"] === -2, "reservó 2 La Gabriela");
   assert(moved["cafetera-chemex-400"] === -1, "reservó 1 Chemex (promo)");
   assert(moved["tetera-cisne-350"] === -1, "reservó 1 tetera (promo)");
 

@@ -16,7 +16,7 @@ try {
   step("Entrar por el QR de feria y navegar sin la etiqueta");
   await page.goto(`${BASE}/?utm_source=feria&utm_medium=qr`, { waitUntil: "networkidle0" });
   await page.evaluate(() => localStorage.removeItem("kaffa-cart-v1"));
-  await page.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/producto/gabriela-colombia`, { waitUntil: "networkidle0" });
   const src = await page.evaluate(() => JSON.parse(localStorage.getItem("kaffa-src") ?? "null")?.s);
   assert(src === "feria", "el navegador recuerda el canal «feria»");
   await clickText(page, "#molienda label", "Media");

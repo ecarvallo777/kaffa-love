@@ -38,7 +38,7 @@ async function addCoffee(p, slug, grind) {
 
 try {
   step("Dispositivo A: compra con despacho y crea su cuenta");
-  await addCoffee(page, "caicedo-blend-colombia", "Media");
+  await addCoffee(page, "gabriela-colombia", "Media");
   await page.goto(`${BASE}/checkout`, { waitUntil: "networkidle0" });
   await page.waitForSelector('input[type="email"]');
   await page.type('input[type="email"]', EMAIL);

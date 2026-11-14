@@ -13,7 +13,7 @@ const ready = () => page.waitForFunction(() => !document.body.innerText.includes
 const recipeTitle = () => page.$eval("#receta h2", (el) => el.textContent.trim());
 
 try {
-  step("Administración: crear receta de prensa francesa para Caicedo");
+  step("Administración: crear receta de prensa francesa para La Gabriela");
   await page.goto(`${BASE}/ingresar`, { waitUntil: "networkidle0" });
   await page.type('input[name="email"]', "e2e-admin@kaffalove.test");
   await page.type('input[name="password"]', pass);
@@ -39,7 +39,7 @@ try {
   await areas[1].type("Presiona el émbolo y sirve.");
   const secs = await page.$$('input[type="number"][max="3600"]');
   await secs[1].type("2");
-  await clickText(page, "label", "Caicedo Blend");
+  await clickText(page, "label", "La Gabriela");
   await shot(page, "recetas-02-formulario");
   await clickText(page, "button", "Crear receta");
   await page.waitForFunction(() => location.pathname.startsWith("/admin/recetas/") && !location.pathname.endsWith("/nueva"), { timeout: 30000 });
@@ -47,7 +47,7 @@ try {
   assert(true, "receta creada");
 
   step("Ficha del café: receta destacada al abrir");
-  await page.goto(`${BASE}/producto/caicedo-blend-colombia`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/producto/gabriela-colombia`, { waitUntil: "networkidle0" });
   await page.waitForSelector("#receta");
   const initialTitle = await recipeTitle();
   assert(!!initialTitle, `muestra una receta destacada al abrir (${initialTitle})`);
@@ -61,9 +61,10 @@ try {
   await shot(page, "recetas-03-gruesa", false);
 
   step("Molienda sin receta: consejo general y receta destacada");
-  await clickText(page, "#molienda label", "Fina");
+  // "En grano" no tiene receta (fina, media y gruesa sí: Mokka, Chemex/V60 y prensa)
+  await clickText(page, "#molienda label", "En grano");
   await sleep(200);
-  assert((await page.$eval("#molienda", (el) => el.innerText)).includes("Molienda fina"), "consejo general para fina");
+  assert((await page.$eval("#molienda", (el) => el.innerText)).includes("Molienda en grano"), "consejo general para en grano");
   assert((await recipeTitle()) === initialTitle, "vuelve a la destacada");
 
   step("«Usar esta molienda» marca el selector");
@@ -75,11 +76,15 @@ try {
   assert((await page.$eval("#receta", (el) => el.innerText)).includes("es la indicada"), "la receta confirma la molienda");
 
   step("Temporizador de la receta de prensa (5 s)");
-  await clickText(page, "#molienda label", "Gruesa");
+  // Clic directo en el elemento: con recetas largas, un clic por coordenadas puede caer
+  // sobre la barra fija de "Agregar al carrito"
+  const domClick = (sel, txt) =>
+    page.evaluate((s, t) => [...document.querySelectorAll(s)].find((el) => el.textContent.includes(t)).click(), sel, txt);
+  await domClick("#molienda label", "Gruesa");
   await sleep(200);
-  await clickText(page, '#receta [role="tab"]', "Prensa e2e");
+  await domClick('#receta [role="tab"]', "Prensa e2e");
   await sleep(200);
-  await clickText(page, "#receta button", "Iniciar temporizador");
+  await domClick("#receta button", "Iniciar temporizador");
   await sleep(1200);
   assert((await page.$eval("#receta", (el) => el.innerText)).includes("Ahora: Vierte el agua"), "resalta el paso en curso");
   await shot(page, "recetas-04-temporizador", false);
