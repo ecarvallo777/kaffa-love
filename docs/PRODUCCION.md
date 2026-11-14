@@ -116,8 +116,7 @@ Se usan dos ramas de git:
   Según el mapa del tarifario, **Chiloé es Centro** y la **provincia de Palena** (Chaitén, Futaleufú, Hualaihué y Palena) es **Extremo**: esas cuatro comunas tienen tarifa propia en **Configuración → Comunas con tarifa propia**. Si Blue Express cambia sus precios, se editan en **Configuración → Tarifas de despacho**.
 - [x] **2.3b** Pregunta a Blue Express (WhatsApp +56 9 8953 7233) **qué comunas de la Región Metropolitana no están en la zona Santiago**: el tarifario dice que «la zona naranja no incluye todas las comunas de la R.M.», sin listarlas. Agrégalas en **Comunas con tarifa propia** con la tarifa que te indiquen (probablemente la de Centro: XS $4.300, S $5.600).
 - [ ] **2.4** *(pendiente: se completa antes de la fase 6)* **Productos**: fichas de los 3 cafés completas y con recetas ✅; fotos de los 3 cafés ✅ (14 de noviembre de 2026). Falta:
-  - Fotos de las 2 promociones y descripción corta de La Secreta.
-  - Tildes en las notas de cata (aromático, cítrico, láctico, azúcar).
+  - Fotos de las 2 promociones. (Descripción de La Secreta y tildes de las fichas ✅)
   - **La Betania:** la foto muestra la etiqueta de un lote anterior (Lavado, 85,5, Nov 25), distinta de la ficha, que es la correcta. Cuando haya bolsa con la etiqueta nueva, saca otra foto igual y se reemplaza.
 - [ ] **2.6** *(pendiente: antes de la fase 6)* **Costos y comisiones**: ingresa el costo unitario neto de cada producto (**Productos**) y las comisiones de Mercado Pago **sin IVA** para feria y tienda (**Configuración → Impuestos y comisiones**). Tienda online: **3,19 %** ✅. Point en feria: **2,44 %** ✅ (14 de noviembre de 2026; tarifas de la cuenta: crédito 2,69 % y débito o prepago 2,19 %, al instante; se usa el promedio suponiendo mitad y mitad). Sin esto, la utilidad de **Ferias** y **Reportes** sale más alta de lo real.
 
