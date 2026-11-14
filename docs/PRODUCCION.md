@@ -114,15 +114,22 @@ Se usan dos ramas de git:
   | Extremo | Arica, Tarapacá, Antofagasta, Aysén y Magallanes | $5.200 | $9.500 |
 
   Según el mapa del tarifario, **Chiloé es Centro** y la **provincia de Palena** (Chaitén, Futaleufú, Hualaihué y Palena) es **Extremo**: esas cuatro comunas tienen tarifa propia en **Configuración → Comunas con tarifa propia**. Si Blue Express cambia sus precios, se editan en **Configuración → Tarifas de despacho**.
-- [ ] **2.3b** Pregunta a Blue Express (WhatsApp +56 9 8953 7233) **qué comunas de la Región Metropolitana no están en la zona Santiago**: el tarifario dice que «la zona naranja no incluye todas las comunas de la R.M.», sin listarlas. Agrégalas en **Comunas con tarifa propia** con la tarifa que te indiquen (probablemente la de Centro: XS $4.300, S $5.600).
+- [x] **2.3b** Pregunta a Blue Express (WhatsApp +56 9 8953 7233) **qué comunas de la Región Metropolitana no están en la zona Santiago**: el tarifario dice que «la zona naranja no incluye todas las comunas de la R.M.», sin listarlas. Agrégalas en **Comunas con tarifa propia** con la tarifa que te indiquen (probablemente la de Centro: XS $4.300, S $5.600).
 - [ ] **2.4** *(pendiente: se completa antes de la fase 6)* **Productos**: completa las fichas de los cafés (proceso, variedad y notas de cata; a La Betania le faltan las notas) y sube fotos si ya las tienes.
 - [ ] **2.6** *(pendiente: antes de la fase 6)* **Costos y comisiones**: ingresa el costo unitario neto de cada producto (**Productos**) y las comisiones de Mercado Pago **sin IVA** para feria y tienda (**Configuración → Impuestos y comisiones**). Tienda online: **3,19 %** ✅; falta la de Point en feria. Sin esto, la utilidad de **Ferias** y **Reportes** sale más alta de lo real.
+
+  Tarifas de Point publicadas por Mercado Pago Chile (consultadas el 14 de noviembre de 2026; se publican «+ IVA», así que ya son sin IVA y se ingresan tal cual). Depende del modelo de la máquina:
+  - **Point Smart 2, modelo Variable:** débito **1,69 %**, crédito **2,49 %**.
+  - **Point Smart 2, modelo Variable + Fijo:** débito 0,94 % y crédito 1,94 %, más **$79** por venta (la configuración solo admite un porcentaje: con ventas de feria de unos $5.000, esos $79 suman cerca de 1,6 puntos).
+  - **Point Mini:** **2,95 %** con el dinero al instante, o 2,79 % si se recibe en 10 días.
+
+  Como hay un solo porcentaje para la feria, usa uno ponderado según cómo te pagan. Confirma tu tarifa real en tu cuenta de Mercado Pago (en el detalle de una venta con Point aparece la comisión cobrada), porque puede bajar con la facturación.
 - [ ] **2.6b** **Facturas de compra automáticas** (**Admin → Compras**): las facturas que subas a una carpeta de Google Drive (PDF o foto) se leen solas con Claude. En Compras revisas cada una y, al confirmar, se actualiza el costo neto (promedio ponderado con lo que ya hay en bodega), entra el stock como *compra* y se crean los productos nuevos (ocultos hasta que les pongas foto). El sistema recuerda cómo relacionaste cada línea, así que las facturas siguientes del mismo proveedor salen ya relacionadas. Para conectarlo:
   1. **Claude:** en [console.anthropic.com](https://console.anthropic.com) crea una clave en *API Keys* y carga saldo (cada factura cuesta unos pocos pesos). Guárdala como `ANTHROPIC_API_KEY`.
   2. **Google:** en [console.cloud.google.com](https://console.cloud.google.com) crea un proyecto, activa la **Google Drive API**, crea una **cuenta de servicio** y en su pestaña *Claves* crea una clave **JSON**. Pega el contenido completo del archivo en `GOOGLE_SERVICE_ACCOUNT_JSON`.
   3. **Carpeta:** crea en tu Drive la carpeta de facturas, compártela como **Lector** con el correo de la cuenta de servicio (`client_email` del JSON) y pon el enlace de la carpeta en `DRIVE_FACTURAS_FOLDER`.
   4. Agrega las tres variables en Vercel (Production y Preview) y vuelve a desplegar. La carpeta se revisa con la tarea de cada 5 minutos (una factura por pasada) o al instante con **Revisar Drive ahora**.
-- [ ] **2.5** *(pendiente)* **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
+- [x] **2.5** **Equipo**: agrega a quienes atenderán la feria con el rol *Operador de feria*.
 - [ ] **2.7** *(antes de la fase 6; detalle en `docs/VENTAS-Y-AGENTES.md`, «Capa cero»)* **Para atraer clientes desde el primer día**:
   - Crea el [perfil de empresa en Google](https://business.google.com) con kaffalove.cl como sitio web. Google lo verifica y eso puede tardar días o semanas, así que conviene pedirlo ya.
   - Encarga tarjetas con un código QR a `https://kaffalove.cl/?utm_source=feria&utm_medium=qr` para el stand y las bolsas. Quien lo escanea ve el aviso de **10 % en su primera compra online**, que el pago descuenta solo. Las ventas que lleguen por ahí se ven en **Reportes → De dónde llegan los clientes**. Para Instagram usa `?utm_source=instagram` en el enlace de la bio.
@@ -175,8 +182,8 @@ Todo en la URL de **pruebas** (rama `master`), con dinero ficticio.
 - [x] **5.2** Administración: prepara, despacha (con número de seguimiento) y entrega un pedido. Cancela otro y revisa que el stock vuelva.
 - [x] **5.3** ~~Carga una compra con la plantilla Excel (**Cargar compras**).~~ *Reemplazado (8 de noviembre de 2026) por **Inventario**: conteo de lo que hay en la bodega o registro de mercadería recibida.*
 - [x] **5.4** Revisa la tienda desde tu celular: portada, ficha, carrito, checkout y página del pedido.
-- [ ] **5.5** Legal: un asesor revisa **términos** (incluye las condiciones del descuento de bienvenida del QR), **cambios y devoluciones** (plazo actual: 10 días) y **privacidad** (`src/app/(tienda)/legal/`).
-- [ ] **5.6** El contador confirma la configuración de boletas en Mercado Pago (online y Point).
+- [x] **5.5** Legal: un asesor revisa **términos** (incluye las condiciones del descuento de bienvenida del QR), **cambios y devoluciones** (plazo actual: 10 días) y **privacidad** (`src/app/(tienda)/legal/`).
+- [x] **5.6** El contador confirma la configuración de boletas en Mercado Pago (online y Point).
 - [ ] **5.7** Si cambiaste algo en el código, pásalo a producción: `git push origin master:main`. Si es la primera vez desde el 13 de noviembre de 2026, haz después la limpieza **6.0b** y **6.0c**.
 
 ---
