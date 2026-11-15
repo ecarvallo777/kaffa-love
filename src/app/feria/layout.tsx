@@ -24,7 +24,7 @@ async function FairShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col bg-paper">
       <header className="flex items-center justify-between gap-4 bg-ink px-4 py-2.5 text-paper">
         <Link href="/feria" className="flex items-center gap-2" aria-label="Kaffa Love · Feria">
-          <Wordmark light className="h-7" />
+          <Wordmark plate className="h-6" />
           <span className="text-sm text-paper/60">· Feria</span>
         </Link>
         <div className="flex items-center gap-4 text-sm text-paper/80">

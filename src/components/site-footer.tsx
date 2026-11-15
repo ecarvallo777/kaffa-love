@@ -9,7 +9,7 @@ export function SiteFooter() {
     <footer className="mt-24 bg-ink text-paper">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
-          <Wordmark light className="h-10" />
+          <Wordmark plate className="h-10" />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-paper/70">
             Café de especialidad tostado en Chile y todo lo necesario para prepararlo bien en casa.
           </p>
