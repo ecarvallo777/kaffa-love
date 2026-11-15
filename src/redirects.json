@@ -35,6 +35,7 @@
   { "from": "/content/5-:rest", "to": "/legal/terminos" },
   { "from": "/contactanos", "to": "/contacto" },
   { "from": "/blog.html", "to": "/" },
+  { "from": "/blog/recetas-c7.html", "to": "/categoria/cafe-de-especialidad" },
   { "from": "/blog/:path*", "to": "/" },
   { "from": "/iniciar-sesion", "to": "/cuenta" },
   { "from": "/mi-cuenta", "to": "/cuenta" }
