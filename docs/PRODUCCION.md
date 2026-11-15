@@ -115,10 +115,10 @@ Se usan dos ramas de git:
 
   Según el mapa del tarifario, **Chiloé es Centro** y la **provincia de Palena** (Chaitén, Futaleufú, Hualaihué y Palena) es **Extremo**: esas cuatro comunas tienen tarifa propia en **Configuración → Comunas con tarifa propia**. Si Blue Express cambia sus precios, se editan en **Configuración → Tarifas de despacho**.
 - [x] **2.3b** Pregunta a Blue Express (WhatsApp +56 9 8953 7233) **qué comunas de la Región Metropolitana no están en la zona Santiago**: el tarifario dice que «la zona naranja no incluye todas las comunas de la R.M.», sin listarlas. Agrégalas en **Comunas con tarifa propia** con la tarifa que te indiquen (probablemente la de Centro: XS $4.300, S $5.600).
-- [ ] **2.4** *(pendiente: se completa antes de la fase 6)* **Productos**: fichas de los 3 cafés completas y con recetas ✅; fotos de los 3 cafés ✅ (14 de noviembre de 2026). Falta:
+- [x] **2.4** **Productos**: fichas de los 3 cafés completas y con recetas ✅; fotos de los 3 cafés ✅ (14 de noviembre de 2026). Falta:
   - Foto de la Promo V60 + Filtros + Tetera ✅. La Promo Cafetera + Tetera queda pausada (la desactivas tú en **Productos**); si vuelve, necesita foto. (Descripción de La Secreta y tildes de las fichas ✅)
-  - **La Betania:** la foto muestra la etiqueta de un lote anterior (Lavado, 85,5, Nov 25), distinta de la ficha, que es la correcta. Cuando haya bolsa con la etiqueta nueva, saca otra foto igual y se reemplaza.
-- [ ] **2.6** *(pendiente: antes de la fase 6)* **Costos y comisiones**: ingresa el costo unitario neto de cada producto (**Productos**) y las comisiones de Mercado Pago **sin IVA** para feria y tienda (**Configuración → Impuestos y comisiones**). Tienda online: **3,19 %** ✅. Point en feria: **2,44 %** ✅ (14 de noviembre de 2026; tarifas de la cuenta: crédito 2,69 % y débito o prepago 2,19 %, al instante; se usa el promedio suponiendo mitad y mitad). Sin esto, la utilidad de **Ferias** y **Reportes** sale más alta de lo real.
+  - *(Pendiente menor, no bloquea el lanzamiento)* **La Betania:** la foto muestra la etiqueta de un lote anterior (Lavado, 85,5, Nov 25), distinta de la ficha, que es la correcta. Cuando haya bolsa con la etiqueta nueva, saca otra foto igual y se reemplaza.
+- [x] **2.6** **Costos y comisiones**: ingresa el costo unitario neto de cada producto (**Productos**) y las comisiones de Mercado Pago **sin IVA** para feria y tienda (**Configuración → Impuestos y comisiones**). Tienda online: **3,19 %** ✅. Point en feria: **2,44 %** ✅ (14 de noviembre de 2026; tarifas de la cuenta: crédito 2,69 % y débito o prepago 2,19 %, al instante; se usa el promedio suponiendo mitad y mitad). Sin esto, la utilidad de **Ferias** y **Reportes** sale más alta de lo real.
 
   Tarifas de Point publicadas por Mercado Pago Chile (consultadas el 14 de noviembre de 2026; se publican «+ IVA», así que ya son sin IVA y se ingresan tal cual). Depende del modelo de la máquina:
   - **Point Smart 2, modelo Variable:** débito **1,69 %**, crédito **2,49 %**.
@@ -126,7 +126,7 @@ Se usan dos ramas de git:
   - **Point Mini:** **2,95 %** con el dinero al instante, o 2,79 % si se recibe en 10 días.
 
   Como hay un solo porcentaje para la feria, usa uno ponderado según cómo te pagan. Confirma tu tarifa real en tu cuenta de Mercado Pago (en el detalle de una venta con Point aparece la comisión cobrada), porque puede bajar con la facturación.
-- [ ] **2.6b** **Facturas de compra automáticas** (**Admin → Compras**): las facturas que subas a una carpeta de Google Drive (PDF o foto) se leen solas con Claude. En Compras revisas cada una y, al confirmar, se actualiza el costo neto (promedio ponderado con lo que ya hay en bodega), entra el stock como *compra* y se crean los productos nuevos (ocultos hasta que les pongas foto). El sistema recuerda cómo relacionaste cada línea, así que las facturas siguientes del mismo proveedor salen ya relacionadas. Para conectarlo:
+- [x] **2.6b** **Facturas de compra automáticas** (**Admin → Compras**): las facturas que subas a una carpeta de Google Drive (PDF o foto) se leen solas con Claude. En Compras revisas cada una y, al confirmar, se actualiza el costo neto (promedio ponderado con lo que ya hay en bodega), entra el stock como *compra* y se crean los productos nuevos (ocultos hasta que les pongas foto). El sistema recuerda cómo relacionaste cada línea, así que las facturas siguientes del mismo proveedor salen ya relacionadas. Para conectarlo:
   1. **Claude:** en [console.anthropic.com](https://console.anthropic.com) crea una clave en *API Keys* y carga saldo (cada factura cuesta unos pocos pesos). Guárdala como `ANTHROPIC_API_KEY`.
   2. **Google:** en [console.cloud.google.com](https://console.cloud.google.com) crea un proyecto, activa la **Google Drive API**, crea una **cuenta de servicio** y en su pestaña *Claves* crea una clave **JSON**. Pega el contenido completo del archivo en `GOOGLE_SERVICE_ACCOUNT_JSON`.
   3. **Carpeta:** crea en tu Drive la carpeta de facturas, compártela como **Lector** con el correo de la cuenta de servicio (`client_email` del JSON) y pon el enlace de la carpeta en `DRIVE_FACTURAS_FOLDER`.
@@ -196,7 +196,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 **Requisitos pendientes de la fase 2**
 
-- [ ] **6.0** Fichas de café completas (2.4), operadores de feria creados (2.5) y costos y comisiones ingresados (2.6).
+- [x] **6.0** Fichas de café completas (2.4), operadores de feria creados (2.5) y costos y comisiones ingresados (2.6).
 
 **Limpieza al pasar `master` a `main`** (la primera vez que se haga `git push origin master:main` después del 13 de noviembre de 2026)
 
