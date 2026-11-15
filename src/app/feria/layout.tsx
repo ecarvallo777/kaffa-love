@@ -7,7 +7,7 @@ import { signOut } from "@/app/ingresar/actions";
 import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = { title: "Feria", robots: { index: false } };
-export const viewport: Viewport = { themeColor: "#1d1511", width: "device-width", initialScale: 1, maximumScale: 1 };
+export const viewport: Viewport = { themeColor: "#ede4d5", width: "device-width", initialScale: 1, maximumScale: 1 };
 
 export default function FairLayout({ children }: LayoutProps<"/feria">) {
   return (
@@ -22,15 +22,15 @@ async function FairShell({ children }: { children: React.ReactNode }) {
   const staff = await requireStaff(["admin", "operador"], "/feria");
   return (
     <div className="flex min-h-screen flex-col bg-paper">
-      <header className="flex items-center justify-between gap-4 bg-ink px-4 py-2.5 text-paper">
+      <header className="flex items-center justify-between gap-4 border-b border-line bg-paper-2 px-4 py-2.5 text-ink">
         <Link href="/feria" className="flex items-center gap-2" aria-label="Kaffa Love · Feria">
-          <Wordmark plate className="h-6" />
-          <span className="text-sm text-paper/60">· Feria</span>
+          <Wordmark className="h-8" />
+          <span className="text-sm text-ink-mute">· Feria</span>
         </Link>
-        <div className="flex items-center gap-4 text-sm text-paper/80">
+        <div className="flex items-center gap-4 text-sm text-ink-soft">
           <span className="hidden sm:inline">{staff.name}</span>
-          {staff.role === "admin" && <Link href="/admin" className="hover:text-paper">Admin</Link>}
-          <form action={signOut}><button className="hover:text-paper">Salir</button></form>
+          {staff.role === "admin" && <Link href="/admin" className="hover:text-ink">Admin</Link>}
+          <form action={signOut}><button className="hover:text-ink">Salir</button></form>
         </div>
       </header>
       <div className="flex-1">{children}</div>
