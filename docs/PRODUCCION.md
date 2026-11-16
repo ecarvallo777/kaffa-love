@@ -222,7 +222,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 **Verificación inmediata**
 
-- [ ] **6.8** Compra real de bajo monto en `https://kaffalove.cl`: debe quedar **Pagado**. Devuélvela desde Mercado Pago.
+- [x] **6.8** *(16 de noviembre de 2026: pedido #104 de $8.300 pagado en producción; el reembolso llegó por el webhook como «Pago reembolsado»)* Compra real de bajo monto en `https://kaffalove.cl`: debe quedar **Pagado**. Devuélvela desde Mercado Pago.
 - [x] **6.9** Prueba una URL antigua, por ejemplo `https://kaffalove.cl/10-cafe-especialidad`: debe llevar a la categoría nueva.
 
 **Volver atrás si algo falla:** quita `kaffalove.cl` y `www` del proyecto (**Settings → Domains**) y vuelve a crear en **DNS Records** el registro A `147.93.14.12` y el CNAME `www → kaffalove.cl`. PrestaShop sigue en Hostinger hasta la fase 8.
