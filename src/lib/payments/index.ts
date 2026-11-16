@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mercadoPagoConfigured, simulatedPaymentsEnabled, siteUrl } from "@/lib/env";
 import { logEvent } from "@/lib/events";
+import { refreshCatalog } from "@/lib/catalog-revalidate";
 import { confirmOrderPaid, getOrder, preferenceItems } from "@/lib/orders";
 import { createPreference, getPayment, searchPaymentsByOrder } from "@/lib/payments/mercadopago";
 
@@ -114,11 +115,44 @@ export async function syncMercadoPagoPayment(paymentId: string, expectedOrderId?
     case "refunded":
     case "charged_back":
       await logEventOnce("pago_reembolsado", orderId, id, { payment_id: id, estado: payment.status });
+      await cancelRefundedOrder(orderId, id, payment.status);
       break;
     default:
       await logEventOnce(`pago_actualizado`, orderId, `${id}:${payment.status}`, { payment_id: id, estado: payment.status });
   }
   return payment;
+}
+
+/**
+ * Reembolso total o contracargo en Mercado Pago: el pedido se cancela solo, igual que con el
+ * botón Cancelar de la administración (devuelve el stock y deja de contar como venta).
+ * Los reembolsos parciales no llegan aquí: en Mercado Pago el pago sigue "approved".
+ */
+async function cancelRefundedOrder(orderId: string, paymentId: string, status: string) {
+  const db = createAdminClient();
+  const { data: order } = await db.from("orders").select("id, status, mp_payment_id").eq("id", orderId).maybeSingle();
+  if (!order || ["cancelado", "expirado", "rechazado"].includes(order.status)) return;
+  // Solo si el pago devuelto es el que pagó el pedido: devolver un pago duplicado no anula la compra
+  if (order.mp_payment_id !== paymentId) return;
+
+  // Si falla, se lanza el error: Mercado Pago reintenta el aviso y se vuelve a intentar
+  const { error: stockError } = await db.rpc("release_order_stock", { p_order_id: orderId });
+  if (stockError) throw new Error(`No se pudo devolver el stock del pedido reembolsado: ${stockError.message}`);
+  const { error } = await db
+    .from("orders")
+    .update({ status: "cancelado", reserved_until: null, updated_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .eq("status", order.status);
+  if (error) throw new Error(`No se pudo cancelar el pedido reembolsado: ${error.message}`);
+
+  await logEvent("pedido_cancelado", "order", orderId, {
+    de: order.status,
+    a: "cancelado",
+    por: "Mercado Pago",
+    motivo: status === "charged_back" ? "contracargo" : "reembolso",
+    payment_id: paymentId,
+  });
+  refreshCatalog();
 }
 
 /**
