@@ -46,3 +46,7 @@ next-env.d.ts
 
 # credenciales generadas por scripts/crear-usuario.mjs
 /.credenciales-*
+
+# Datos personales de la migración desde PrestaShop (nunca al repositorio)
+/migracion/
+*.csv
