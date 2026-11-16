@@ -206,24 +206,24 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 **Credenciales reales**
 
-- [ ] **6.1** En Mercado Pago, copia el **Access Token de producción** en `MP_ACCESS_TOKEN` (**Production**).
-- [ ] **6.2** En **Webhooks → Modo productivo**, configura la URL `https://kaffalove.cl/api/webhooks/mercadopago` con el evento **Pagos**, y copia su clave en `MP_WEBHOOK_SECRET` (**Production**).
-- [ ] **6.3** Cambia `NEXT_PUBLIC_SITE_URL` (**Production**) a `https://kaffalove.cl` y haz **Redeploy** de `main`.
+- [x] **6.1** En Mercado Pago, copia el **Access Token de producción** en `MP_ACCESS_TOKEN` (**Production**).
+- [x] **6.2** En **Webhooks → Modo productivo**, configura la URL `https://kaffalove.cl/api/webhooks/mercadopago` con el evento **Pagos**, y copia su clave en `MP_WEBHOOK_SECRET` (**Production**).
+- [x] **6.3** Cambia `NEXT_PUBLIC_SITE_URL` (**Production**) a `https://kaffalove.cl` y haz **Redeploy** de `main`.
 
 **Dominio**
 
-- [ ] **6.4** En **Vercel → Domains → kaffalove.cl → DNS Records**, borra los registros **1, 2 y 3** de la fase 0 (el **A** y el **AAAA** del dominio principal, que apuntan a Hostinger, y el **CNAME** de `www`). **No toques** los de correo (MX, TXT, DKIM, autodiscover, autoconfig) ni los de Resend.
-- [ ] **6.5** En el proyecto, **Settings → Domains → Add**: agrega `kaffalove.cl` y `www.kaffalove.cl`. **Desmarca** «Redirect apex domains to www»: la tienda usa `https://kaffalove.cl` sin www, así que `www` debe redirigir a `kaffalove.cl`. Elige el entorno **Production**. Como el DNS ya está en Vercel, la conexión es automática.
-- [ ] **6.6** Espera a que ambos dominios aparezcan como **Valid Configuration**. El certificado https se emite solo, en minutos.
-- [ ] **6.7** Actualiza en cron-job.org la URL a `https://kaffalove.cl/api/cron/expirar-reservas` y el secreto al `CRON_SECRET` de **Production**.
+- [x] **6.4** *(16 de noviembre de 2026: kaffalove.cl en Vercel; www redirige a kaffalove.cl; correo sigue en Hostinger)* En **Vercel → Domains → kaffalove.cl → DNS Records**, borra los registros **1, 2 y 3** de la fase 0 (el **A** y el **AAAA** del dominio principal, que apuntan a Hostinger, y el **CNAME** de `www`). **No toques** los de correo (MX, TXT, DKIM, autodiscover, autoconfig) ni los de Resend.
+- [x] **6.5** En el proyecto, **Settings → Domains → Add**: agrega `kaffalove.cl` y `www.kaffalove.cl`. **Desmarca** «Redirect apex domains to www»: la tienda usa `https://kaffalove.cl` sin www, así que `www` debe redirigir a `kaffalove.cl`. Elige el entorno **Production**. Como el DNS ya está en Vercel, la conexión es automática.
+- [x] **6.6** Espera a que ambos dominios aparezcan como **Valid Configuration**. El certificado https se emite solo, en minutos.
+- [x] **6.7** Actualiza en cron-job.org la URL a `https://kaffalove.cl/api/cron/expirar-reservas` y el secreto al `CRON_SECRET` de **Production**.
 
-- [ ] **6.7b** En Vercel, pestaña **Analytics → Enable** (Web Analytics, plan gratis). Mide visitas y páginas; el embudo de compra (vio producto → agregó al carrito → llegó al pago) se ve en **Reportes** sin hacer nada.
-- [ ] **6.7c** Revisa en **Configuración → Correos automáticos** que «Carrito abandonado», «Recompra» y «Pedido de reseña» estén como quieres. El de reseña necesita el **enlace para dejar la reseña** de tu perfil de Google (paso 2.7); sin él no se envía. Solo **Production** los envía (la base de datos es compartida y el sitio de pruebas mandaría enlaces que no son kaffalove.cl); para probarlos en otro entorno, define `AUTOMATION_EMAILS=on` en ese entorno. Van solo a clientes que aceptaron novedades e incluyen un enlace de baja.
+- [x] **6.7b** En Vercel, pestaña **Analytics → Enable** (Web Analytics, plan gratis). Mide visitas y páginas; el embudo de compra (vio producto → agregó al carrito → llegó al pago) se ve en **Reportes** sin hacer nada.
+- [x] **6.7c** Revisa en **Configuración → Correos automáticos** que «Carrito abandonado», «Recompra» y «Pedido de reseña» estén como quieres. El de reseña necesita el **enlace para dejar la reseña** de tu perfil de Google (paso 2.7); sin él no se envía. Solo **Production** los envía (la base de datos es compartida y el sitio de pruebas mandaría enlaces que no son kaffalove.cl); para probarlos en otro entorno, define `AUTOMATION_EMAILS=on` en ese entorno. Van solo a clientes que aceptaron novedades e incluyen un enlace de baja.
 
 **Verificación inmediata**
 
 - [ ] **6.8** Compra real de bajo monto en `https://kaffalove.cl`: debe quedar **Pagado**. Devuélvela desde Mercado Pago.
-- [ ] **6.9** Prueba una URL antigua, por ejemplo `https://kaffalove.cl/10-cafe-especialidad`: debe llevar a la categoría nueva.
+- [x] **6.9** Prueba una URL antigua, por ejemplo `https://kaffalove.cl/10-cafe-especialidad`: debe llevar a la categoría nueva.
 
 **Volver atrás si algo falla:** quita `kaffalove.cl` y `www` del proyecto (**Settings → Domains**) y vuelve a crear en **DNS Records** el registro A `147.93.14.12` y el CNAME `www → kaffalove.cl`. PrestaShop sigue en Hostinger hasta la fase 8.
 
