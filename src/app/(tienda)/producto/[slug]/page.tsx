@@ -21,6 +21,7 @@ import { AddToCart } from "@/components/add-to-cart";
 import { GrindGuide } from "@/components/grind-guide";
 import { RecipeTabs } from "@/components/recipe-card";
 import { recipeRatio, recipesForProduct } from "@/lib/recipes";
+import { getSettings } from "@/lib/settings";
 export async function generateStaticParams() {
   const catalog = await getCatalog();
   return catalog.products.map((p) => ({ slug: p.slug }));
@@ -168,7 +169,9 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
           </div>
 
           <ul className="mt-8 divide-y divide-line border-y border-line text-sm">
-            <Perk icon="truck" title="Despacho a domicilio" text="Cotizado con Blue Express al finalizar la compra." />
+            <Suspense fallback={<ShippingPerk free={null} />}>
+              <ShippingPerkLoader />
+            </Suspense>
             <Perk icon="store" title="Retiro sin costo" text="Elige retiro en persona en el checkout." />
             <Perk icon="lock" title="Pago seguro" text="Con Mercado Pago. La boleta llega desde Mercado Pago." />
           </ul>
@@ -219,6 +222,18 @@ function StockLine({ available, low, maxQty }: { available: boolean; low: boolea
       <span className={`size-2 rounded-full ${dot}`} aria-hidden />
       {text}
     </p>
+  );
+}
+
+async function ShippingPerkLoader() {
+  return <ShippingPerk free={(await getSettings()).freeShippingFromClp} />;
+}
+
+function ShippingPerk({ free }: { free: number | null }) {
+  return free ? (
+    <Perk icon="truck" title={`Despacho gratis sobre ${clp(free)}`} text="Bajo ese monto, se cotiza con Blue Express al finalizar la compra." />
+  ) : (
+    <Perk icon="truck" title="Despacho a domicilio" text="Cotizado con Blue Express al finalizar la compra." />
   );
 }
 

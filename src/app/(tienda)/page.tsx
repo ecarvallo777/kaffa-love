@@ -11,13 +11,14 @@ import {
   tastingNotes,
   topCategories,
 } from "@/lib/catalog-utils";
+import { getSettings } from "@/lib/settings";
 import { ProductArt } from "@/components/product-art";
 import { ProductCard } from "@/components/product-card";
 import { GrindGuide } from "@/components/grind-guide";
 import { flavorColor } from "@/components/tasting-notes";
 
 export default async function Home() {
-  const catalog = await getCatalog();
+  const [catalog, settings] = await Promise.all([getCatalog(), getSettings()]);
   const byType = (t: Product["type"]) =>
     sortForShop(
       catalog.products.filter((p) => p.type === t),
@@ -36,7 +37,7 @@ export default async function Home() {
     <>
       {featured && <Hero coffee={featured} catalog={catalog} />}
 
-      <ValueStrip />
+      <ValueStrip freeShippingFromClp={settings.freeShippingFromClp} />
 
       {coffees.length > 0 && (
         <Section
@@ -173,10 +174,12 @@ function Hero({ coffee, catalog }: { coffee: Product; catalog: Catalog }) {
   );
 }
 
-function ValueStrip() {
+function ValueStrip({ freeShippingFromClp: free }: { freeShippingFromClp: number | null }) {
   const items = [
     { t: "Molido a tu medida", d: "En grano, fina, media o gruesa" },
-    { t: "Retiro sin costo", d: "O despacho a domicilio" },
+    free
+      ? { t: `Despacho gratis sobre ${clp(free)}`, d: "O retiro sin costo" }
+      : { t: "Retiro sin costo", d: "O despacho a domicilio" },
     { t: "Pago seguro", d: "Con Mercado Pago" },
     { t: "Boleta electrónica", d: "Emitida por Mercado Pago" },
   ];

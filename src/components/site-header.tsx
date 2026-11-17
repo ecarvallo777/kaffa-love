@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getCatalog } from "@/lib/catalog";
 import { getPublishedGuides } from "@/lib/guides";
-import { categoryHref, topCategories } from "@/lib/catalog-utils";
+import { getSettings } from "@/lib/settings";
+import { categoryHref, clp, topCategories } from "@/lib/catalog-utils";
 import { CartButton } from "@/components/cart-button";
 import { Wordmark } from "@/components/wordmark";
 
@@ -11,7 +12,9 @@ export function SiteHeader() {
     <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/85 backdrop-blur-md">
       <div className="bg-ink text-paper">
         <p className="mx-auto max-w-7xl px-4 py-2 text-center text-xs tracking-wide sm:px-6">
-          Despacho a domicilio o <strong className="font-medium">retiro sin costo</strong>
+          <Suspense fallback={<>Despacho a domicilio o <strong className="font-medium">retiro sin costo</strong></>}>
+            <ShippingNotice />
+          </Suspense>
           <span className="max-sm:hidden">
             <span className="mx-2 text-paper/40">·</span>
             Paga seguro con Mercado Pago
@@ -55,6 +58,19 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+/** Con despacho gratis configurado en Admin → Configuración, lo anuncia con su monto */
+async function ShippingNotice() {
+  const { freeShippingFromClp: free } = await getSettings();
+  if (!free) return <>Despacho a domicilio o <strong className="font-medium">retiro sin costo</strong></>;
+  return (
+    <>
+      <strong className="font-medium">Despacho gratis</strong> sobre {clp(free)}
+      <span className="mx-2 text-paper/40">·</span>
+      Retiro sin costo
+    </>
   );
 }
 

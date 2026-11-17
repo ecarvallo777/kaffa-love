@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
+import { clp } from "@/lib/catalog-utils";
 import { Prose } from "@/components/prose";
 
 export const metadata: Metadata = { title: "Términos y condiciones" };
@@ -44,7 +45,7 @@ export default async function TermsPage() {
       <ul>
         <li><strong>Retiro en persona:</strong> sin costo, en el lugar y horario indicados al comprar. Te avisaremos por correo cuando esté listo.</li>
         <li>
-          <strong>Despacho a domicilio:</strong> realizado por Blue Express. El costo y plazo estimado se muestran en el checkout según tu región.
+          <strong>Despacho a domicilio:</strong> realizado por Blue Express. El costo y plazo estimado se muestran en el checkout según tu región.{s.freeShippingFromClp ? ` Es gratis para compras con un subtotal de ${clp(s.freeShippingFromClp)} o más (después de descuentos).` : ""}
           Los plazos se cuentan en días hábiles desde la confirmación del pago.
         </li>
       </ul>
