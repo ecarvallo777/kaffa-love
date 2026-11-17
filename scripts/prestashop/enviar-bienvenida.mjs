@@ -55,8 +55,12 @@ if (previewFile) {
 }
 
 const db = adminDb();
-const { data: customers } = await db.from("customers").select("email, name").eq("source", "prestashop").is("auth_user_id", null);
-console.log(`${customers.length} clientes migrados sin cuenta.`);
+const { data: all } = await db.from("customers").select("id, email, name").eq("source", "prestashop").is("auth_user_id", null);
+// La tienda también lo envía de forma programada (src/lib/welcome-migrated.ts): nunca dos veces
+const { data: sent } = await db.from("events").select("entity_id").eq("type", "bienvenida_enviada").in("entity_id", all.map((c) => c.id));
+const done = new Set((sent ?? []).map((e) => e.entity_id));
+const customers = all.filter((c) => !done.has(c.id));
+console.log(`${customers.length} clientes migrados sin cuenta y sin bienvenida (${done.size} ya la recibieron).`);
 if (!send) {
   console.log("Simulación. Agrega --enviar para mandar los correos (o --vista archivo.html para ver el texto).");
   process.exit(0);
@@ -73,8 +77,10 @@ for (const c of customers) {
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from: env.EMAIL_FROM, to: c.email, subject: SUBJECT, html: emailHtml(c.name, link) }),
   });
-  if (res.ok) ok++;
-  else console.error(`${c.email}: ${res.status} ${await res.text()}`);
+  if (res.ok) {
+    ok++;
+    await db.from("events").insert({ type: "bienvenida_enviada", entity: "customer", entity_id: c.id, data: { origen: "prestashop", via: "script" } });
+  } else console.error(`${c.email}: ${res.status} ${await res.text()}`);
   await new Promise((r) => setTimeout(r, 600));
 }
 console.log(`Enviados: ${ok} de ${customers.length}.`);

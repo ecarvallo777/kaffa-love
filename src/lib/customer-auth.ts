@@ -1,7 +1,7 @@
 import "server-only";
 import { createAuthClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
+import { emailLayout, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/env";
 
 export type Customer = { id: string; email: string; name: string | null; marketing_consent: boolean };
@@ -90,19 +90,36 @@ export async function sendPasswordLink(email: string, kind: "recuperar" | "bienv
 
   const link = `${siteUrl()}/cuenta/nueva-clave?token_hash=${encodeURIComponent(data.properties.hashed_token)}`;
   const { data: customer } = await db.from("customers").select("name").eq("email", normalized).maybeSingle();
-  const first = customer?.name?.split(" ")[0];
-  const title = kind === "bienvenida" ? `${first ? `${escapeHtml(first)}, ` : ""}estrenamos tienda` : "Crea una nueva contraseña";
-  const body =
-    kind === "bienvenida"
-      ? `<p>Renovamos la tienda de Kaffa Love. Por seguridad, las contraseñas anteriores no se traspasaron: crea una nueva para ver tus pedidos y comprar más rápido.</p>`
-      : `<p>Recibimos una solicitud para cambiar la contraseña de tu cuenta. Si no fuiste tú, ignora este correo.</p>`;
+  // PrestaShop guarda algunos nombres en mayúsculas: "MARÍA" → "María"
+  const word = customer?.name?.trim().split(/\s+/)[0];
+  const first = word ? word.charAt(0).toLocaleUpperCase("es") + word.slice(1).toLocaleLowerCase("es") : null;
+  const site = siteUrl();
+  const domain = site.replace(/^https?:\/\//, "");
+  const button = `<p style="margin:24px 0"><a href="${link}" style="background:#387b4d;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Crear contraseña</a></p>`;
+  const renew = `Si el botón ya no funciona, pide un enlace nuevo en <a href="${site}/cuenta/recuperar" style="color:#8b7c70">${domain}/cuenta/recuperar</a>.`;
+
+  if (kind === "bienvenida") {
+    // Mismo texto que scripts/prestashop/enviar-bienvenida.mjs
+    return sendEmail({
+      to: normalized,
+      subject: "Estrenamos tienda: crea tu contraseña",
+      html: emailLayout(
+        `${first ? `${first}, e` : "E"}strenamos tienda`,
+        `<p>Renovamos la tienda de Kaffa Love en <a href="${site}" style="color:#387b4d">${domain}</a>. Ahora puedes ver nuestros cafés con su ficha completa, encontrar recetas para prepararlos y seguir tus pedidos.</p>
+<p>Por seguridad, las contraseñas anteriores no se traspasaron. Crea una nueva para entrar a tu cuenta:</p>
+${button}
+<p>En tu cuenta también puedes activar las novedades: nuevos cafés, recetas y promociones. Solo te escribiremos si las activas.</p>
+<p style="color:#8b7c70;font-size:13px">${renew} Si no quieres una cuenta, ignora este correo: puedes seguir comprando sin ella.</p>`,
+      ),
+    });
+  }
 
   return sendEmail({
     to: normalized,
-    subject: kind === "bienvenida" ? "Estrenamos tienda: crea tu contraseña" : "Cambia tu contraseña de Kaffa Love",
+    subject: "Cambia tu contraseña de Kaffa Love",
     html: emailLayout(
-      title,
-      `${body}<p style="margin:24px 0"><a href="${link}" style="background:#387b4d;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Crear contraseña</a></p><p style="color:#8b7c70;font-size:13px">Si el botón ya no funciona, pide un enlace nuevo en <a href="${siteUrl()}/cuenta/recuperar" style="color:#8b7c70">${siteUrl()}/cuenta/recuperar</a>.</p>`,
+      "Crea una nueva contraseña",
+      `<p>Recibimos una solicitud para cambiar la contraseña de tu cuenta. Si no fuiste tú, ignora este correo.</p>${button}<p style="color:#8b7c70;font-size:13px">${renew}</p>`,
     ),
   });
 }
