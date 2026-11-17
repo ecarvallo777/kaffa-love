@@ -43,6 +43,21 @@ function parseCsv(file) {
 // Nombres de columna posibles según versión/idioma de PrestaShop
 const pick = (row, ...keys) => keys.map((k) => row[k]).find((v) => v !== undefined && v !== "") ?? "";
 
+// Mismos nombres que src/lib/chile.ts: el envío se calcula comparando el nombre exacto
+const REGIONES = [
+  "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", "Valparaíso",
+  "Metropolitana de Santiago", "Libertador General Bernardo O'Higgins", "Maule", "Ñuble", "Biobío",
+  "La Araucanía", "Los Ríos", "Los Lagos", "Aysén del General Carlos Ibáñez del Campo",
+  "Magallanes y de la Antártica Chilena",
+];
+const plain = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/^region (de |del )?/, "").trim();
+/** PrestaShop guarda "METROPOLITANA DE SANTIAGO", "NUBLE", "ARAUCANIA"... */
+function region(raw) {
+  const p = plain(raw);
+  if (!p) return "Sin región";
+  return REGIONES.find((r) => plain(r) === p) ?? REGIONES.find((r) => plain(r).includes(p) || p.includes(plain(r))) ?? raw;
+}
+
 const customers = parseCsv(customersFile);
 const addresses = addressesFile ? parseCsv(addressesFile) : [];
 console.log(`${customers.length} clientes y ${addresses.length} direcciones leídos.`);
@@ -69,10 +84,15 @@ for (const c of customers) {
 
   if (!apply) { console.log(`[simulación] ${email} · ${name ?? "(sin nombre)"} · ${myAddresses.length} dirección(es)${consent.marketing_consent ? " · acepta novedades" : ""}`); continue; }
 
-  const { data: existing } = await db.from("customers").select("id").eq("email", email).maybeSingle();
+  const { data: existing } = await db.from("customers").select("id, name, phone, marketing_consent").eq("email", email).maybeSingle();
   let id = existing?.id;
   if (existing) {
-    await db.from("customers").update({ name, phone, ...consent }).eq("id", id);
+    // Lo que el cliente dejó en la tienda nueva es más reciente: solo se completan datos vacíos
+    const patch = {};
+    if (!existing.name && name) patch.name = name;
+    if (!existing.phone && phone) patch.phone = phone;
+    if (!existing.marketing_consent && consent.marketing_consent) Object.assign(patch, consent);
+    if (Object.keys(patch).length) await db.from("customers").update(patch).eq("id", id);
     updated++;
   } else {
     const { data, error } = await db.from("customers").insert({ email, name, phone, source: "prestashop", ...consent }).select("id").single();
@@ -80,16 +100,21 @@ for (const c of customers) {
     id = data.id;
     created++;
   }
+  // Evita repetir direcciones (correo duplicado en PrestaShop o importación ejecutada dos veces)
+  const { data: saved } = await db.from("addresses").select("street, commune").eq("customer_id", id);
+  const key = (s, c) => `${s}|${c}`.toLowerCase().replace(/\s+/g, " ").trim();
+  const seen = new Set((saved ?? []).map((a) => key(a.street, a.commune)));
   for (const a of myAddresses) {
     const street = pick(a, "address1", "dirección", "direccion");
     const commune = pick(a, "city", "ciudad", "comuna");
-    if (!street || !commune) continue;
+    if (!street || !commune || seen.has(key(street, commune))) continue;
+    seen.add(key(street, commune));
     await db.from("addresses").insert({
       customer_id: id,
       street,
       apartment: pick(a, "address2", "dirección (2)", "direccion 2") || null,
       commune,
-      region: pick(a, "state", "estado", "región", "region") || "Sin región",
+      region: region(pick(a, "state", "estado", "región", "region")),
       notes: pick(a, "other", "otro") || null,
     });
     addrCount++;
