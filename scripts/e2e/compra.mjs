@@ -34,7 +34,7 @@ try {
   const lines = await page.$$eval("main li", (els) => els.length);
   assert(lines >= 2, `carrito con ${lines} líneas`);
   const cartText = await page.$eval("main", (el) => el.textContent);
-  assert(cartText.includes("$66.850"), "subtotal $66.850 (2 × 13.500 + 39.850)");
+  assert(cartText.includes("$56.990"), "subtotal $56.990 (2 × 13.500 + 29.990)");
   await shot(page, `${tag}02-carrito`);
 
   step("Checkout con retiro");
@@ -66,7 +66,7 @@ try {
 
   const { data: order } = await db.from("orders").select("status, total_clp, mp_payment_id, order_items(grind, quantity)").eq("id", orderId).single();
   assert(order.status === "pagado", "pedido pagado en la base");
-  assert(order.total_clp === 66850, "total $66.850 con retiro gratis");
+  assert(order.total_clp === 56990, "total $56.990 con retiro gratis");
   assert(order.order_items.some((i) => i.grind === "media" && i.quantity === 2), "molienda guardada");
   const { data: events } = await db.from("events").select("type").eq("entity_id", orderId);
   const types = events.map((e) => e.type);
@@ -88,7 +88,7 @@ try {
   await clickText(page, "button", "Volver a comprar");
   await page.waitForFunction(() => location.pathname === "/carrito", { timeout: 20000 });
   await sleep(500);
-  assert((await page.$eval("main", (el) => el.textContent)).includes("$66.850"), "carrito con el pedido anterior");
+  assert((await page.$eval("main", (el) => el.textContent)).includes("$56.990"), "carrito con el pedido anterior");
 
   console.log(`\nOK · pedido ${orderId}`);
 } catch (e) {
