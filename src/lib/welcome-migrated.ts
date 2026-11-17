@@ -1,8 +1,10 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/events";
-import { sendPasswordLink } from "@/lib/customer-auth";
+import { sendPasswordLink, welcomeEmail } from "@/lib/customer-auth";
 import { automationsActive } from "@/lib/automations";
+import { sendEmail } from "@/lib/email";
+import { siteUrl } from "@/lib/env";
 
 /*
  * Envío programado del correo "Estrenamos tienda" a los clientes migrados de PrestaShop
@@ -14,6 +16,7 @@ import { automationsActive } from "@/lib/automations";
 const WINDOW_START = new Date("2026-11-17T09:00:00-03:00");
 const WINDOW_END = new Date("2026-11-17T12:00:00-03:00");
 const MAX_PER_RUN = 30;
+const CONTROL_COPY_TO = "kaffaloveroasters11.11@gmail.com";
 
 export async function runMigratedWelcomeEmails(now = new Date()) {
   if (!automationsActive() || now < WINDOW_START || now >= WINDOW_END) return 0;
@@ -35,8 +38,12 @@ export async function runMigratedWelcomeEmails(now = new Date()) {
     .in("entity_id", customers.map((c) => c.id));
   const done = new Set((sent ?? []).map((e) => e.entity_id));
 
+  const pending = customers.filter((c) => !done.has(c.id));
+  if (!pending.length) return 0;
+  await sendControlCopy(pending.length);
+
   let count = 0;
-  for (const c of customers.filter((c) => !done.has(c.id)).slice(0, MAX_PER_RUN)) {
+  for (const c of pending.slice(0, MAX_PER_RUN)) {
     if (!(await sendPasswordLink(c.email, "bienvenida"))) {
       console.error("[bienvenida] No se pudo enviar a un cliente migrado:", c.id);
       continue;
@@ -47,4 +54,18 @@ export async function runMigratedWelcomeEmails(now = new Date()) {
     await new Promise((r) => setTimeout(r, 600));
   }
   return count;
+}
+
+/**
+ * Copia de control a la tienda, una sola vez, para comprobar que los correos llegan.
+ * El botón lleva a "recuperar contraseña" en vez de un enlace real: así no se crea
+ * una cuenta de cliente con el correo de la tienda.
+ */
+async function sendControlCopy(recipients: number) {
+  const db = createAdminClient();
+  const { count } = await db.from("events").select("id", { count: "exact", head: true }).eq("type", "bienvenida_control");
+  if (count) return;
+  const { subject, html } = welcomeEmail("María", `${siteUrl()}/cuenta/recuperar`);
+  const ok = await sendEmail({ to: CONTROL_COPY_TO, subject: `[Copia de control · ${recipients} clientes] ${subject}`, html });
+  if (ok) await logEvent("bienvenida_control", "customer", null, { destinatarios: recipients });
 }

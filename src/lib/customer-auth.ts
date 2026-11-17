@@ -76,6 +76,33 @@ export async function getCustomerProfile(): Promise<CustomerProfile | null> {
 export const addressKey = (a: { street: string; number: string | null; apartment: string | null; commune: string; region: string }) =>
   [a.street, a.number ?? "", a.apartment ?? "", a.commune, a.region].map((s) => s.trim().toLowerCase()).join("|");
 
+function passwordParts(link: string) {
+  const site = siteUrl();
+  const domain = site.replace(/^https?:\/\//, "");
+  return {
+    site,
+    domain,
+    button: `<p style="margin:24px 0"><a href="${link}" style="background:#387b4d;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Crear contraseña</a></p>`,
+    renew: `Si el botón ya no funciona, pide un enlace nuevo en <a href="${site}/cuenta/recuperar" style="color:#8b7c70">${domain}/cuenta/recuperar</a>.`,
+  };
+}
+
+/** Correo "Estrenamos tienda" para clientes migrados. Mismo texto que scripts/prestashop/enviar-bienvenida.mjs */
+export function welcomeEmail(first: string | null, link: string) {
+  const { site, domain, button, renew } = passwordParts(link);
+  return {
+    subject: "Estrenamos tienda: crea tu contraseña",
+    html: emailLayout(
+      `${first ? `${first}, e` : "E"}strenamos tienda`,
+      `<p>Renovamos la tienda de Kaffa Love en <a href="${site}" style="color:#387b4d">${domain}</a>. Ahora puedes ver nuestros cafés con su ficha completa, encontrar recetas para prepararlos y seguir tus pedidos.</p>
+<p>Por seguridad, las contraseñas anteriores no se traspasaron. Crea una nueva para entrar a tu cuenta:</p>
+${button}
+<p>En tu cuenta también puedes activar las novedades: nuevos cafés, recetas y promociones. Solo te escribiremos si las activas.</p>
+<p style="color:#8b7c70;font-size:13px">${renew} Si no quieres una cuenta, ignora este correo: puedes seguir comprando sin ella.</p>`,
+    ),
+  };
+}
+
 /** Envía un enlace para crear o cambiar la contraseña (requiere Resend) */
 export async function sendPasswordLink(email: string, kind: "recuperar" | "bienvenida") {
   const db = createAdminClient();
@@ -93,26 +120,9 @@ export async function sendPasswordLink(email: string, kind: "recuperar" | "bienv
   // PrestaShop guarda algunos nombres en mayúsculas: "MARÍA" → "María"
   const word = customer?.name?.trim().split(/\s+/)[0];
   const first = word ? word.charAt(0).toLocaleUpperCase("es") + word.slice(1).toLocaleLowerCase("es") : null;
-  const site = siteUrl();
-  const domain = site.replace(/^https?:\/\//, "");
-  const button = `<p style="margin:24px 0"><a href="${link}" style="background:#387b4d;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Crear contraseña</a></p>`;
-  const renew = `Si el botón ya no funciona, pide un enlace nuevo en <a href="${site}/cuenta/recuperar" style="color:#8b7c70">${domain}/cuenta/recuperar</a>.`;
+  const { button, renew } = passwordParts(link);
 
-  if (kind === "bienvenida") {
-    // Mismo texto que scripts/prestashop/enviar-bienvenida.mjs
-    return sendEmail({
-      to: normalized,
-      subject: "Estrenamos tienda: crea tu contraseña",
-      html: emailLayout(
-        `${first ? `${first}, e` : "E"}strenamos tienda`,
-        `<p>Renovamos la tienda de Kaffa Love en <a href="${site}" style="color:#387b4d">${domain}</a>. Ahora puedes ver nuestros cafés con su ficha completa, encontrar recetas para prepararlos y seguir tus pedidos.</p>
-<p>Por seguridad, las contraseñas anteriores no se traspasaron. Crea una nueva para entrar a tu cuenta:</p>
-${button}
-<p>En tu cuenta también puedes activar las novedades: nuevos cafés, recetas y promociones. Solo te escribiremos si las activas.</p>
-<p style="color:#8b7c70;font-size:13px">${renew} Si no quieres una cuenta, ignora este correo: puedes seguir comprando sin ella.</p>`,
-      ),
-    });
-  }
+  if (kind === "bienvenida") return sendEmail({ to: normalized, ...welcomeEmail(first, link) });
 
   return sendEmail({
     to: normalized,
