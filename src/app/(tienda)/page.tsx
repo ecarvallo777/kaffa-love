@@ -110,7 +110,7 @@ function Hero({ coffee, catalog }: { coffee: Product; catalog: Catalog }) {
 
   return (
     <section className="relative overflow-hidden">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pt-10 pb-14 sm:px-6 md:grid-cols-[1.1fr_1fr] md:pt-16 md:pb-20">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pt-10 pb-14 sm:px-6 md:grid-cols-[1.1fr_1fr] md:pt-8 md:pb-16">
         <div className="animate-rise">
           <p className="text-xs font-medium tracking-[0.2em] text-accent uppercase">
             Café de especialidad
@@ -143,7 +143,7 @@ function Hero({ coffee, catalog }: { coffee: Product; catalog: Catalog }) {
           className="group relative block animate-rise [animation-delay:120ms]"
           aria-label={`Ver ${coffee.name}`}
         >
-          <div className="relative mx-auto aspect-square max-w-lg rounded-full bg-paper-2">
+          <div className="relative mx-auto aspect-square max-w-md xl:max-w-lg rounded-full bg-paper-2">
             <div className="absolute inset-[8%] rounded-full border border-dashed border-line" />
             <ProductArt
               product={coffee}
