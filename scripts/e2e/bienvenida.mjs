@@ -60,7 +60,10 @@ try {
   await page.waitForSelector('[data-testid="bienvenida-banner"]', { timeout: 10000 });
   assert((await page.$eval('[data-testid="bienvenida-banner"]', (el) => el.innerText)).includes(`${pct} %`), "el aviso muestra el porcentaje");
   await shot(page, "bienvenida-aviso");
-  await clickText(page, '[data-testid="bienvenida-banner"] button', "Ver los cafés");
+  await clickText(page, '[data-testid="bienvenida-banner"] a', "Ver los cafés");
+  // En npm run dev la primera visita a la categoría compila la página (puede tardar)
+  await page.waitForFunction(() => location.pathname === "/categoria/cafe-de-especialidad", { timeout: 90000 });
+  assert(true, "el botón lleva a los cafés");
   await page.reload({ waitUntil: "networkidle0" });
   assert(!(await page.$('[data-testid="bienvenida-banner"]')), "cerrado, no vuelve a aparecer");
 
