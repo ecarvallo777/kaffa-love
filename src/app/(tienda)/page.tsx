@@ -110,8 +110,8 @@ function Hero({ coffee, catalog }: { coffee: Product; catalog: Catalog }) {
 
   return (
     <section className="relative overflow-hidden">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pt-10 pb-14 sm:px-6 md:grid-cols-[1.1fr_1fr] md:pt-8 md:pb-16">
-        <div className="animate-rise">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 md:items-start px-4 pt-10 pb-14 sm:px-6 md:grid-cols-[1.1fr_1fr] md:pt-8 md:pb-16">
+        <div className="animate-rise md:pt-12 lg:pt-16">
           <p className="text-xs font-medium tracking-[0.2em] text-accent uppercase">
             Café de especialidad
           </p>
