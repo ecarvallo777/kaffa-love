@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCatalog } from "@/lib/catalog";
+import { getPublishedGuides } from "@/lib/guides";
 import { categoryHref, topCategories } from "@/lib/catalog-utils";
 import { CartButton } from "@/components/cart-button";
 import { Wordmark } from "@/components/wordmark";
@@ -28,6 +29,9 @@ export function SiteHeader() {
           <Suspense>
             <CategoryLinks />
           </Suspense>
+          <Suspense>
+            <GuidesLink />
+          </Suspense>
           <Link
             href="/nosotros"
             className="shrink-0 rounded-full px-3 py-1.5 text-sm text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink"
@@ -51,6 +55,19 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+/** Solo con al menos una guía publicada, para no llevar a una página vacía */
+async function GuidesLink() {
+  if (!(await getPublishedGuides()).length) return null;
+  return (
+    <Link
+      href="/guias"
+      className="shrink-0 rounded-full px-3 py-1.5 text-sm text-ink-soft transition-colors hover:bg-paper-2 hover:text-ink"
+    >
+      Guías
+    </Link>
   );
 }
 
