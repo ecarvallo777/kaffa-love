@@ -22,7 +22,7 @@ export default async function AdminHome() {
   const week = daysAgoIso(7);
   const month = daysAgoIso(30);
 
-  const [salesToday, salesWeek, toPrepare, alerts, low, recent, settingsFile, pickups, settings, costs, sellable] = await Promise.all([
+  const [salesToday, salesWeek, toPrepare, alerts, low, recent, settingsFile, pickups, settings, costs, sellable, lastBackup] = await Promise.all([
     salesSince(today),
     salesSince(week),
     db.from("orders").select("id", { count: "exact", head: true }).eq("channel", "online").in("status", ["pagado", "en_preparacion"]),
@@ -34,6 +34,8 @@ export default async function AdminHome() {
     getSettings(),
     getProductCosts(),
     db.from("products").select("id").eq("active", true).neq("type", "promocion"),
+    // El Apps Script de Google Drive lo descarga cada lunes (docs/PRODUCCION.md, 7.4)
+    db.from("events").select("id", { count: "exact", head: true }).eq("type", "respaldo_descargado").gte("created_at", daysAgoIso(8)),
   ]);
   const withoutCost = (sellable.data ?? []).filter((p) => costs[p.id] === undefined).length;
 
@@ -45,6 +47,7 @@ export default async function AdminHome() {
     { ok: !!settingsFile.data?.some((f) => f.name === "settings.json"), label: "Tarifas de despacho revisadas y guardadas", href: "/admin/configuracion" },
     { ok: !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM, label: "Correos de confirmación (RESEND_API_KEY y EMAIL_FROM)", href: null },
     { ok: !!process.env.CRON_SECRET, label: "Tarea programada para liberar reservas (CRON_SECRET)", href: null },
+    { ok: !!process.env.BACKUP_SECRET && !!lastBackup.count, label: "Respaldo semanal en Google Drive (sin respaldo en los últimos 8 días)", href: null },
     { ok: settings.mpFeriaPct > 0 && settings.mpTiendaPct > 0, label: "Comisiones de Mercado Pago para la utilidad real", href: "/admin/configuracion" },
     { ok: withoutCost === 0, label: withoutCost ? `Costo unitario de los productos (faltan ${withoutCost})` : "Costo unitario de los productos", href: "/admin/productos" },
   ];

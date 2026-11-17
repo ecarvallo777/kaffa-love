@@ -87,6 +87,7 @@ Se usan dos ramas de git:
   | `MP_ACCESS_TOKEN` | credencial **de prueba** (fase 3) | credencial **de producción** (fase 6) | Sí |
   | `MP_WEBHOOK_SECRET` | clave de webhooks en modo **prueba** (fase 3) | clave en modo **productivo** (fase 6) | Sí |
   | `CRON_SECRET` | uno al azar | otro al azar | Sí |
+  | `BACKUP_SECRET` | — | uno al azar (7.4) | No |
   | `RESEND_API_KEY`, `EMAIL_FROM` | fase 4 | fase 4 | Sí / No |
   | `AGENT_API_KEY` | opcional | opcional | Sí |
 
@@ -236,7 +237,12 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
   - [x] Importación (2026-11-16): 23 personas (22 nuevas + 1 que ya tenía cuenta) y 24 direcciones. Ninguno con consentimiento de novedades: PrestaShop no guardó la fecha de suscripción (`0000-00-00`), así que no se puede demostrar.
   - [ ] Correo de bienvenida: texto aprobado; **programado para el 17-11 entre 9:00 y 12:00** (lo envía la tarea periódica de producción, `src/lib/welcome-migrated.ts`, una vez por cliente con el evento `bienvenida_enviada`). Después de enviado: revisar que lleguen los 22 y borrar la ventana del código.
 - [x] **7.3** (2026-11-17: propiedad de tipo Dominio verificada, sitemap enviado con 29 páginas descubiertas; pendiente revisar los 404 las próximas semanas) En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
-- [ ] **7.4** Activa los respaldos de Supabase (plan Pro) o exporta la base periódicamente.
+- [ ] **7.4** **Respaldo semanal gratis en Google Drive** (detalle y cómo restaurar: `scripts/respaldo/README.md`). Supabase gratis no hace respaldos.
+  1. En Vercel, agrega `BACKUP_SECRET` (**solo Production**, una clave al azar de al menos 24 caracteres) y despliega `main`.
+  2. Con la cuenta de Google de la tienda, entra a [script.google.com](https://script.google.com) → **Nuevo proyecto**, llámalo «Respaldo Kaffa Love» y pega el contenido de `scripts/respaldo/apps-script.gs`.
+  3. En **Configuración del proyecto** (engranaje) → **Propiedades del script**, agrega `BACKUP_SECRET` con el mismo valor.
+  4. En el editor, elige la función **instalar** y presiona **Ejecutar**. Autoriza el acceso (Google advierte que la app no está verificada: **Configuración avanzada → Ir a Respaldo Kaffa Love**). Hace el primer respaldo y deja programado uno cada lunes a las 4:00.
+  5. Revisa que en tu Drive aparezca la carpeta **Respaldos Kaffa Love** con `kaffa-love-AAAA-MM-DD.json.gz`, y que en **Admin → Resumen** no aparezca el aviso del respaldo.
 - [x] **7.5** *(14 de noviembre de 2026)* Logo original de Kaffa Love Roasters 11:11 (versión horizontal, clara e ícono en `public/brand/` y `src/app/`) y acento verde del logo en `src/app/globals.css`.
 - [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md`.
   - **Google Shopping gratis:** en [Merchant Center](https://merchants.google.com) agrega kaffalove.cl, verifica el sitio y en *Productos → Fuentes* agrega el feed programado `https://kaffalove.cl/feed/productos.xml` (diario).
