@@ -41,9 +41,14 @@ export function driveServiceEmail() {
 
 const b64url = (v: string | Buffer) => Buffer.from(v).toString("base64url");
 
-let cached: { token: string; exp: number } | null = null;
+const cache = new Map<string, { token: string; exp: number }>();
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
 
-async function accessToken() {
+const accessToken = () => googleAccessToken(DRIVE_SCOPE);
+
+/** Token de la cuenta de servicio para un permiso de Google (Drive, Search Console…) */
+export async function googleAccessToken(scope: string) {
+  const cached = cache.get(scope);
   if (cached && cached.exp > Date.now() + 60_000) return cached.token;
   const sa = serviceAccount();
   if (!sa) throw new Error("Falta configurar GOOGLE_SERVICE_ACCOUNT_JSON.");
@@ -51,7 +56,7 @@ async function accessToken() {
   const unsigned = `${b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }))}.${b64url(
     JSON.stringify({
       iss: sa.client_email,
-      scope: "https://www.googleapis.com/auth/drive.readonly",
+      scope,
       aud: "https://oauth2.googleapis.com/token",
       iat: now,
       exp: now + 3600,
@@ -65,8 +70,8 @@ async function accessToken() {
   });
   const json = (await res.json()) as { access_token?: string; expires_in?: number; error_description?: string };
   if (!res.ok || !json.access_token) throw new Error(`Google no aceptó la cuenta de servicio: ${json.error_description ?? res.status}`);
-  cached = { token: json.access_token, exp: Date.now() + (json.expires_in ?? 3600) * 1000 };
-  return cached.token;
+  cache.set(scope, { token: json.access_token, exp: Date.now() + (json.expires_in ?? 3600) * 1000 });
+  return json.access_token;
 }
 
 /** Archivos de la carpeta (sin subcarpetas ni papelera), del más antiguo al más nuevo */

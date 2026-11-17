@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const ITEMS = [
   ["/admin", "Resumen"],
   ["/admin/reportes", "Reportes"],
+  ["/admin/marketing", "Marketing"],
   ["/admin/pedidos", "Pedidos"],
   ["/admin/productos", "Productos"],
   ["/admin/recetas", "Recetas"],

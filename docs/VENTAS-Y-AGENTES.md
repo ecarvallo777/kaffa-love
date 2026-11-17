@@ -50,6 +50,13 @@ Antes de recuperar carritos o pedir recompras, alguien tiene que llegar a la tie
 - ⏳ Secuencia post-compra, QR de feria y "Avísame cuando vuelva": después del lanzamiento.
 - ⏳ Agentes con IA: después del lanzamiento, cuando haya datos del embudo.
 - ⏳ Capa cero (atraer clientes): ya están programados las ventas por canal, el feed y el pedido de reseñas. Falta conectar Merchant Center, Meta y el perfil de Google.
+- ✅ **Agente de marketing semanal** (17 de noviembre de 2026, `src/lib/marketing/agent.ts`). Une los agentes de reporte semanal, contenido y SEO.
+  - **Cuándo corre:** los lunes a las 7:00, desde la tarea periódica y solo en producción. También se puede correr con **Generar plan ahora**.
+  - **Qué entrega:** resumen y 3 acciones con el dato que las justifica, 4 publicaciones de Instagram (texto, hashtags, qué foto tomar y enlace con etiqueta) y el borrador de una guía para `/guias`.
+  - **Dónde se revisa:** **Admin → Marketing**, y el aviso llega por correo a la dirección de contacto.
+  - **Costo:** unos US$ 0,30 por plan (Claude Opus 5.5).
+  - **Datos que usa:** no recibe datos personales de clientes. Usa las búsquedas de Google si la cuenta de servicio tiene acceso a Search Console (ver `docs/PRODUCCION.md`, 7.6).
+- ✅ **Guías** en `kaffalove.cl/guias`: se publican solo con aprobación, con datos estructurados (Article), enlaces a los productos y entrada en el sitemap.
 
 ## Segunda capa: agentes con IA
 

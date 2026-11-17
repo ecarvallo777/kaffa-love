@@ -250,6 +250,10 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
   - El feed ya está listo y se actualiza solo. **Solo incluye productos con foto** (Google y Meta rechazan los que no tienen), así que antes sube las fotos (paso 2.4).
   - **Reseñas:** el correo ya está listo. Pega el enlace de reseñas de tu perfil de Google en **Configuración → Correos automáticos**.
   - **Descuento de bienvenida del QR:** listo, 10 % en la primera compra online. Se cambia o se desactiva en **Configuración → Bienvenida del QR de feria**.
+  - **Agente de marketing con búsquedas de Google:**
+    1. En [console.cloud.google.com](https://console.cloud.google.com), en el proyecto de la cuenta de servicio de las facturas, ve a **APIs y servicios → Biblioteca** y activa **Google Search Console API**.
+    2. En Search Console, en **Configuración → Usuarios y permisos → Agregar usuario**, agrega `facturas@kaffa-love.iam.gserviceaccount.com` con permiso **Restringido**.
+    3. **Admin → Marketing** muestra si funciona («Búsquedas de Google: N búsquedas»).
 
 ---
 

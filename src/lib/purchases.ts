@@ -172,7 +172,8 @@ const PRICES: Record<string, { input: number; output: number; cacheRead: number 
 
 type Tokens = { model: string | null; input_tokens: number; output_tokens: number; cache_creation_input_tokens: number | null; cache_read_input_tokens: number | null };
 
-function usageOf(response: Anthropic.Beta.BetaMessage): ReadUsage {
+/** Tokens y costo en USD de una respuesta de Claude (también lo usa el agente de marketing) */
+export function usageOf(response: Anthropic.Beta.BetaMessage): ReadUsage {
   const u = response.usage;
   // Si hubo reintento con otro modelo, cada intento trae su propio consumo
   const parts: Tokens[] = (u.iterations ?? [])
@@ -204,11 +205,10 @@ function usageOf(response: Anthropic.Beta.BetaMessage): ReadUsage {
 
 /** Error de lectura que igual consumió tokens (se cobra) */
 class ReadError extends Error {
-  constructor(
-    message: string,
-    readonly usage: ReadUsage,
-  ) {
+  readonly usage: ReadUsage;
+  constructor(message: string, usage: ReadUsage) {
     super(message);
+    this.usage = usage;
   }
 }
 
