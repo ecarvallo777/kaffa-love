@@ -273,7 +273,7 @@ Deja pasar **2 a 4 semanas** desde el lanzamiento, por si hay que volver a Prest
 
 **Cancelar**
 
-- [ ] **8.8** Respalda PrestaShop: desde hPanel, descarga una copia de los archivos y de la base de datos (Respaldos). Guárdala por si necesitas consultar pedidos antiguos.
+- [x] **8.8** ~~Respalda PrestaShop~~ Descartado (decisión 2026-11-17): los clientes ya se migraron (7.2); no se guarda el historial de pedidos antiguos. Era: desde hPanel, descarga una copia de los archivos y de la base de datos (Respaldos). Guárdala por si necesitas consultar pedidos antiguos.
 - [ ] **8.9** Borra el registro `ftp` (registro 4 de la fase 0) y cualquier otro que todavía apunte a Hostinger (`147.93.14.12`, `2a02:4780:…` o `*.hostinger.com`).
 - [ ] **8.10** Cancela la membresía de Hostinger. Revisa antes que **el dominio no esté registrado en Hostinger** (está en NIC.cl, así que no debería verse afectado).
 
