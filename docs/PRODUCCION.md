@@ -235,7 +235,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 - [ ] **7.2** Migra los clientes de PrestaShop y envíales la bienvenida: `scripts/prestashop/README.md`.
   - [x] Importación (2026-11-16): 23 personas (22 nuevas + 1 que ya tenía cuenta) y 24 direcciones. Ninguno con consentimiento de novedades: PrestaShop no guardó la fecha de suscripción (`0000-00-00`), así que no se puede demostrar.
   - [ ] Correo de bienvenida: texto aprobado; **programado para el 17-11 entre 9:00 y 12:00** (lo envía la tarea periódica de producción, `src/lib/welcome-migrated.ts`, una vez por cliente con el evento `bienvenida_enviada`). Después de enviado: revisar que lleguen los 22 y borrar la ventana del código.
-- [ ] **7.3** En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
+- [x] **7.3** (2026-11-17: propiedad de tipo Dominio verificada, sitemap enviado con 29 páginas descubiertas; pendiente revisar los 404 las próximas semanas) En [Google Search Console](https://search.google.com/search-console), agrega `kaffalove.cl`, envía `https://kaffalove.cl/sitemap.xml` y revisa los errores 404 durante las semanas siguientes.
 - [ ] **7.4** Activa los respaldos de Supabase (plan Pro) o exporta la base periódicamente.
 - [x] **7.5** *(14 de noviembre de 2026)* Logo original de Kaffa Love Roasters 11:11 (versión horizontal, clara e ícono en `public/brand/` y `src/app/`) y acento verde del logo en `src/app/globals.css`.
 - [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md`.
