@@ -102,7 +102,7 @@ export async function sendPasswordLink(email: string, kind: "recuperar" | "bienv
     subject: kind === "bienvenida" ? "Estrenamos tienda: crea tu contraseña" : "Cambia tu contraseña de Kaffa Love",
     html: emailLayout(
       title,
-      `${body}<p style="margin:24px 0"><a href="${link}" style="background:#387b4d;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Crear contraseña</a></p><p style="color:#8b7c70;font-size:13px">El enlace vence en 24 horas.</p>`,
+      `${body}<p style="margin:24px 0"><a href="${link}" style="background:#387b4d;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Crear contraseña</a></p><p style="color:#8b7c70;font-size:13px">Si el botón ya no funciona, pide un enlace nuevo en <a href="${siteUrl()}/cuenta/recuperar" style="color:#8b7c70">${siteUrl()}/cuenta/recuperar</a>.</p>`,
     ),
   });
 }
