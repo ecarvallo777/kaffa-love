@@ -259,13 +259,13 @@ Deja pasar **2 a 4 semanas** desde el lanzamiento, por si hay que volver a Prest
 
 **Correo: recibir en Gmail**
 
-- [ ] **8.1** Crea una cuenta gratuita en [ImprovMX](https://improvmx.com) con el dominio `kaffalove.cl`. Crea un alias *catch-all* (`*`) que reenvíe a `kaffaloveroasters11.11@gmail.com`: cubre `contacto@` (el correo de contacto de la tienda, en **Configuración**), las respuestas a `pedidos@` (remitente de la tienda) y cualquier otra dirección.
+- [x] **8.1** *(17-11-2026)* Crea una cuenta gratuita en [ImprovMX](https://improvmx.com) con el dominio `kaffalove.cl`. Crea un alias *catch-all* (`*`) que reenvíe a `kaffaloveroasters11.11@gmail.com`: cubre `contacto@` (el correo de contacto de la tienda, en **Configuración**), las respuestas a `pedidos@` (remitente de la tienda) y cualquier otra dirección.
 - [x] **8.2** ~~Respaldo de correos~~ Descartado (decisión 2026-11-17: no se guardan los correos antiguos de Hostinger). Era: **antes de cambiar nada**, respalda los correos antiguos de Hostinger. Por ejemplo, con [Thunderbird](https://www.thunderbird.net): conecta la casilla por IMAP y copia las carpetas a "Carpetas locales". Haz lo mismo con cada casilla.
-- [ ] **8.3** En **Vercel → Domains → kaffalove.cl → DNS Records**:
+- [x] **8.3** *(17-11-2026)* En **Vercel → Domains → kaffalove.cl → DNS Records**:
   - Borra los dos **MX** de Hostinger y crea `mx1.improvmx.com` (prioridad 10) y `mx2.improvmx.com` (prioridad 20).
   - Cambia el **TXT de SPF** a `v=spf1 include:spf.improvmx.com ~all`.
   - Borra los registros de correo de Hostinger: DKIM (`hostingermail-a/b/c._domainkey`), `autodiscover` y `autoconfig` (registros 9 a 13 de la fase 0). **No toques** los de Resend ni el `_dmarc`.
-- [ ] **8.4** Espera a que ImprovMX marque el dominio como activo y envíate un correo de prueba a `contacto@kaffalove.cl`: debe llegar a tu Gmail.
+- [x] **8.4** *(17-11-2026: prueba recibida en Gmail)* Espera a que ImprovMX marque el dominio como activo y envíate un correo de prueba a `contacto@kaffalove.cl`: debe llegar a tu Gmail.
 
 **Correo: enviar como @kaffalove.cl desde Gmail**
 
