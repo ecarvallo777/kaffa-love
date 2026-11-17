@@ -3,7 +3,6 @@ import { expirePendingOrders } from "@/lib/orders";
 import { reconcilePendingPayments } from "@/lib/payments";
 import { runAbandonedCartEmails, runRepurchaseEmails, runReviewEmails } from "@/lib/automations";
 import { syncDriveInvoices } from "@/lib/purchases";
-import { runMigratedWelcomeEmails } from "@/lib/welcome-migrated";
 import { runWeeklyMarketing } from "@/lib/marketing/agent";
 
 // Leer una factura nueva con Claude puede tomar alrededor de un minuto
@@ -29,9 +28,8 @@ export async function GET(request: NextRequest) {
   const abandonEmails = await runAbandonedCartEmails().catch((e) => (console.error("[cron] abandono:", e), 0));
   const repurchaseEmails = await runRepurchaseEmails().catch((e) => (console.error("[cron] recompra:", e), 0));
   const reviewEmails = await runReviewEmails().catch((e) => (console.error("[cron] reseñas:", e), 0));
-  const welcomeEmails = await runMigratedWelcomeEmails().catch((e) => (console.error("[cron] bienvenida:", e), 0));
   // Plan de marketing (lunes): tarda 1 a 2 minutos, así que esa pasada no lee facturas
   const marketing = await runWeeklyMarketing().catch((e) => (console.error("[cron] marketing:", e), false));
   const invoices = marketing ? null : await syncDriveInvoices(1).catch((e) => (console.error("[cron] facturas:", e), null));
-  return NextResponse.json({ ok: true, confirmed, expired, abandonEmails, repurchaseEmails, reviewEmails, welcomeEmails, marketing, invoices });
+  return NextResponse.json({ ok: true, confirmed, expired, abandonEmails, repurchaseEmails, reviewEmails, marketing, invoices });
 }

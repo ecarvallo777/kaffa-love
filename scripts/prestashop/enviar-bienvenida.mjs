@@ -56,7 +56,7 @@ if (previewFile) {
 
 const db = adminDb();
 const { data: all } = await db.from("customers").select("id, email, name").eq("source", "prestashop").is("auth_user_id", null);
-// La tienda también lo envía de forma programada (src/lib/welcome-migrated.ts): nunca dos veces
+// Nunca dos veces: la bienvenida programada del 17-11-2026 dejó un evento bienvenida_enviada por cliente
 const { data: sent } = await db.from("events").select("entity_id").eq("type", "bienvenida_enviada").in("entity_id", all.map((c) => c.id));
 const done = new Set((sent ?? []).map((e) => e.entity_id));
 const customers = all.filter((c) => !done.has(c.id));
