@@ -269,13 +269,13 @@ Deja pasar **2 a 4 semanas** desde el lanzamiento, por si hay que volver a Prest
 
 **Correo: enviar como @kaffalove.cl desde Gmail**
 
-- [ ] **8.5** En Resend, crea una **API key** solo para Gmail (*Sending access*).
-- [ ] **8.6** En Gmail, ve a **Configuración → Cuentas e importación → Enviar como → Añadir otra dirección**:
+- [x] **8.5** *(17-11-2026)* En Resend, crea una **API key** solo para Gmail (*Sending access*).
+- [x] **8.6** *(17-11-2026)* En Gmail, ve a **Configuración → Cuentas e importación → Enviar como → Añadir otra dirección**:
   - Nombre: `Kaffa Love`. Correo: `contacto@kaffalove.cl`. Desmarca "Tratar como un alias".
   - Servidor SMTP: `smtp.resend.com`, puerto `465`, conexión **SSL**.
   - Usuario: `resend`. Contraseña: la API key del paso 8.5.
   - Gmail envía un código de confirmación a `contacto@kaffalove.cl`, que te llega por ImprovMX. Ingrésalo.
-- [ ] **8.7** Envía un correo de prueba a otra cuenta y revisa que el remitente sea `contacto@kaffalove.cl` y que no caiga en spam.
+- [x] **8.7** *(17-11-2026: SPF, DKIM y DMARC en PASS)* Envía un correo de prueba a otra cuenta y revisa que el remitente sea `contacto@kaffalove.cl` y que no caiga en spam.
 
 **Cancelar**
 
