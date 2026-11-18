@@ -245,12 +245,12 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
   5. Revisa que en tu Drive aparezca la carpeta **Respaldos Kaffa Love** con `kaffa-love-AAAA-MM-DD.json.gz`, y que en **Admin → Resumen** no aparezca el aviso del respaldo.
 - [x] **7.5** *(14 de noviembre de 2026)* Logo original de Kaffa Love Roasters 11:11 (versión horizontal, clara e ícono en `public/brand/` y `src/app/`) y acento verde del logo en `src/app/globals.css`.
 - [ ] **7.6** Primer mes: la capa cero de `docs/VENTAS-Y-AGENTES.md`.
-  - **Google Shopping gratis:** en [Merchant Center](https://merchants.google.com) agrega kaffalove.cl, verifica el sitio y en *Productos → Fuentes* agrega el feed programado `https://kaffalove.cl/feed/productos.xml` (diario).
-  - **Tienda de Instagram:** en el Administrador de ventas de Meta crea un catálogo con la fuente `https://kaffalove.cl/feed/productos.xml?canal=instagram`.
+  - [x] *(18-11-2026: cuenta creada, empresa y sitio verificados, despacho y devoluciones configurados, fuente única con 20 productos; se borraron los de PrestaShop; solo fichas gratuitas)* **Google Shopping gratis:** en [Merchant Center](https://merchants.google.com) agrega kaffalove.cl, verifica el sitio y en *Productos → Fuentes* agrega el feed programado `https://kaffalove.cl/feed/productos.xml` (diario).
+  - [ ] **Tienda de Instagram:** en el Administrador de ventas de Meta crea un catálogo con la fuente `https://kaffalove.cl/feed/productos.xml?canal=instagram`.
   - El feed ya está listo y se actualiza solo. **Solo incluye productos con foto** (Google y Meta rechazan los que no tienen), así que antes sube las fotos (paso 2.4).
   - **Reseñas:** el correo ya está listo. Pega el enlace de reseñas de tu perfil de Google en **Configuración → Correos automáticos**.
   - **Descuento de bienvenida del QR:** listo, 10 % en la primera compra online. Se cambia o se desactiva en **Configuración → Bienvenida del QR de feria**.
-  - **Agente de marketing con búsquedas de Google:**
+  - [x] *(18-11-2026: API activada y cuenta de servicio con acceso; el plan ya lee las búsquedas)* **Agente de marketing con búsquedas de Google:**
     1. En [console.cloud.google.com](https://console.cloud.google.com), en el proyecto de la cuenta de servicio de las facturas, ve a **APIs y servicios → Biblioteca** y activa **Google Search Console API**.
     2. En Search Console, en **Configuración → Usuarios y permisos → Agregar usuario**, agrega `facturas@kaffa-love.iam.gserviceaccount.com` con permiso **Restringido**.
     3. **Admin → Marketing** muestra si funciona («Búsquedas de Google: N búsquedas»).
