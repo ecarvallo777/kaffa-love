@@ -1,6 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { downloadText } from "@/lib/config-store";
 import type { Grind } from "@/lib/catalog-types";
 
 /*
@@ -68,14 +69,11 @@ async function defaultRecipes(): Promise<Recipe[]> {
   ];
 }
 
+/** null solo si el archivo no existe; un error de lectura se lanza (no se toma como "sin recetas") */
 async function readFile(): Promise<Recipe[] | null> {
-  const { data, error } = await createAdminClient().storage.from(BUCKET).download(FILE);
-  if (error || !data) return null;
-  try {
-    return (JSON.parse(await data.text()) as Partial<Recipe>[]).map(normalize);
-  } catch {
-    return null;
-  }
+  const text = await downloadText(BUCKET, FILE);
+  if (text === null) return null;
+  return (JSON.parse(text) as Partial<Recipe>[]).map(normalize);
 }
 
 /** Completa campos que no existían en versiones anteriores del archivo */

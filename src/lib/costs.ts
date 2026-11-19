@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { downloadText } from "@/lib/config-store";
 
 /*
  * Costos para calcular la utilidad real (ferias y tienda):
@@ -15,14 +16,10 @@ export const EXPENSE_CATEGORIES = ["Stand", "Transporte", "Comida", "Insumos", "
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 export type FairExpense = { id: string; category: ExpenseCategory; concept: string; amountClp: number };
 
+/** El valor por defecto solo si el archivo no existe; un error de lectura se lanza (si no, se guardaría encima) */
 async function readJson<T>(file: string, fallback: T): Promise<T> {
-  const { data, error } = await createAdminClient().storage.from(BUCKET).download(file);
-  if (error || !data) return fallback;
-  try {
-    return JSON.parse(await data.text()) as T;
-  } catch {
-    return fallback;
-  }
+  const text = await downloadText(BUCKET, file);
+  return text === null ? fallback : (JSON.parse(text) as T);
 }
 
 async function writeJson(file: string, value: unknown) {

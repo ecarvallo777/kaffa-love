@@ -232,7 +232,7 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
 
 ## Fase 7 · Después del lanzamiento
 
-- [ ] **7.1** Borra los datos y usuarios de prueba (pedidos de prueba, jornadas `[PRUEBA]`): `node scripts/e2e/limpiar.mjs --usuarios`. Las compras hechas con Mercado Pago de prueba se cancelan desde **Pedidos** (el stock vuelve solo).
+- [x] **7.1** *(19-11-2026: no quedaban pedidos, clientes ni jornadas de prueba; se borraron los usuarios e2e y el plan de marketing de prueba. Para volver a correr las pruebas: `node scripts/crear-usuario.mjs`)* Borra los datos y usuarios de prueba (pedidos de prueba, jornadas `[PRUEBA]`): `node scripts/e2e/limpiar.mjs --usuarios`. Las compras hechas con Mercado Pago de prueba se cancelan desde **Pedidos** (el stock vuelve solo).
 - [x] **7.2** Migra los clientes de PrestaShop y envíales la bienvenida: `scripts/prestashop/README.md`.
   - [x] Importación (2026-11-16): 23 personas (22 nuevas + 1 que ya tenía cuenta) y 24 direcciones. Ninguno con consentimiento de novedades: PrestaShop no guardó la fecha de suscripción (`0000-00-00`), así que no se puede demostrar.
   - [x] Correo de bienvenida enviado el 17-11-2026 a las 9:21 a los 22 clientes migrados sin cuenta (más la copia de control a la tienda). El envío programado se quitó del código.

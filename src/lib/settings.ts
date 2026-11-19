@@ -1,6 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { downloadText } from "@/lib/config-store";
 import { REGIONES } from "@/lib/chile";
 import { rateFor, ratePrice, type CommuneRate, type ParcelSize } from "@/lib/shipping";
 
@@ -101,14 +102,11 @@ export async function getSettings(): Promise<Settings> {
   cacheLife("hours");
   cacheTag("settings");
 
-  const { data, error } = await createAdminClient().storage.from(BUCKET).download(FILE);
-  if (error || !data) return DEFAULT_SETTINGS;
-  try {
-    const saved = JSON.parse(await data.text()) as Partial<Settings>;
-    return { ...DEFAULT_SETTINGS, ...saved };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
+  // Si la lectura falla se lanza el error: así no queda en caché la configuración por defecto
+  const text = await downloadText(BUCKET, FILE);
+  if (text === null) return DEFAULT_SETTINGS;
+  const saved = JSON.parse(text) as Partial<Settings>;
+  return { ...DEFAULT_SETTINGS, ...saved };
 }
 
 export async function saveSettings(settings: Settings) {
