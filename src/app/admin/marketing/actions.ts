@@ -116,7 +116,8 @@ export async function connectInstagramAction(_prev: ActionResult, form: FormData
   try {
     const appSecret = String(form.get("appSecret") ?? "").trim() || undefined;
     const appId = String(form.get("appId") ?? "").replace(/\D/g, "") || undefined;
-    const username = await connectInstagram(token, staff.email, appSecret, appId);
+    const igId = String(form.get("igId") ?? "").replace(/\D/g, "") || undefined;
+    const username = await connectInstagram(token, staff.email, appSecret, appId, igId);
     refresh();
     return { ok: `Conectado como @${username}.` };
   } catch (e) {

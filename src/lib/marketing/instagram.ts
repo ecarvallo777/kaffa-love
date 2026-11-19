@@ -120,8 +120,8 @@ async function ig<T>(method: "GET" | "POST", path: string, auth: Auth, params: R
 }
 
 /** Valida un token pegado en el admin y lo guarda */
-export async function connectInstagram(token: string, by: string, appSecret?: string, appId?: string) {
-  const store = token.startsWith("EAA") ? await facebookToken(token, appSecret, appId) : await instagramToken(token);
+export async function connectInstagram(token: string, by: string, appSecret?: string, appId?: string, igId?: string) {
+  const store = token.startsWith("EAA") ? await facebookToken(token, appSecret, appId, igId) : await instagramToken(token);
   await writeConfigJson(TOKEN_FILE, store);
   await logEvent("instagram_conectado", "instagram", null, { cuenta: store.username, via: store.host ?? "instagram", por: by });
   return store.username;
@@ -143,9 +143,9 @@ type PagesResponse = { data?: { instagram_business_account?: { id: string; usern
  * Token de Facebook (EAA…), el que entrega la configuración con inicio de sesión unificado o de Facebook.
  * Con la clave secreta de la app se cambia por uno de 60 días que la tienda renueva sola.
  */
-async function facebookToken(token: string, appSecret?: string, appIdInput?: string): Promise<TokenStore> {
+async function facebookToken(token: string, appSecret?: string, appIdInput?: string, igIdInput?: string): Promise<TokenStore> {
   const fb = (t: string): Auth => ({ token: t, host: "facebook" });
-  type Debug = { app_id?: string; expires_at?: number; is_valid?: boolean; scopes?: string[] };
+  type Debug = { app_id?: string; expires_at?: number; is_valid?: boolean; scopes?: string[]; granular_scopes?: { scope: string; target_ids?: string[] }[] };
   const problems: string[] = [];
   const readDebug = (accessToken: string) =>
     ig<{ data?: Debug }>("GET", "/debug_token", fb(accessToken), { input_token: token })
@@ -196,13 +196,32 @@ async function facebookToken(token: string, appSecret?: string, appIdInput?: str
     limit: "50",
   }).catch((): PagesResponse => ({ data: [] }));
   let account = pages.data?.find((p) => p.instagram_business_account)?.instagram_business_account;
+  // Sin permiso de páginas: la cuenta a la que Meta asignó los permisos de Instagram, o la que se pegó en el admin
+  if (!account) {
+    const granted = (debug?.granular_scopes ?? [])
+      .filter((g) => g.scope === "instagram_content_publish" || g.scope === "instagram_basic")
+      .flatMap((g) => g.target_ids ?? []);
+    for (const id of [...new Set([igIdInput, ...granted].filter((x): x is string => Boolean(x)))]) {
+      const info = await ig<{ id?: string; username?: string }>("GET", `/${id}`, fb(finalToken), { fields: "id,username" }).catch((e: Error) => {
+        problems.push(`cuenta ${id}: ${e.message}`);
+        return {} as { id?: string; username?: string };
+      });
+      if (info.id && info.username) {
+        account = { id: info.id, username: info.username };
+        break;
+      }
+    }
+  }
   if (!account) {
     const me = await ig<{ id?: string; username?: string }>("GET", "/me", fb(finalToken), { fields: "id,username" }).catch((): { id?: string; username?: string } => ({}));
     if (me.id && me.username) account = { id: me.id, username: me.username };
   }
   if (!account) {
-    const scopes = debug?.scopes?.length ? ` Permisos del token: ${debug.scopes.join(", ")}.` : problems.length ? ` Detalle: ${problems.join(" · ")}` : "";
-    throw new Error(`El token no da acceso a ninguna cuenta de Instagram profesional. Al generarlo, acepta los permisos de Instagram (publicar contenido).${scopes}`);
+    const scopes = debug?.scopes?.length ? ` Permisos del token: ${debug.scopes.join(", ")}.` : "";
+    const detail = problems.length ? ` Detalle: ${problems.join(" · ")}` : "";
+    throw new Error(
+      `No encontré la cuenta de Instagram del token. Pega también el «ID de la cuenta de Instagram» (aparece junto a la cuenta en «Generar tokens de acceso» de la app de Meta).${scopes}${detail}`,
+    );
   }
   if (!account.username) {
     const info = await ig<{ username?: string }>("GET", `/${account.id}`, fb(finalToken), { fields: "username" }).catch((): { username?: string } => ({}));

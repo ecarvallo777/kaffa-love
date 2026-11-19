@@ -45,15 +45,33 @@ export function startInstagramSimulado(port = 4599) {
     // Los de «Unified login» (EAAunif…) no se pueden consultar con el mismo token ni entregan /app
     if (token.startsWith("EAAunif") && (parts[0] === "debug_token" || parts[0] === "app")) return send(400, { error: { message: "(#100) Missing permissions", code: 100 } });
     if (token.startsWith("EAA") || appToken) {
+      // Unified login: sin permiso de páginas; la cuenta viene en granular_scopes
+      const unified = (t) => t.startsWith("EAAunif") || t.startsWith("EAAlargoU");
       if (parts[0] === "debug_token") {
         const long = params.input_token.startsWith("EAAlargo");
-        return send(200, { data: { app_id: "123456", is_valid: true, expires_at: Math.floor(Date.now() / 1000) + (long ? 5184000 : 3600), scopes: ["instagram_basic", "instagram_content_publish", "pages_show_list"] } });
+        const expires_at = Math.floor(Date.now() / 1000) + (long ? 5184000 : 3600);
+        if (unified(params.input_token)) {
+          return send(200, {
+            data: {
+              app_id: "123456",
+              is_valid: true,
+              expires_at,
+              scopes: ["instagram_basic", "instagram_content_publish", "public_profile"],
+              granular_scopes: [{ scope: "instagram_basic", target_ids: [IG_USER] }, { scope: "instagram_content_publish", target_ids: [IG_USER] }],
+            },
+          });
+        }
+        return send(200, { data: { app_id: "123456", is_valid: true, expires_at, scopes: ["instagram_basic", "instagram_content_publish", "pages_show_list"] } });
       }
       if (parts[0] === "oauth") {
         if (params.client_secret !== "secreto-de-prueba" || params.client_id !== "123456") return send(400, { error: { message: "Error validating client secret.", code: 1 } });
-        return send(200, { access_token: "EAAlargo" + "y".repeat(60), token_type: "bearer", expires_in: 5184000 });
+        return send(200, { access_token: (unified(params.fb_exchange_token) ? "EAAlargoU" : "EAAlargo") + "y".repeat(60), token_type: "bearer", expires_in: 5184000 });
       }
-      if (parts[0] === "me" && parts[1] === "accounts") return send(200, { data: [{ name: "Kaffa Love", instagram_business_account: { id: IG_USER, username: IG_USERNAME } }] });
+      if (parts[0] === "me" && parts[1] === "accounts") {
+        if (unified(token)) return send(400, { error: { message: "(#100) Requires pages_show_list permission", code: 100 } });
+        return send(200, { data: [{ name: "Kaffa Love", instagram_business_account: { id: IG_USER, username: IG_USERNAME } }] });
+      }
+      if (req.method === "GET" && parts[0] === IG_USER && parts.length === 1) return send(200, { id: IG_USER, username: IG_USERNAME });
     }
 
     if (req.method === "GET" && parts[0] === "me") return send(200, { data: [{ user_id: IG_USER, username: IG_USERNAME }] });

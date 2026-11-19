@@ -39,6 +39,9 @@ export function InstagramSection({ account, queue, message }: { account: Account
           <Field label="ID de la app (si lo pide)" className="w-48">
             <input name="appId" inputMode="numeric" autoComplete="off" className={field} />
           </Field>
+          <Field label="ID de la cuenta de Instagram (si lo pide)" className="w-56">
+            <input name="igId" inputMode="numeric" autoComplete="off" className={field} />
+          </Field>
           <button className={btn.primary}>Conectar</button>
         </ActionForm>
       </Card>

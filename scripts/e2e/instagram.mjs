@@ -183,7 +183,7 @@ try {
   await clickText(page, "button", "Conectar");
   await page.waitForFunction((u) => document.body.innerText.includes(`Conectado como @${u}`), { timeout: 30000 }, IG_USERNAME);
   const unif = await readJson("clave-instagram.json", null);
-  assert(unif.host === "facebook" && unif.token.startsWith("EAAlargo") && unif.appId === "123456", "con el ID: token de 60 días con renovación");
+  assert(unif.host === "facebook" && unif.token.startsWith("EAAlargoU") && unif.appId === "123456" && unif.userId === "17890000000000001", "con el ID: token de 60 días y la cuenta tomada de los permisos del token (sin permiso de páginas)");
   console.log("\nTodo OK");
 } catch (e) {
   console.error(e.message);
