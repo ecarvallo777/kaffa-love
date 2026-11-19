@@ -100,7 +100,7 @@ export default async function ReportsPage({ searchParams }: PageProps<"/admin/re
             ))}
             <div className="flex items-baseline justify-between pt-3">
               <dt className="font-display text-lg">Utilidad</dt>
-              <dd className={`font-display text-2xl tabular-nums ${r.current.profit < 0 ? "text-accent-deep" : "text-leaf"}`}>{clp(r.current.profit)}</dd>
+              <dd className={`font-display text-2xl tabular-nums ${r.current.profit < 0 ? "text-danger-deep" : "text-leaf"}`}>{clp(r.current.profit)}</dd>
             </div>
           </dl>
         </Card>
@@ -233,7 +233,7 @@ export default async function ReportsPage({ searchParams }: PageProps<"/admin/re
                       </td>
                       <td className="py-2 text-right tabular-nums">{clp(f.gross)}</td>
                       <td className="py-2 text-right tabular-nums">{clp(f.avgTicket)}</td>
-                      <td className={`py-2 text-right font-medium tabular-nums ${f.profit < 0 ? "text-accent-deep" : "text-leaf"}`}>{clp(f.profit)}</td>
+                      <td className={`py-2 text-right font-medium tabular-nums ${f.profit < 0 ? "text-danger-deep" : "text-leaf"}`}>{clp(f.profit)}</td>
                       <td className="py-2 text-right tabular-nums">{f.missingCosts ? <span className="text-xs text-[#8a5a1c]">faltan costos</span> : pct(f.margin)}</td>
                       <td className="py-2 text-right tabular-nums">{f.perHour === null ? "—" : clp(f.perHour)}</td>
                     </tr>

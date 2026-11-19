@@ -57,7 +57,7 @@ export default async function FairsAdminPage() {
                     <td className="text-right tabular-nums">
                       {fp.expenses.length ? clp(p.expenses) : <Link href={`/admin/ferias/${s.id}`} className="text-xs text-accent-deep underline">Ingresar</Link>}
                     </td>
-                    <td className={`text-right font-medium tabular-nums ${p.profit < 0 ? "text-accent-deep" : "text-leaf"}`}>
+                    <td className={`text-right font-medium tabular-nums ${p.profit < 0 ? "text-danger-deep" : "text-leaf"}`}>
                       {clp(p.profit)}
                       {p.missingCost.length ? <span className="block text-xs font-normal text-[#8a5a1c]">faltan costos</span> : p.margin !== null && <span className="block text-xs font-normal text-ink-mute">{Math.round(p.margin * 100)} %</span>}
                     </td>
@@ -70,7 +70,7 @@ export default async function FairsAdminPage() {
             </tbody>
           </Table>
           <p className="mt-3 text-sm text-ink-soft">
-            Utilidad acumulada: <b className={`tabular-nums ${totalProfit < 0 ? "text-accent-deep" : "text-leaf"}`}>{clp(totalProfit)}</b>
+            Utilidad acumulada: <b className={`tabular-nums ${totalProfit < 0 ? "text-danger-deep" : "text-leaf"}`}>{clp(totalProfit)}</b>
             {withExpenses < sessions.length && (
               <span className="text-ink-mute"> · {sessions.length - withExpenses} jornada(s) sin gastos ingresados</span>
             )}

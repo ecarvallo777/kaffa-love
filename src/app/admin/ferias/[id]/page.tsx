@@ -60,7 +60,7 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
               ))}
               <div className="flex items-baseline justify-between gap-4 pt-4">
                 <dt className="font-display text-xl">Utilidad</dt>
-                <dd className={`font-display text-3xl tabular-nums ${p.profit < 0 ? "text-accent-deep" : "text-leaf"}`}>{clp(p.profit)}</dd>
+                <dd className={`font-display text-3xl tabular-nums ${p.profit < 0 ? "text-danger-deep" : "text-leaf"}`}>{clp(p.profit)}</dd>
               </div>
             </dl>
             <div className="mt-4 grid grid-cols-3 gap-3 text-center text-sm">
