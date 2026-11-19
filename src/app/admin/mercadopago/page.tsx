@@ -11,6 +11,10 @@ import { requestReport } from "./actions";
 export const metadata = { title: "Mercado Pago · diagnóstico" };
 
 const day = (d: Date) => d.toISOString().slice(0, 10);
+/** Rango por defecto: los últimos 30 días */
+function defaultRange() {
+  return { from: day(new Date(Date.now() - 30 * 86400_000)), to: day(new Date()) };
+}
 
 /**
  * Diagnóstico de solo lectura: qué pagos HECHOS por la cuenta entrega Mercado Pago,
@@ -20,8 +24,9 @@ export default async function MercadoPagoPage({ searchParams }: PageProps<"/admi
   await connection();
   const sp = await searchParams;
   if (!mercadoPagoConfigured()) return <Empty>Falta MP_ACCESS_TOKEN en este entorno.</Empty>;
-  const to = typeof sp.hasta === "string" ? sp.hasta : day(new Date());
-  const from = typeof sp.desde === "string" ? sp.desde : day(new Date(Date.now() - 30 * 86400_000));
+  const range = defaultRange();
+  const to = typeof sp.hasta === "string" ? sp.hasta : range.to;
+  const from = typeof sp.desde === "string" ? sp.desde : range.from;
   const fromIso = `${from}T00:00:00.000-03:00`;
   const toIso = `${to}T23:59:59.999-03:00`;
   const [probe, report] = await Promise.all([
