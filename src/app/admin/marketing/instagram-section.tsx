@@ -13,7 +13,7 @@ const STATUS: Record<IgStatus, { label: string; tone: "ok" | "wait" | "bad" | "i
   cancelada: { label: "Cancelada", tone: "neutral" },
 };
 
-type Account = { username: string; connectedAt: string; refreshedAt: string; expiresAt: string | null } | null;
+type Account = { username: string; connectedAt: string; refreshedAt: string; expiresAt: string | null; autoRenew: boolean } | null;
 
 export function InstagramSection({ account, queue, message }: { account: Account; queue: IgPublication[]; message: string | null }) {
   if (!account) {
@@ -26,12 +26,15 @@ export function InstagramSection({ account, queue, message }: { account: Account
         </p>
         <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-ink-soft">
           <li>En developers.facebook.com, crea una app con el caso de uso «Administrar mensajes y contenido en Instagram».</li>
-          <li>En <strong>Configuración de la API con inicio de sesión de Instagram</strong>, agrega la cuenta de la tienda y presiona <strong>Generar token</strong>.</li>
-          <li>Pega el token aquí. La tienda lo renueva sola cada semana.</li>
+          <li>En <strong>API setup with Unified login</strong> (o con inicio de sesión de Instagram), agrega la cuenta de la tienda y presiona <strong>Generar token</strong>.</li>
+          <li>Pega el token aquí. Si empieza con <code>EAA</code>, pega también la <strong>clave secreta de la app</strong> (Configuración de la app → Básica): así la tienda lo renueva sola.</li>
         </ol>
         <ActionForm action={connectInstagramAction} className="mt-4 flex flex-wrap items-end gap-3">
           <Field label="Token de acceso" className="min-w-0 flex-1">
-            <input name="token" type="password" autoComplete="off" className={field} placeholder="IGAA…" required />
+            <input name="token" type="password" autoComplete="off" className={field} placeholder="IGAA… o EAA…" required />
+          </Field>
+          <Field label="Clave secreta de la app (si el token empieza con EAA)" className="min-w-0 flex-1">
+            <input name="appSecret" type="password" autoComplete="off" className={field} />
           </Field>
           <button className={btn.primary}>Conectar</button>
         </ActionForm>
@@ -56,8 +59,12 @@ export function InstagramSection({ account, queue, message }: { account: Account
     >
       {message && <ActionMessage state={{ ok: message }} className="mb-4" />}
       <p className="text-sm text-ink-soft">
-        Conectado como <strong>@{account.username}</strong>. El acceso se renueva solo
-        {account.expiresAt && <> (vence el {fmtDate(account.expiresAt)} si no se renueva)</>}.
+        Conectado como <strong>@{account.username}</strong>.{" "}
+        {!account.expiresAt
+          ? "El acceso no vence."
+          : account.autoRenew
+            ? `El acceso se renueva solo (vence el ${fmtDate(account.expiresAt)} si no se renueva).`
+            : `El acceso vence el ${fmtDate(account.expiresAt)}: antes de esa fecha, desconecta y conecta un token nuevo.`}
       </p>
 
       {upcoming.length > 0 ? (
@@ -79,7 +86,7 @@ export function InstagramSection({ account, queue, message }: { account: Account
                     <span className="font-medium">{KIND_LABEL[p.kind]}</span>
                     <span className="text-ink-mute"> · {p.media.length} {p.media.length === 1 ? "archivo" : "archivos"}</span>
                     {p.caption && <span className="block max-w-md truncate text-xs text-ink-mute">{p.caption}</span>}
-                    {p.error && <span className="mt-1 block max-w-md text-xs text-accent-deep">{p.error}</span>}
+                    {p.error && <span className="mt-1 block max-w-md text-xs text-danger-deep">{p.error}</span>}
                   </td>
                   <td><Pill tone={STATUS[p.status].tone}>{STATUS[p.status].label}</Pill></td>
                   <td>

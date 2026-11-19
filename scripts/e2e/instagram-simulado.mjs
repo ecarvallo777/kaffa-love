@@ -36,8 +36,22 @@ export function startInstagramSimulado(port = 4599) {
       res.end(JSON.stringify(json));
     };
     const fail = (message) => (log.push({ error: message }), send(400, { error: { message, code: 100 } }));
-    if (!params.access_token?.startsWith("IGAA")) return send(401, { error: { message: "Invalid OAuth access token", code: 190 } });
+    const token = params.access_token ?? "";
+    if (!token.startsWith("IGAA") && !token.startsWith("EAA")) return send(400, { error: { message: "Invalid OAuth access token - Cannot parse access token", code: 190 } });
     const parts = url.pathname.split("/").filter(Boolean);
+
+    // Tokens de Facebook (EAA…): el de la app dura 1 hora; con la clave secreta se cambia por uno de 60 días
+    if (token.startsWith("EAA")) {
+      if (parts[0] === "debug_token") {
+        const long = params.input_token.startsWith("EAAlargo");
+        return send(200, { data: { app_id: "123456", is_valid: true, expires_at: Math.floor(Date.now() / 1000) + (long ? 5184000 : 3600), scopes: ["instagram_basic", "instagram_content_publish", "pages_show_list"] } });
+      }
+      if (parts[0] === "oauth") {
+        if (params.client_secret !== "secreto-de-prueba" || params.client_id !== "123456") return send(400, { error: { message: "Error validating client secret.", code: 1 } });
+        return send(200, { access_token: "EAAlargo" + "y".repeat(60), token_type: "bearer", expires_in: 5184000 });
+      }
+      if (parts[0] === "me" && parts[1] === "accounts") return send(200, { data: [{ name: "Kaffa Love", instagram_business_account: { id: IG_USER, username: IG_USERNAME } }] });
+    }
 
     if (req.method === "GET" && parts[0] === "me") return send(200, { data: [{ user_id: IG_USER, username: IG_USERNAME }] });
 

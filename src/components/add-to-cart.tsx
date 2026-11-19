@@ -137,7 +137,7 @@ export function AddToCart({ product, available, maxQty, recipes = [] }: Props) {
             ))}
           </div>
           {error && !grind && (
-            <p id={errorId} className="mt-2 text-sm text-accent" role="alert">
+            <p id={errorId} className="mt-2 text-sm text-danger" role="alert">
               Elige una molienda para agregar este café.
             </p>
           )}

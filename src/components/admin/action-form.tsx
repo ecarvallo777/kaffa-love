@@ -9,7 +9,7 @@ export type ActionResult = { ok?: string; error?: string } | null;
 export function ActionMessage({ state, className = "mt-3" }: { state: ActionResult; className?: string }) {
   if (state?.error)
     return (
-      <p role="alert" className={`${className} rounded-xl bg-accent/10 px-3 py-2 text-sm text-accent-deep`}>
+      <p role="alert" className={`${className} rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger-deep`}>
         {state.error}
       </p>
     );

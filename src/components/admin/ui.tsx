@@ -51,7 +51,7 @@ const TONES = {
   ok: "bg-leaf/15 text-leaf",
   info: "bg-[#2f4a68]/12 text-[#2f4a68]",
   wait: "bg-crema/20 text-[#8a5a1c]",
-  bad: "bg-accent/12 text-accent-deep",
+  bad: "bg-danger/12 text-danger-deep",
   neutral: "bg-paper-3 text-ink-soft",
 };
 
@@ -81,7 +81,7 @@ export function Empty({ children }: { children: React.ReactNode }) {
 export const btn = {
   primary: "inline-flex h-10 items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-medium text-paper transition-colors hover:bg-accent disabled:opacity-50",
   secondary: "inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line bg-white/70 px-5 text-sm font-medium transition-colors hover:border-ink disabled:opacity-50",
-  danger: "inline-flex h-10 items-center justify-center gap-2 rounded-full border border-accent/40 px-5 text-sm font-medium text-accent-deep transition-colors hover:bg-accent hover:text-white disabled:opacity-50",
+  danger: "inline-flex h-10 items-center justify-center gap-2 rounded-full border border-danger/40 px-5 text-sm font-medium text-danger-deep transition-colors hover:bg-danger hover:text-white disabled:opacity-50",
 };
 
 export const field = "h-11 w-full rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-ink";

@@ -14,7 +14,7 @@ export function SignInForm() {
     <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="space-y-4">
       <input name="email" type="email" required autoComplete="email" placeholder="Correo" className={input} />
       <input name="password" type="password" required autoComplete="current-password" placeholder="Contraseña" className={input} />
-      {error && <p role="alert" className="text-sm text-accent">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button disabled={pending} className={primary}>{pending ? "Ingresando…" : "Ingresar"}</button>
       <p className="text-center text-sm"><Link href="/cuenta/recuperar" className="text-ink-soft underline underline-offset-4">Olvidé mi contraseña</Link></p>
     </form>
@@ -27,7 +27,7 @@ export function ResetRequestForm() {
   return (
     <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="space-y-4">
       <input name="email" type="email" required autoComplete="email" placeholder="Correo" className={input} />
-      {state && <p role="alert" className="text-sm text-accent">{state}</p>}
+      {state && <p role="alert" className="text-sm text-danger">{state}</p>}
       <button disabled={pending} className={primary}>{pending ? "Enviando…" : "Enviar enlace"}</button>
     </form>
   );
@@ -39,7 +39,7 @@ export function NewPasswordForm({ tokenHash }: { tokenHash: string }) {
     <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="space-y-4">
       <input type="hidden" name="token_hash" value={tokenHash} />
       <input name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="Nueva contraseña (mín. 8 caracteres)" className={input} />
-      {error && <p role="alert" className="text-sm text-accent">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button disabled={pending} className={primary}>{pending ? "Guardando…" : "Guardar contraseña"}</button>
     </form>
   );
@@ -56,7 +56,7 @@ export function CreateAccountOffer({ orderId, email }: { orderId: string; email:
         <input name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="Contraseña (mín. 8 caracteres)" className={`${input} min-w-56 flex-1`} />
         <button disabled={pending} className="h-12 rounded-full bg-ink px-6 font-medium text-paper hover:bg-accent disabled:opacity-60">{pending ? "Creando…" : "Crear cuenta"}</button>
       </form>
-      {error && <p role="alert" className="mt-2 text-sm text-accent">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-danger">{error}</p>}
     </section>
   );
 }

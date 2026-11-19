@@ -20,6 +20,9 @@
   /* Acentos: verde del logo (accent-deep para hover), hoja y crema */
   --color-accent: #387b4d;
   --color-accent-deep: #2b5f3c;
+  /* Errores y acciones destructivas: rojo ladrillo, distinto del verde del logo */
+  --color-danger: #b2402f;
+  --color-danger-deep: #8c2e21;
   --color-leaf: #3d5944;
   --color-crema: #c4873a;
 

@@ -34,7 +34,7 @@ export function CloseSessionForm({ sessionId, expected }: { sessionId: string; e
         <span className="mb-1.5 block font-medium">Notas (opcional)</span>
         <textarea name="notes" rows={3} className="w-full rounded-2xl border border-line bg-white px-4 py-3" />
       </label>
-      {error && <p role="alert" className="text-accent-deep">{error}</p>}
+      {error && <p role="alert" className="text-danger-deep">{error}</p>}
       <button disabled={pending} className="h-14 w-full rounded-full bg-ink text-lg font-medium text-paper disabled:opacity-60">
         {pending ? "Cerrando…" : "Cerrar jornada"}
       </button>

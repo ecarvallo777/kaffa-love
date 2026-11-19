@@ -177,7 +177,7 @@ export function RecipeForm({ recipe, coffees }: { recipe: RecipeFormData | null;
         </Section>
 
         <div className="sticky bottom-4 rounded-2xl border border-line bg-paper p-4 shadow-lg">
-          {state?.error && <p role="alert" className="mb-3 text-sm text-accent-deep">{state.error}</p>}
+          {state?.error && <p role="alert" className="mb-3 text-sm text-danger-deep">{state.error}</p>}
           {state?.ok && <p role="status" className="mb-3 text-sm text-leaf">{state.ok}</p>}
           <button form="recipe-form" disabled={pending} className={`${btn.primary} w-full`}>
             {pending ? "Guardando…" : r.id ? "Guardar cambios" : "Crear receta"}

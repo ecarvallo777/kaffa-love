@@ -75,7 +75,7 @@ export function ExpensesEditor({ sessionId, initial }: { sessionId: string; init
       <div className="mt-4 flex items-center gap-3">
         <button disabled={pending} className={btn.primary}>{pending ? "Guardando…" : "Guardar gastos"}</button>
         {state?.ok && <span role="status" className="text-sm text-leaf">{state.ok}</span>}
-        {state?.error && <span role="alert" className="text-sm text-accent-deep">{state.error}</span>}
+        {state?.error && <span role="alert" className="text-sm text-danger-deep">{state.error}</span>}
       </div>
     </form>
   );

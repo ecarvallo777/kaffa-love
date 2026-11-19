@@ -18,7 +18,12 @@ import { getMarketingRuns, saveMarketingRuns } from "@/lib/marketing/agent";
  */
 
 // INSTAGRAM_API_URL solo para pruebas locales contra un Instagram simulado (scripts/e2e/instagram.mjs)
-const API = (process.env.NODE_ENV !== "production" && process.env.INSTAGRAM_API_URL) || "https://graph.instagram.com/v27.0";
+const TEST_API = process.env.NODE_ENV !== "production" ? process.env.INSTAGRAM_API_URL : undefined;
+/** Token de Instagram (IGAA…): API de Instagram. Token de Facebook (EAA…): la misma API de publicación vía Facebook. */
+const HOSTS = {
+  instagram: TEST_API || "https://graph.instagram.com/v27.0",
+  facebook: TEST_API || "https://graph.facebook.com/v27.0",
+};
 const TOKEN_FILE = "clave-instagram.json";
 const QUEUE_FILE = "instagram.json";
 export const MEDIA_BUCKET = "instagram";
@@ -60,7 +65,21 @@ export type IgPublication = {
   lockUntil?: string | null;
 };
 
-type TokenStore = { token: string; userId: string; username: string; connectedAt: string; refreshedAt: string; expiresAt: string | null };
+type TokenStore = {
+  token: string;
+  /** "facebook" para tokens EAA…; sin valor = token de Instagram (IGAA…) */
+  host?: "instagram" | "facebook";
+  userId: string;
+  username: string;
+  connectedAt: string;
+  refreshedAt: string;
+  /** null = no vence */
+  expiresAt: string | null;
+  /** Solo tokens de Facebook: con la clave secreta de la app se renuevan solos */
+  appId?: string;
+  appSecret?: string;
+};
+type Auth = Pick<TokenStore, "token" | "host">;
 
 export const KIND_LABEL: Record<IgKind, string> = { feed: "Publicación", reel: "Reel", historia: "Historia" };
 
@@ -72,7 +91,9 @@ async function getTokenStore() {
 
 export async function getInstagramAccount() {
   const t = await getTokenStore();
-  return t ? { username: t.username, connectedAt: t.connectedAt, refreshedAt: t.refreshedAt, expiresAt: t.expiresAt } : null;
+  if (!t) return null;
+  const autoRenew = t.host !== "facebook" || Boolean(t.appSecret);
+  return { username: t.username, connectedAt: t.connectedAt, refreshedAt: t.refreshedAt, expiresAt: t.expiresAt, autoRenew };
 }
 
 class IgError extends Error {
@@ -83,9 +104,9 @@ class IgError extends Error {
   }
 }
 
-async function ig<T>(method: "GET" | "POST", path: string, token: string, params: Record<string, string> = {}): Promise<T> {
-  const url = new URL(path.startsWith("http") ? path : `${API}${path}`);
-  const body = new URLSearchParams({ ...params, access_token: token });
+async function ig<T>(method: "GET" | "POST", path: string, auth: Auth, params: Record<string, string> = {}): Promise<T> {
+  const url = new URL(path.startsWith("http") ? path : `${HOSTS[auth.host ?? "instagram"]}${path}`);
+  const body = new URLSearchParams({ ...params, access_token: auth.token });
   const res =
     method === "GET"
       ? await fetch(`${url}${url.search ? "&" : "?"}${body}`, { cache: "no-store" })
@@ -99,40 +120,116 @@ async function ig<T>(method: "GET" | "POST", path: string, token: string, params
 }
 
 /** Valida un token pegado en el admin y lo guarda */
-export async function connectInstagram(token: string, by: string) {
-  const me = await ig<{ user_id?: string; username?: string; account_type?: string; data?: { user_id: string; username: string }[] }>(
-    "GET",
-    "/me",
-    token,
-    { fields: "user_id,username,account_type" },
-  );
+export async function connectInstagram(token: string, by: string, appSecret?: string) {
+  const store = token.startsWith("EAA") ? await facebookToken(token, appSecret) : await instagramToken(token);
+  await writeConfigJson(TOKEN_FILE, store);
+  await logEvent("instagram_conectado", "instagram", null, { cuenta: store.username, via: store.host ?? "instagram", por: by });
+  return store.username;
+}
+
+async function instagramToken(token: string): Promise<TokenStore> {
+  const me = await ig<{ user_id?: string; username?: string; data?: { user_id: string; username: string }[] }>("GET", "/me", { token }, {
+    fields: "user_id,username",
+  });
   const info = me.data?.[0] ?? me;
   if (!info.user_id || !info.username) throw new Error("Instagram no devolvió la cuenta. Revisa que el token sea de la cuenta profesional.");
   const now = new Date().toISOString();
-  await writeConfigJson(TOKEN_FILE, {
-    token,
-    userId: String(info.user_id),
-    username: info.username,
+  return { token, userId: String(info.user_id), username: info.username, connectedAt: now, refreshedAt: now, expiresAt: new Date(Date.now() + 60 * 86400_000).toISOString() };
+}
+
+type PagesResponse = { data?: { instagram_business_account?: { id: string; username?: string } }[] };
+
+/**
+ * Token de Facebook (EAA…), el que entrega la configuración con inicio de sesión unificado o de Facebook.
+ * Con la clave secreta de la app se cambia por uno de 60 días que la tienda renueva sola.
+ */
+async function facebookToken(token: string, appSecret?: string): Promise<TokenStore> {
+  const fb = (t: string): Auth => ({ token: t, host: "facebook" });
+  const debug = await ig<{ data?: { app_id?: string; expires_at?: number; is_valid?: boolean; scopes?: string[] } }>("GET", "/debug_token", fb(token), {
+    input_token: token,
+  })
+    .then((r) => r.data)
+    .catch(() => undefined);
+  if (debug && debug.is_valid === false) throw new Error("Meta indica que el token no es válido o ya venció. Genera uno nuevo.");
+
+  let finalToken = token;
+  // expires_at 0 = no vence; sin dato, se asume corto (1 hora) para pedir la clave secreta
+  let expiresAt: string | null =
+    debug?.expires_at === 0 ? null : debug?.expires_at ? new Date(debug.expires_at * 1000).toISOString() : new Date(Date.now() + 3600_000).toISOString();
+  const appId = debug?.app_id;
+  if (appSecret) {
+    if (!appId) throw new Error("No pude leer el identificador de la app desde el token.");
+    const r = await ig<{ access_token: string; expires_in?: number }>("GET", "/oauth/access_token", fb(token), {
+      grant_type: "fb_exchange_token",
+      client_id: appId,
+      client_secret: appSecret,
+      fb_exchange_token: token,
+    }).catch((e: Error) => {
+      throw new Error(`Meta no aceptó la clave secreta: ${e.message}`);
+    });
+    finalToken = r.access_token;
+    expiresAt = r.expires_in ? new Date(Date.now() + r.expires_in * 1000).toISOString() : null;
+  } else if (expiresAt && new Date(expiresAt).getTime() - Date.now() < 7 * 86400_000) {
+    throw new Error(
+      "Este token dura solo unas horas. Pega también la «Clave secreta de la app» (en la app de Meta: Configuración de la app → Básica) para cambiarlo por uno que la tienda renueva sola.",
+    );
+  }
+
+  // Cuenta de Instagram: la vinculada a una página de Facebook, o el propio usuario del token
+  const pages = await ig<PagesResponse>("GET", "/me/accounts", fb(finalToken), {
+    fields: "name,instagram_business_account{id,username}",
+    limit: "50",
+  }).catch((): PagesResponse => ({ data: [] }));
+  let account = pages.data?.find((p) => p.instagram_business_account)?.instagram_business_account;
+  if (!account) {
+    const me = await ig<{ id?: string; username?: string }>("GET", "/me", fb(finalToken), { fields: "id,username" }).catch((): { id?: string; username?: string } => ({}));
+    if (me.id && me.username) account = { id: me.id, username: me.username };
+  }
+  if (!account) {
+    const scopes = debug?.scopes?.length ? ` Permisos del token: ${debug.scopes.join(", ")}.` : "";
+    throw new Error(`El token no da acceso a ninguna cuenta de Instagram profesional. Al generarlo, acepta los permisos de Instagram (publicar contenido).${scopes}`);
+  }
+  if (!account.username) {
+    const info = await ig<{ username?: string }>("GET", `/${account.id}`, fb(finalToken), { fields: "username" }).catch((): { username?: string } => ({}));
+    account.username = info.username ?? account.id;
+  }
+  const now = new Date().toISOString();
+  return {
+    token: finalToken,
+    host: "facebook",
+    userId: account.id,
+    username: account.username,
     connectedAt: now,
     refreshedAt: now,
-    expiresAt: new Date(Date.now() + 60 * 86400_000).toISOString(),
-  } satisfies TokenStore);
-  await logEvent("instagram_conectado", "instagram", null, { cuenta: info.username, por: by });
-  return info.username;
+    expiresAt,
+    ...(appSecret && appId ? { appId, appSecret } : {}),
+  };
 }
 
 export async function disconnectInstagram() {
   await createAdminClient().storage.from("config").remove([TOKEN_FILE]);
 }
 
-/** Renueva el token si tiene más de 7 días (dura 60 y solo se puede renovar después de 24 horas) */
+/** Renueva el token cada 7 días (dura 60). Los de Facebook, solo si se guardó la clave secreta de la app. */
 async function refreshTokenIfNeeded(t: TokenStore) {
   if (Date.now() - new Date(t.refreshedAt).getTime() < 7 * 86400_000) return t;
   try {
-    const r = await ig<{ access_token: string; expires_in: number }>("GET", "https://graph.instagram.com/refresh_access_token", t.token, {
-      grant_type: "ig_refresh_token",
-    });
-    const next = { ...t, token: r.access_token, refreshedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + r.expires_in * 1000).toISOString() };
+    let next: TokenStore;
+    if (t.host === "facebook") {
+      if (!t.appId || !t.appSecret || !t.expiresAt) return t;
+      const r = await ig<{ access_token: string; expires_in?: number }>("GET", "/oauth/access_token", t, {
+        grant_type: "fb_exchange_token",
+        client_id: t.appId,
+        client_secret: t.appSecret,
+        fb_exchange_token: t.token,
+      });
+      next = { ...t, token: r.access_token, refreshedAt: new Date().toISOString(), expiresAt: r.expires_in ? new Date(Date.now() + r.expires_in * 1000).toISOString() : null };
+    } else {
+      const r = await ig<{ access_token: string; expires_in: number }>("GET", `${TEST_API || "https://graph.instagram.com"}/refresh_access_token`, t, {
+        grant_type: "ig_refresh_token",
+      });
+      next = { ...t, token: r.access_token, refreshedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + r.expires_in * 1000).toISOString() };
+    }
     await writeConfigJson(TOKEN_FILE, next);
     return next;
   } catch (e) {
@@ -181,15 +278,15 @@ export function validateMedia(kind: IgKind, media: IgMedia[]): string | null {
 const CAPTION = (p: IgPublication) => p.caption.trim();
 
 
-async function containerStatus(id: string, token: string) {
-  const r = await ig<{ status_code?: string; status?: string }>("GET", `/${id}`, token, { fields: "status_code,status" });
+async function containerStatus(id: string, auth: Auth) {
+  const r = await ig<{ status_code?: string; status?: string }>("GET", `/${id}`, auth, { fields: "status_code,status" });
   return { code: r.status_code ?? "IN_PROGRESS", detail: r.status ?? "" };
 }
 
 /** "listo" | "esperando" | mensaje de error */
-async function allFinished(ids: string[], token: string) {
+async function allFinished(ids: string[], auth: Auth) {
   for (const id of ids) {
-    const s = await containerStatus(id, token);
+    const s = await containerStatus(id, auth);
     if (s.code === "ERROR" || s.code === "EXPIRED") return `Instagram no pudo procesar un archivo (${s.code}${s.detail ? `: ${s.detail}` : ""}). Revisa el formato del video o la foto.`;
     if (s.code !== "FINISHED" && s.code !== "PUBLISHED") return "esperando";
   }
@@ -201,7 +298,7 @@ function mediaParams(m: IgMedia): Record<string, string> {
 }
 
 async function createContainers(p: IgPublication, t: TokenStore) {
-  const make = (params: Record<string, string>) => ig<{ id: string }>("POST", `/${t.userId}/media`, t.token, params).then((r) => r.id);
+  const make = (params: Record<string, string>) => ig<{ id: string }>("POST", `/${t.userId}/media`, t, params).then((r) => r.id);
   if (p.kind === "historia") {
     const ids: string[] = [];
     for (const m of p.media) ids.push(await make({ media_type: "STORIES", ...mediaParams(m) }));
@@ -254,7 +351,7 @@ async function advance(id: string, t: TokenStore, budgetMs: number): Promise<IgP
   /** Espera a que Instagram termine de procesar; false si se acabó el tiempo de esta pasada */
   const waitFinished = async (ids: string[]) => {
     for (;;) {
-      const s = await allFinished(ids, t.token);
+      const s = await allFinished(ids, t);
       if (s === "listo") return true;
       if (s !== "esperando") throw new Error(s);
       if (Date.now() + 5000 > deadline) return false;
@@ -277,7 +374,7 @@ async function advance(id: string, t: TokenStore, budgetMs: number): Promise<IgP
     // 2. Carrusel: con todos los elementos listos se crea el contenedor principal
     if (p.children && !p.containers) {
       if (!(await waitFinished(p.children))) return await release();
-      const parent = await ig<{ id: string }>("POST", `/${t.userId}/media`, t.token, { media_type: "CAROUSEL", children: p.children.join(","), caption: CAPTION(p) });
+      const parent = await ig<{ id: string }>("POST", `/${t.userId}/media`, t, { media_type: "CAROUSEL", children: p.children.join(","), caption: CAPTION(p) });
       await save((x) => ((x.containers = [parent.id]), (x.published = [null])));
     }
     const containers = p.containers ?? [];
@@ -287,7 +384,7 @@ async function advance(id: string, t: TokenStore, budgetMs: number): Promise<IgP
     for (let i = 0; i < containers.length; i++) {
       if (p.published?.[i]) continue;
       await save((x) => (x.publishing = i));
-      const r = await ig<{ id: string }>("POST", `/${t.userId}/media_publish`, t.token, { creation_id: containers[i] });
+      const r = await ig<{ id: string }>("POST", `/${t.userId}/media_publish`, t, { creation_id: containers[i] });
       await save((x) => {
         x.published = x.published ?? containers.map(() => null);
         x.published[i] = r.id;
@@ -298,7 +395,7 @@ async function advance(id: string, t: TokenStore, budgetMs: number): Promise<IgP
     const permalinks: string[] = [];
     for (const mediaId of p.published ?? []) {
       if (!mediaId) continue;
-      const link = await ig<{ permalink?: string }>("GET", `/${mediaId}`, t.token, { fields: "permalink" })
+      const link = await ig<{ permalink?: string }>("GET", `/${mediaId}`, t, { fields: "permalink" })
         .then((r) => r.permalink)
         .catch(() => undefined);
       if (link) permalinks.push(link);

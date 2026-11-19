@@ -146,8 +146,29 @@ try {
   await page.waitForFunction(() => document.body.innerText.includes("Instagram desconectado"), { timeout: 30000 });
   await page.type('input[name="token"]', "malo" + "x".repeat(60));
   await clickText(page, "button", "Conectar");
-  await page.waitForFunction(() => document.body.innerText.includes("Instagram rechazó el token"), { timeout: 30000 });
+  await page.waitForFunction(() => document.body.innerText.includes("Cannot parse access token"), { timeout: 30000 });
   assert(true, "token inválido rechazado con mensaje");
+
+  step("Token de Facebook (EAA…): sin clave secreta se pide; con ella queda de 60 días y publica");
+  await page.goto(`${BASE}/admin/marketing`, { waitUntil: "networkidle0", timeout: 90000 });
+  await page.type('input[name="token"]', "EAAcorto" + "z".repeat(60));
+  await clickText(page, "button", "Conectar");
+  await page.waitForFunction(() => document.body.innerText.includes("Clave secreta de la app»"), { timeout: 30000 });
+  assert(true, "token corto sin clave: pide la clave secreta");
+  await page.type('input[name="appSecret"]', "secreto-de-prueba");
+  await clickText(page, "button", "Conectar");
+  await page.waitForFunction((u) => document.body.innerText.includes(`Conectado como @${u}`), { timeout: 30000 }, IG_USERNAME);
+  const fbStore = await readJson("clave-instagram.json", null);
+  assert(fbStore.host === "facebook" && fbStore.token.startsWith("EAAlargo") && fbStore.appSecret, "token cambiado por uno de 60 días, con renovación");
+  assert(await page.evaluate(() => document.body.innerText.includes("El acceso se renueva solo")), "muestra que se renueva solo");
+  await page.goto(`${BASE}/admin/marketing/instagram/nueva`, { waitUntil: "networkidle0", timeout: 90000 });
+  await (await page.$('input[type="file"]')).uploadFile("public/brand/logo-original-canva.png");
+  await page.waitForFunction(() => document.body.innerText.includes("Fotos y videos (1)"));
+  await page.type("textarea", "Prueba con token de Facebook");
+  await clickText(page, "label", "Publicar ahora");
+  await clickText(page, "button", "Publicar en @");
+  await page.waitForFunction(() => location.search.includes("ig=") || document.querySelector('[role="alert"]'), { timeout: 120000 });
+  assert(decodeURIComponent(page.url()).includes("¡Publicado en Instagram!"), "publica con el token de Facebook");
   console.log("\nTodo OK");
 } catch (e) {
   console.error(e.message);

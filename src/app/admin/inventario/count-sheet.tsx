@@ -186,7 +186,7 @@ export function CountSheet({ rows }: { rows: InventoryRow[] }) {
             {pending ? "Aplicando…" : "Aplicar conteo"}
           </button>
         </div>
-        {state?.error && <p role="alert" className="mt-3 text-sm text-accent-deep">{state.error}</p>}
+        {state?.error && <p role="alert" className="mt-3 text-sm text-danger-deep">{state.error}</p>}
         {state?.results && (
           <div role="status" className="mt-3 text-sm">
             <p className="font-medium text-leaf">

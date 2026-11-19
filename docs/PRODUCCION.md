@@ -256,9 +256,9 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
     3. **Admin → Marketing** muestra si funciona («Búsquedas de Google: N búsquedas»).
   - [ ] **Publicar en Instagram desde Admin → Marketing** (programar publicaciones, carruseles de hasta 20 fotos o videos, reels e historias):
     1. En [developers.facebook.com](https://developers.facebook.com) → **Mis apps → Crear app**. Caso de uso: **«Administrar mensajes y contenido en Instagram»**. Nombre: `Kaffa Love Publicaciones`. Portfolio comercial: Kaffa Love.
-    2. En la app: **Casos de uso → Personalizar → Configuración de la API con inicio de sesión de Instagram**. En **Generar tokens de acceso**, presiona **Agregar cuenta** e inicia sesión con el Instagram de la tienda (cuenta profesional). Acepta los permisos de publicar contenido.
-    3. Presiona **Generar token** junto a la cuenta y copia el token (empieza con `IGAA`).
-    4. En **Admin → Marketing → Instagram**, pégalo y presiona **Conectar**. Dura 60 días y la tienda lo renueva sola cada semana; no hace falta tocar Vercel. Se guarda en `config/clave-instagram.json` y no va al respaldo.
+    2. En **Roles de la app → Roles**, agrega el Instagram de la tienda como **Evaluador de Instagram** y acepta la invitación en instagram.com → Configuración → Permisos de apps y sitios web → Invitaciones de evaluador.
+    3. En la app: **Casos de uso → Personalizar → API setup with Unified login** (Meta cambió el nombre en 2026; antes era «con inicio de sesión de Instagram»). En **Generar tokens de acceso**, presiona **Agregar cuenta**, inicia sesión con el Instagram de la tienda y acepta los permisos de publicar contenido. Presiona **Generar token** y cópialo.
+    4. En **Admin → Marketing → Instagram**, pégalo y presiona **Conectar**. Si el token empieza con `EAA` (Facebook), pega también la **clave secreta de la app** (Configuración de la app → Básica → Clave secreta): con ella la tienda lo cambia por uno de 60 días y lo renueva sola cada semana. Los tokens `IGAA` no la necesitan. No hace falta tocar Vercel. Se guarda en `config/clave-instagram.json` y no va al respaldo.
     5. La app puede quedar en modo desarrollo: publica solo en tu propia cuenta, sin revisión de Meta.
     - Límites de Instagram: fotos JPG (el admin las convierte y recorta solo), videos MP4 o MOV de hasta 50 MB (límite de Supabase gratis), historias sin sticker de enlace (eso solo desde la app).
     - Prueba local: `scripts/e2e/instagram.mjs` contra un Instagram simulado.

@@ -255,7 +255,7 @@ export function InstagramComposer({
                       <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="grid size-8 place-items-center rounded-full hover:bg-paper-2 disabled:opacity-30" aria-label="Mover antes">←</button>
                       <button type="button" onClick={() => move(i, 1)} disabled={i === items.length - 1} className="grid size-8 place-items-center rounded-full hover:bg-paper-2 disabled:opacity-30" aria-label="Mover después">→</button>
                     </div>
-                    <button type="button" onClick={() => remove(i)} className="grid size-8 place-items-center rounded-full text-accent-deep hover:bg-accent/10" aria-label="Quitar">✕</button>
+                    <button type="button" onClick={() => remove(i)} className="grid size-8 place-items-center rounded-full text-danger-deep hover:bg-danger/10" aria-label="Quitar">✕</button>
                   </div>
                 </li>
               ))}
@@ -301,7 +301,7 @@ export function InstagramComposer({
         {kind !== "historia" && (
           <Card title="Texto">
             <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={10} className={textarea} />
-            <p className={`mt-1 text-xs ${caption.length > 2200 ? "text-accent-deep" : "text-ink-mute"}`}>{caption.length} de 2.200 caracteres · los enlaces del texto no son clicables en Instagram</p>
+            <p className={`mt-1 text-xs ${caption.length > 2200 ? "text-danger-deep" : "text-ink-mute"}`}>{caption.length} de 2.200 caracteres · los enlaces del texto no son clicables en Instagram</p>
             {initial.link && (
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-ink-mute">
                 <span className="truncate">Enlace con etiqueta para la bio: {initial.link}</span>

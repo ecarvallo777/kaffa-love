@@ -382,7 +382,7 @@ export function CheckoutForm({
         <p className="text-xs text-ink-mute">IVA incluido</p>
 
         {errors.length > 0 && (
-          <div ref={errorRef} role="alert" className="mt-5 rounded-2xl border border-accent/40 bg-accent/5 p-4 text-sm text-accent-deep">
+          <div ref={errorRef} role="alert" className="mt-5 rounded-2xl border border-danger/40 bg-danger/5 p-4 text-sm text-danger-deep">
             {errors.map((e) => (
               <p key={e}>{e}</p>
             ))}

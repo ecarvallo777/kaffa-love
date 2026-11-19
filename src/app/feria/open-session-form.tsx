@@ -31,7 +31,7 @@ export function OpenSessionForm({ preparados }: { preparados: { id: string; name
             ))}
           </fieldset>
         )}
-        {error && <p role="alert" className="text-accent-deep">{error}</p>}
+        {error && <p role="alert" className="text-danger-deep">{error}</p>}
         <button disabled={pending} className="h-14 w-full rounded-full bg-accent text-lg font-medium text-white disabled:opacity-60">
           {pending ? "Abriendo…" : "Abrir jornada"}
         </button>

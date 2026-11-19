@@ -18,7 +18,7 @@ export function LoginForm({ next, initialError }: { next: string; initialError: 
         <input name="password" type="password" autoComplete="current-password" required className="h-12 w-full rounded-xl border border-line bg-paper px-4 outline-none focus:border-ink" />
       </label>
       {error && (
-        <p role="alert" className="text-sm text-accent">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}
