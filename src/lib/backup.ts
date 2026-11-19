@@ -71,7 +71,8 @@ async function dumpConfig() {
   if (error) throw new Error(`No se pudo listar config: ${error.message}`);
   const out: Record<string, unknown> = {};
   for (const f of files ?? []) {
-    if (!f.name.endsWith(".json")) continue;
+    // Las claves de acceso (por ejemplo, el token de Instagram) no van al respaldo: se vuelven a conectar
+    if (!f.name.endsWith(".json") || f.name.startsWith("clave-")) continue;
     const { data, error: e } = await db.storage.from("config").download(f.name);
     if (e || !data) throw new Error(`No se pudo leer config/${f.name}: ${e?.message}`);
     out[f.name] = JSON.parse(await data.text());

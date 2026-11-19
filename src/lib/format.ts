@@ -29,6 +29,20 @@ export function startOfMonthChile(now = new Date()) {
   return startOfTodayChile(new Date(noonToday - (day - 1) * 86400_000));
 }
 
+/** Fecha y hora escrita en hora de Chile ("AAAA-MM-DDTHH:MM", como la da un input datetime-local) → ISO (UTC) */
+export function chileLocalToIso(local: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local)) return null;
+  const guess = new Date(`${local}:00Z`);
+  if (Number.isNaN(guess.getTime())) return null;
+  return new Date(guess.getTime() - tzOffsetMinutes(guess) * 60_000).toISOString();
+}
+
+/** ISO (UTC) → "AAAA-MM-DDTHH:MM" en hora de Chile, para un input datetime-local */
+export function isoToChileLocal(iso: string | Date) {
+  const d = new Date(iso);
+  return new Date(d.getTime() + tzOffsetMinutes(d) * 60_000).toISOString().slice(0, 16);
+}
+
 function tzOffsetMinutes(d: Date) {
   const local = new Date(d.toLocaleString("en-US", { timeZone: TZ }));
   const utc = new Date(d.toLocaleString("en-US", { timeZone: "UTC" }));
@@ -60,6 +74,10 @@ export const EVENT_LABELS: Record<string, string> = {
   marketing_generado: "Plan de marketing semanal listo",
   guia_publicada: "Guía publicada",
   guia_actualizada: "Guía actualizada",
+  instagram_conectado: "Instagram conectado para publicar",
+  instagram_programado: "Publicación de Instagram programada",
+  instagram_publicado: "Publicado en Instagram",
+  instagram_error: "Error al publicar en Instagram",
   bienvenida_enviada: "Bienvenida enviada (cliente de PrestaShop)",
   bienvenida_control: "Copia de control de la bienvenida",
   pago_actualizado: "Estado de pago actualizado",

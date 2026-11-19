@@ -254,6 +254,14 @@ Hazlo en un horario de pocas ventas. Desde el paso 6.4, PrestaShop deja de verse
     1. En [console.cloud.google.com](https://console.cloud.google.com), en el proyecto de la cuenta de servicio de las facturas, ve a **APIs y servicios → Biblioteca** y activa **Google Search Console API**.
     2. En Search Console, en **Configuración → Usuarios y permisos → Agregar usuario**, agrega `facturas@kaffa-love.iam.gserviceaccount.com` con permiso **Restringido**.
     3. **Admin → Marketing** muestra si funciona («Búsquedas de Google: N búsquedas»).
+  - [ ] **Publicar en Instagram desde Admin → Marketing** (programar publicaciones, carruseles de hasta 20 fotos o videos, reels e historias):
+    1. En [developers.facebook.com](https://developers.facebook.com) → **Mis apps → Crear app**. Caso de uso: **«Administrar mensajes y contenido en Instagram»**. Nombre: `Kaffa Love Publicaciones`. Portfolio comercial: Kaffa Love.
+    2. En la app: **Casos de uso → Personalizar → Configuración de la API con inicio de sesión de Instagram**. En **Generar tokens de acceso**, presiona **Agregar cuenta** e inicia sesión con el Instagram de la tienda (cuenta profesional). Acepta los permisos de publicar contenido.
+    3. Presiona **Generar token** junto a la cuenta y copia el token (empieza con `IGAA`).
+    4. En **Admin → Marketing → Instagram**, pégalo y presiona **Conectar**. Dura 60 días y la tienda lo renueva sola cada semana; no hace falta tocar Vercel. Se guarda en `config/clave-instagram.json` y no va al respaldo.
+    5. La app puede quedar en modo desarrollo: publica solo en tu propia cuenta, sin revisión de Meta.
+    - Límites de Instagram: fotos JPG (el admin las convierte y recorta solo), videos MP4 o MOV de hasta 50 MB (límite de Supabase gratis), historias sin sticker de enlace (eso solo desde la app).
+    - Prueba local: `scripts/e2e/instagram.mjs` contra un Instagram simulado.
 
 ---
 

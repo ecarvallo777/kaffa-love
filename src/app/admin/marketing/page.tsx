@@ -7,6 +7,8 @@ import { ActionForm } from "@/components/admin/action-form";
 import { Card, Empty, PageHeader, Pill, Table, btn } from "@/components/admin/ui";
 import { generateMarketing, setPostStatus, toggleAction } from "./actions";
 import { CopyButton } from "./copy-button";
+import { InstagramSection } from "./instagram-section";
+import { getInstagramAccount, getInstagramQueue } from "@/lib/marketing/instagram";
 
 export const metadata = { title: "Marketing" };
 // Generar el plan con Claude tarda 1 a 2 minutos
@@ -18,7 +20,7 @@ const GUIDE_TONE: Record<GuideStatus, "ok" | "wait" | "neutral"> = { publicada: 
 export default async function MarketingPage({ searchParams }: PageProps<"/admin/marketing">) {
   await connection();
   const sp = await searchParams;
-  const [runs, guides] = await Promise.all([getMarketingRuns(), getGuidesFresh()]);
+  const [runs, guides, igAccount, igQueue] = await Promise.all([getMarketingRuns(), getGuidesFresh(), getInstagramAccount(), getInstagramQueue()]);
   const run = runs.find((r) => r.id === sp.plan) ?? runs[0];
   const guide = run?.guideSlug ? guides.find((g) => g.slug === run.guideSlug) : undefined;
 
@@ -34,6 +36,10 @@ export default async function MarketingPage({ searchParams }: PageProps<"/admin/
           </ActionForm>
         }
       />
+
+      <div id="instagram" className="mb-6 scroll-mt-6">
+        <InstagramSection account={igAccount} queue={igQueue} message={typeof sp.ig === "string" ? sp.ig : null} />
+      </div>
 
       {!run ? (
         <Empty>Todavía no hay planes. El primero llega el lunes a las 7:00, o genéralo ahora con el botón de arriba.</Empty>
@@ -76,6 +82,7 @@ export default async function MarketingPage({ searchParams }: PageProps<"/admin/
             <div className="grid gap-4 lg:grid-cols-2">
               {run.posts.map((p, i) => {
                 const full = `${p.caption}\n\n${p.hashtags.map((h) => `#${h}`).join(" ")}`;
+                const scheduled = igQueue.filter((q) => q.source?.runId === run.id && q.source.index === i && q.status !== "cancelada").at(-1);
                 return (
                   <article key={i} className={`flex flex-col rounded-2xl border border-line bg-white/60 p-5 ${p.status === "descartado" ? "opacity-50" : ""}`}>
                     <div className="flex flex-wrap items-center gap-2">
@@ -83,6 +90,11 @@ export default async function MarketingPage({ searchParams }: PageProps<"/admin/
                       <Pill>{p.day}</Pill>
                       {p.status === "publicado" && <Pill tone="ok">Publicada</Pill>}
                       {p.status === "descartado" && <Pill>Descartada</Pill>}
+                      {scheduled && scheduled.status !== "publicada" && (
+                        <Pill tone={scheduled.status === "error" ? "bad" : "wait"}>
+                          {scheduled.status === "error" ? "Error en Instagram" : `Programada ${fmtDateTime(scheduled.scheduledAt)}`}
+                        </Pill>
+                      )}
                     </div>
                     <p className="mt-3 text-xs text-ink-mute">{p.goal}</p>
                     <p className="mt-2 font-medium">{p.hook}</p>
@@ -91,6 +103,9 @@ export default async function MarketingPage({ searchParams }: PageProps<"/admin/
                     <p className="mt-3 rounded-xl bg-paper-2 px-3 py-2 text-sm text-ink-soft"><span className="font-medium text-ink">Foto: </span>{p.photo}</p>
                     <p className="mt-2 truncate text-xs text-ink-mute" title={p.link}>Enlace (bio o sticker): {p.link}</p>
                     <div className="mt-4 flex flex-wrap gap-2 pt-1">
+                      {igAccount && p.status === "pendiente" && !scheduled && (
+                        <Link href={`/admin/marketing/instagram/nueva?plan=${run.id}&post=${i}`} className={btn.primary}>Programar en Instagram</Link>
+                      )}
                       <CopyButton text={full} label="Copiar texto" />
                       <CopyButton text={p.link} label="Copiar enlace" />
                       {p.status !== "publicado" && (

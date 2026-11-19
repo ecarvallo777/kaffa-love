@@ -53,6 +53,7 @@ Antes de recuperar carritos o pedir recompras, alguien tiene que llegar a la tie
 - ✅ **Agente de marketing semanal** (17 de noviembre de 2026, `src/lib/marketing/agent.ts`). Une los agentes de reporte semanal, contenido y SEO.
   - **Cuándo corre:** los lunes a las 7:00, desde la tarea periódica y solo en producción. También se puede correr con **Generar plan ahora**.
   - **Qué entrega:** resumen y 3 acciones con el dato que las justifica, 4 publicaciones de Instagram (texto, hashtags, qué foto tomar y enlace con etiqueta) y el borrador de una guía para `/guias`.
+  - **Publicar en Instagram desde el admin:** cada post del plan tiene «Programar en Instagram» (también hay «Nueva publicación» libre). Se suben varias fotos o videos (o se eligen fotos del catálogo), se revisa el texto y se programa o publica ya; la tarea de cada 5 minutos lo publica con la API de Instagram. Publicaciones, carruseles de hasta 20, reels e historias (sin sticker de enlace). Código: `src/lib/marketing/instagram.ts`. Conexión: `docs/PRODUCCION.md` 7.6.
   - **Dónde se revisa:** **Admin → Marketing**, y el aviso llega por correo a la dirección de contacto.
   - **Costo:** unos US$ 0,30 por plan (Claude Opus 5.5).
   - **Datos que usa:** no recibe datos personales de clientes. Usa las búsquedas de Google si la cuenta de servicio tiene acceso a Search Console (ver `docs/PRODUCCION.md`, 7.6).
