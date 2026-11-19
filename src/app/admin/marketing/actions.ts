@@ -115,7 +115,8 @@ export async function connectInstagramAction(_prev: ActionResult, form: FormData
   if (token.length < 40) return { error: "Pega el token completo que generaste en el panel de Meta." };
   try {
     const appSecret = String(form.get("appSecret") ?? "").trim() || undefined;
-    const username = await connectInstagram(token, staff.email, appSecret);
+    const appId = String(form.get("appId") ?? "").replace(/\D/g, "") || undefined;
+    const username = await connectInstagram(token, staff.email, appSecret, appId);
     refresh();
     return { ok: `Conectado como @${username}.` };
   } catch (e) {

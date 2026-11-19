@@ -169,6 +169,21 @@ try {
   await clickText(page, "button", "Publicar en @");
   await page.waitForFunction(() => location.search.includes("ig=") || document.querySelector('[role="alert"]'), { timeout: 120000 });
   assert(decodeURIComponent(page.url()).includes("¡Publicado en Instagram!"), "publica con el token de Facebook");
+
+  step("Token de Unified login: sin ID de la app lo pide; con el ID conecta");
+  await page.goto(`${BASE}/admin/marketing`, { waitUntil: "networkidle0", timeout: 90000 });
+  await clickText(page, "button", "Desconectar Instagram");
+  await page.waitForFunction(() => document.body.innerText.includes("Instagram desconectado"), { timeout: 30000 });
+  await page.type('input[name="token"]', "EAAunif" + "u".repeat(60));
+  await page.type('input[name="appSecret"]', "secreto-de-prueba");
+  await clickText(page, "button", "Conectar");
+  await page.waitForFunction(() => document.body.innerText.includes("«ID de la app»"), { timeout: 30000 });
+  assert(true, "sin ID: pide el «ID de la app»");
+  await page.type('input[name="appId"]', "123456");
+  await clickText(page, "button", "Conectar");
+  await page.waitForFunction((u) => document.body.innerText.includes(`Conectado como @${u}`), { timeout: 30000 }, IG_USERNAME);
+  const unif = await readJson("clave-instagram.json", null);
+  assert(unif.host === "facebook" && unif.token.startsWith("EAAlargo") && unif.appId === "123456", "con el ID: token de 60 días con renovación");
   console.log("\nTodo OK");
 } catch (e) {
   console.error(e.message);

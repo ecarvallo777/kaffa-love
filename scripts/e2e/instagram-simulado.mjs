@@ -37,11 +37,14 @@ export function startInstagramSimulado(port = 4599) {
     };
     const fail = (message) => (log.push({ error: message }), send(400, { error: { message, code: 100 } }));
     const token = params.access_token ?? "";
-    if (!token.startsWith("IGAA") && !token.startsWith("EAA")) return send(400, { error: { message: "Invalid OAuth access token - Cannot parse access token", code: 190 } });
+    const appToken = token === "123456|secreto-de-prueba";
+    if (!token.startsWith("IGAA") && !token.startsWith("EAA") && !appToken) return send(400, { error: { message: "Invalid OAuth access token - Cannot parse access token", code: 190 } });
     const parts = url.pathname.split("/").filter(Boolean);
 
     // Tokens de Facebook (EAA…): el de la app dura 1 hora; con la clave secreta se cambia por uno de 60 días
-    if (token.startsWith("EAA")) {
+    // Los de «Unified login» (EAAunif…) no se pueden consultar con el mismo token ni entregan /app
+    if (token.startsWith("EAAunif") && (parts[0] === "debug_token" || parts[0] === "app")) return send(400, { error: { message: "(#100) Missing permissions", code: 100 } });
+    if (token.startsWith("EAA") || appToken) {
       if (parts[0] === "debug_token") {
         const long = params.input_token.startsWith("EAAlargo");
         return send(200, { data: { app_id: "123456", is_valid: true, expires_at: Math.floor(Date.now() / 1000) + (long ? 5184000 : 3600), scopes: ["instagram_basic", "instagram_content_publish", "pages_show_list"] } });

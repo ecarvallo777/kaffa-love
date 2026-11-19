@@ -27,7 +27,7 @@ export function InstagramSection({ account, queue, message }: { account: Account
         <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-ink-soft">
           <li>En developers.facebook.com, crea una app con el caso de uso «Administrar mensajes y contenido en Instagram».</li>
           <li>En <strong>API setup with Unified login</strong> (o con inicio de sesión de Instagram), agrega la cuenta de la tienda y presiona <strong>Generar token</strong>.</li>
-          <li>Pega el token aquí. Si empieza con <code>EAA</code>, pega también la <strong>clave secreta de la app</strong> (Configuración de la app → Básica): así la tienda lo renueva sola.</li>
+          <li>Pega el token aquí. Si empieza con <code>EAA</code>, pega también la <strong>clave secreta</strong> y el <strong>ID de la app</strong> (Configuración de la app → Básica): así la tienda lo renueva sola.</li>
         </ol>
         <ActionForm action={connectInstagramAction} className="mt-4 flex flex-wrap items-end gap-3">
           <Field label="Token de acceso" className="min-w-0 flex-1">
@@ -35,6 +35,9 @@ export function InstagramSection({ account, queue, message }: { account: Account
           </Field>
           <Field label="Clave secreta de la app (si el token empieza con EAA)" className="min-w-0 flex-1">
             <input name="appSecret" type="password" autoComplete="off" className={field} />
+          </Field>
+          <Field label="ID de la app (si lo pide)" className="w-48">
+            <input name="appId" inputMode="numeric" autoComplete="off" className={field} />
           </Field>
           <button className={btn.primary}>Conectar</button>
         </ActionForm>

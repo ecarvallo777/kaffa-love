@@ -120,8 +120,8 @@ async function ig<T>(method: "GET" | "POST", path: string, auth: Auth, params: R
 }
 
 /** Valida un token pegado en el admin y lo guarda */
-export async function connectInstagram(token: string, by: string, appSecret?: string) {
-  const store = token.startsWith("EAA") ? await facebookToken(token, appSecret) : await instagramToken(token);
+export async function connectInstagram(token: string, by: string, appSecret?: string, appId?: string) {
+  const store = token.startsWith("EAA") ? await facebookToken(token, appSecret, appId) : await instagramToken(token);
   await writeConfigJson(TOKEN_FILE, store);
   await logEvent("instagram_conectado", "instagram", null, { cuenta: store.username, via: store.host ?? "instagram", por: by });
   return store.username;
@@ -143,29 +143,44 @@ type PagesResponse = { data?: { instagram_business_account?: { id: string; usern
  * Token de Facebook (EAA…), el que entrega la configuración con inicio de sesión unificado o de Facebook.
  * Con la clave secreta de la app se cambia por uno de 60 días que la tienda renueva sola.
  */
-async function facebookToken(token: string, appSecret?: string): Promise<TokenStore> {
+async function facebookToken(token: string, appSecret?: string, appIdInput?: string): Promise<TokenStore> {
   const fb = (t: string): Auth => ({ token: t, host: "facebook" });
-  const debug = await ig<{ data?: { app_id?: string; expires_at?: number; is_valid?: boolean; scopes?: string[] } }>("GET", "/debug_token", fb(token), {
-    input_token: token,
-  })
-    .then((r) => r.data)
-    .catch(() => undefined);
+  type Debug = { app_id?: string; expires_at?: number; is_valid?: boolean; scopes?: string[] };
+  const problems: string[] = [];
+  const readDebug = (accessToken: string) =>
+    ig<{ data?: Debug }>("GET", "/debug_token", fb(accessToken), { input_token: token })
+      .then((r) => r.data)
+      .catch((e: Error) => (problems.push(`debug_token: ${e.message}`), undefined));
+
+  let debug = await readDebug(token);
+  // El identificador de la app: del token, de /app, o el que se pegó en el admin
+  let appId = appIdInput || debug?.app_id;
+  if (!appId) {
+    appId = await ig<{ id?: string }>("GET", "/app", fb(token))
+      .then((r) => r.id)
+      .catch((e: Error) => (problems.push(`app: ${e.message}`), undefined));
+  }
+  // Con la clave secreta, el token de la app sí puede consultar el token
+  if (!debug && appId && appSecret) debug = await readDebug(`${appId}|${appSecret}`);
   if (debug && debug.is_valid === false) throw new Error("Meta indica que el token no es válido o ya venció. Genera uno nuevo.");
 
   let finalToken = token;
   // expires_at 0 = no vence; sin dato, se asume corto (1 hora) para pedir la clave secreta
   let expiresAt: string | null =
     debug?.expires_at === 0 ? null : debug?.expires_at ? new Date(debug.expires_at * 1000).toISOString() : new Date(Date.now() + 3600_000).toISOString();
-  const appId = debug?.app_id;
   if (appSecret) {
-    if (!appId) throw new Error("No pude leer el identificador de la app desde el token.");
+    if (!appId) {
+      throw new Error(
+        `Meta no entregó el identificador de la app con este token. Pega también el «ID de la app» (Configuración de la app → Básica). Detalle: ${problems.join(" · ") || "sin respuesta"}`,
+      );
+    }
     const r = await ig<{ access_token: string; expires_in?: number }>("GET", "/oauth/access_token", fb(token), {
       grant_type: "fb_exchange_token",
       client_id: appId,
       client_secret: appSecret,
       fb_exchange_token: token,
     }).catch((e: Error) => {
-      throw new Error(`Meta no aceptó la clave secreta: ${e.message}`);
+      throw new Error(`Meta no aceptó el cambio de token: ${e.message}. Revisa que la clave secreta y el ID sean de la misma app que generó el token.`);
     });
     finalToken = r.access_token;
     expiresAt = r.expires_in ? new Date(Date.now() + r.expires_in * 1000).toISOString() : null;
@@ -186,7 +201,7 @@ async function facebookToken(token: string, appSecret?: string): Promise<TokenSt
     if (me.id && me.username) account = { id: me.id, username: me.username };
   }
   if (!account) {
-    const scopes = debug?.scopes?.length ? ` Permisos del token: ${debug.scopes.join(", ")}.` : "";
+    const scopes = debug?.scopes?.length ? ` Permisos del token: ${debug.scopes.join(", ")}.` : problems.length ? ` Detalle: ${problems.join(" · ")}` : "";
     throw new Error(`El token no da acceso a ninguna cuenta de Instagram profesional. Al generarlo, acepta los permisos de Instagram (publicar contenido).${scopes}`);
   }
   if (!account.username) {
