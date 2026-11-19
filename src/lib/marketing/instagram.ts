@@ -24,8 +24,9 @@ const HOSTS = {
   instagram: TEST_API || "https://graph.instagram.com/v27.0",
   facebook: TEST_API || "https://graph.facebook.com/v27.0",
 };
-const TOKEN_FILE = "clave-instagram.json";
-const QUEUE_FILE = "instagram.json";
+// Con el Instagram simulado se usan archivos aparte: las pruebas nunca tocan la cuenta real
+const TOKEN_FILE = TEST_API ? "clave-instagram-prueba.json" : "clave-instagram.json";
+const QUEUE_FILE = TEST_API ? "instagram-prueba.json" : "instagram.json";
 export const MEDIA_BUCKET = "instagram";
 /** Límite de archivo de Supabase en el plan gratis */
 export const MAX_MEDIA_BYTES = 50 * 1024 * 1024;

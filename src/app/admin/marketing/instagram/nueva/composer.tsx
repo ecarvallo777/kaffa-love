@@ -195,7 +195,13 @@ export function InstagramComposer({
       setState(result);
       if (result?.ok) {
         items.forEach((i) => typeof i.source !== "string" && URL.revokeObjectURL(i.preview));
+        // Next guarda esta página al salir: queda limpia para la próxima vez
         setItems([]);
+        setKind(initial.kind);
+        setCaption(initial.caption);
+        setWhen("programar");
+        setScheduledAt(initial.scheduledAt);
+        setState(null);
         router.push(`/admin/marketing?ig=${encodeURIComponent(result.ok)}#instagram`);
       }
     } catch (e) {

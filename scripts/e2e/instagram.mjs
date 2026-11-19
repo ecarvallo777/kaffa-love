@@ -16,11 +16,12 @@ const readJson = async (file, fallback) => {
 };
 const writeJson = (file, value) => config.upload(file, new Blob([JSON.stringify(value, null, 2)], { type: "application/json" }), { upsert: true });
 
-if (await readJson("clave-instagram.json", null)) {
-  console.log("Ya hay una cuenta de Instagram conectada: la prueba no corre para no reemplazarla.");
+if (await readJson("clave-instagram-prueba.json", null)) {
+  // Restos de una prueba anterior que se cortó
+  console.log("Quedó conectada la cuenta de una prueba anterior (clave-instagram-prueba.json): bórrala en Supabase → Storage → config y vuelve a correr.");
   process.exit(1);
 }
-const queueBefore = await readJson("instagram.json", null);
+const queueBefore = await readJson("instagram-prueba.json", null);
 const runsBefore = await readJson("marketing.json", []);
 const startedAt = new Date().toISOString();
 
@@ -30,7 +31,7 @@ page.on("dialog", (d) => d.accept());
 const testIds = [];
 
 async function queue() {
-  return readJson("instagram.json", []);
+  return readJson("instagram-prueba.json", []);
 }
 
 try {
@@ -48,7 +49,7 @@ try {
   await clickText(page, "button", "Conectar");
   await page.waitForFunction((u) => document.body.innerText.includes(`Conectado como @${u}`), { timeout: 30000 }, IG_USERNAME);
   assert(true, `conectado como @${IG_USERNAME}`);
-  const stored = await readJson("clave-instagram.json", null);
+  const stored = await readJson("clave-instagram-prueba.json", null);
   assert(stored?.userId && stored.token.startsWith("IGAA"), "token guardado en config/clave-instagram.json");
 
   step("Carrusel: foto propia (PNG horizontal) + foto del catálogo, publicar ahora");
@@ -85,6 +86,13 @@ try {
 
   const run = runsBefore[0];
   if (run?.posts?.length) {
+    step("Desde Marketing (sin recargar), «Programar en Instagram» trae el texto del plan aunque antes se usó el editor libre");
+    await clickText(page, "a", "Programar en Instagram");
+    await page.waitForFunction(() => location.pathname.endsWith("/instagram/nueva") && location.search.includes("plan="), { timeout: 60000 });
+    const firstPost = run.posts.find((p) => p.status === "pendiente");
+    await page.waitForFunction((start) => document.querySelector("textarea")?.value.startsWith(start), { timeout: 30000 }, firstPost.caption.slice(0, 30));
+    assert(true, "texto del plan precargado tras navegar dentro del admin");
+
     step("Programar una publicación del plan y cancelarla");
     await page.goto(`${BASE}/admin/marketing/instagram/nueva?plan=${run.id}&post=0`, { waitUntil: "networkidle0", timeout: 90000 });
     const caption = await page.$eval("textarea", (el) => el.value).catch(() => "");
@@ -158,7 +166,7 @@ try {
   await page.type('input[name="appSecret"]', "secreto-de-prueba");
   await clickText(page, "button", "Conectar");
   await page.waitForFunction((u) => document.body.innerText.includes(`Conectado como @${u}`), { timeout: 30000 }, IG_USERNAME);
-  const fbStore = await readJson("clave-instagram.json", null);
+  const fbStore = await readJson("clave-instagram-prueba.json", null);
   assert(fbStore.host === "facebook" && fbStore.token.startsWith("EAAlargo") && fbStore.appSecret, "token cambiado por uno de 60 días, con renovación");
   assert(await page.evaluate(() => document.body.innerText.includes("El acceso se renueva solo")), "muestra que se renueva solo");
   await page.goto(`${BASE}/admin/marketing/instagram/nueva`, { waitUntil: "networkidle0", timeout: 90000 });
@@ -182,7 +190,7 @@ try {
   await page.type('input[name="appId"]', "123456");
   await clickText(page, "button", "Conectar");
   await page.waitForFunction((u) => document.body.innerText.includes(`Conectado como @${u}`), { timeout: 30000 }, IG_USERNAME);
-  const unif = await readJson("clave-instagram.json", null);
+  const unif = await readJson("clave-instagram-prueba.json", null);
   assert(unif.host === "facebook" && unif.token.startsWith("EAAlargoU") && unif.appId === "123456" && unif.userId === "17890000000000001", "con el ID: token de 60 días y la cuenta tomada de los permisos del token (sin permiso de páginas)");
   console.log("\nTodo OK");
 } catch (e) {
@@ -190,17 +198,17 @@ try {
   await shot(page, "instagram-error").catch(() => {});
   process.exitCode = 1;
 } finally {
-  // Dejar todo como estaba
-  await config.remove(["clave-instagram.json"]);
-  if (queueBefore) await writeJson("instagram.json", queueBefore);
-  else await config.remove(["instagram.json"]);
-  const q = await queue();
-  const media = (await db.storage.from("instagram").list("media", { limit: 1000 })).data ?? [];
-  const keep = new Set(q.flatMap((p) => p.media.map((m) => m.path)));
-  const extra = media.filter((f) => !keep.has(`media/${f.name}`) && f.created_at >= startedAt).map((f) => `media/${f.name}`);
-  if (extra.length) await db.storage.from("instagram").remove(extra);
-  await db.from("events").delete().like("type", "instagram_%").gte("created_at", startedAt);
-  console.log(`Limpieza: ${testIds.length} publicaciones de prueba, ${extra.length} archivos, eventos instagram_* de la prueba.`);
+  // Dejar todo como estaba (solo archivos de prueba: la cuenta real usa clave-instagram.json e instagram.json)
+  const tested = (await queue()).filter((p) => p.createdAt >= startedAt);
+  await config.remove(["clave-instagram-prueba.json"]);
+  if (queueBefore) await writeJson("instagram-prueba.json", queueBefore);
+  else await config.remove(["instagram-prueba.json"]);
+  const testPaths = tested.flatMap((p) => p.media.map((m) => m.path));
+  if (testPaths.length) await db.storage.from("instagram").remove(testPaths);
+  const ids = tested.map((p) => p.id);
+  if (ids.length) await db.from("events").delete().like("type", "instagram_%").in("data->>publicacion", ids);
+  await db.from("events").delete().eq("type", "instagram_conectado").eq("data->>cuenta", IG_USERNAME).gte("created_at", startedAt);
+  console.log(`Limpieza: ${tested.length} publicaciones de prueba con sus archivos y eventos.`);
   await browser.close();
   sim.close();
 }

@@ -53,6 +53,8 @@ export default async function NewInstagramPage({ searchParams }: PageProps<"/adm
         </Empty>
       ) : (
         <InstagramComposer
+          // Next conserva el estado de las páginas visitadas: con otra publicación del plan, el editor parte de cero
+          key={post && run ? `${run.id}-${index}` : "libre"}
           username={account.username}
           initial={{
             kind: post ? KIND_OF[post.format] : "feed",
