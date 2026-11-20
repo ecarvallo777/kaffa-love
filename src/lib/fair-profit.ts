@@ -4,10 +4,14 @@ import { PAID_STATUSES } from "@/lib/admin-data";
 import { getFairExpenses, getProductCosts, type FairExpense } from "@/lib/costs";
 import { computeProfit, makeCostResolver, type ProfitBreakdown, type SaleOrder } from "@/lib/profit";
 import { getSettings } from "@/lib/settings";
+import { getMpFairExpensesBySession } from "@/lib/fair-mp-expenses";
 
 export type FairProfit = {
   sessionId: string;
+  /** Gastos anotados a mano (stand y otros) */
   expenses: FairExpense[];
+  /** Gastos tomados solos de Mercado Pago (los clasificados como gasto de la feria) */
+  mpExpenses: FairExpense[];
   profit: ProfitBreakdown;
   hours: number | null;
   products: { productId: string; name: string; units: number; revenue: number; cost: number | null }[];
@@ -33,16 +37,20 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
     getFairExpenses(),
     getSettings(),
   ]);
+  const mpBySession = await getMpFairExpensesBySession().catch((e) => (console.error("[ferias] gastos de Mercado Pago:", e), {} as Record<string, FairExpense[]>));
+  // El stand tiene factura: su IVA se recupera, así que resta el neto. El resto no tiene factura: resta completo.
+  const expenseCost = (e: FairExpense) => (e.category === "Stand" ? (e.amountClp * 100) / (100 + settings.ivaPct) : e.amountClp);
   const costOf = makeCostResolver(costs, bundleItems ?? []);
 
   for (const id of sessionIds) {
     const mine = ((orders ?? []) as unknown as SaleOrder[]).filter((o) => o.fair_session_id === id);
     const expenses = expensesBySession[id] ?? [];
+    const mpExpenses = mpBySession[id] ?? [];
     const profit = computeProfit({
       orders: mine,
       settings,
       costOf,
-      expenses: expenses.reduce((s, e) => s + e.amountClp, 0),
+      expenses: [...expenses, ...mpExpenses].reduce((s, e) => s + expenseCost(e), 0),
     });
 
     const byProduct = new Map<string, { productId: string; name: string; units: number; revenue: number; cost: number | null }>();
@@ -62,6 +70,7 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
     out.set(id, {
       sessionId: id,
       expenses,
+      mpExpenses,
       profit,
       hours: hours && hours >= 0.5 ? hours : null, // jornadas muy cortas distorsionan la utilidad por hora
       products: [...byProduct.values()].sort((a, b) => b.revenue - a.revenue),

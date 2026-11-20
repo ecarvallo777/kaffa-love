@@ -5,6 +5,7 @@ import { runAbandonedCartEmails, runRepurchaseEmails, runReviewEmails } from "@/
 import { syncDriveInvoices } from "@/lib/purchases";
 import { runWeeklyMarketing } from "@/lib/marketing/agent";
 import { publishDueInstagram } from "@/lib/marketing/instagram";
+import { syncFairMpExpenses } from "@/lib/fair-mp-expenses";
 
 // Leer una factura nueva con Claude puede tomar alrededor de un minuto
 export const maxDuration = 300;
@@ -16,7 +17,8 @@ export const maxDuration = 300;
  *   2. Libera el stock de pedidos sin pagar cuya reserva venció.
  *   3. Envía los correos automáticos (carrito abandonado, recompra y reseña).
  *   4. Los lunes, prepara el plan de marketing de la semana (src/lib/marketing/agent.ts).
- *   5. Publica en Instagram lo programado desde Admin → Marketing (src/lib/marketing/instagram.ts).
+ *   5. Anota como gastos de feria los pagos hechos con Mercado Pago en los días de las jornadas recientes.
+ *   5b. Publica en Instagram lo programado desde Admin → Marketing (src/lib/marketing/instagram.ts).
  *   6. Lee la factura de compra más antigua que aún no se haya leído en Google Drive.
  */
 export async function GET(request: NextRequest) {
@@ -30,9 +32,10 @@ export async function GET(request: NextRequest) {
   const abandonEmails = await runAbandonedCartEmails().catch((e) => (console.error("[cron] abandono:", e), 0));
   const repurchaseEmails = await runRepurchaseEmails().catch((e) => (console.error("[cron] recompra:", e), 0));
   const reviewEmails = await runReviewEmails().catch((e) => (console.error("[cron] reseñas:", e), 0));
+  const fairExpenses = await syncFairMpExpenses().catch((e) => (console.error("[cron] gastos de feria:", e), null));
   const instagram = await publishDueInstagram().catch((e) => (console.error("[cron] instagram:", e), null));
   // Plan de marketing (lunes): tarda 1 a 2 minutos, así que esa pasada no lee facturas
   const marketing = await runWeeklyMarketing().catch((e) => (console.error("[cron] marketing:", e), false));
   const invoices = marketing ? null : await syncDriveInvoices(1).catch((e) => (console.error("[cron] facturas:", e), null));
-  return NextResponse.json({ ok: true, confirmed, expired, abandonEmails, repurchaseEmails, reviewEmails, instagram, marketing, invoices });
+  return NextResponse.json({ ok: true, confirmed, expired, abandonEmails, repurchaseEmails, reviewEmails, fairExpenses, instagram, marketing, invoices });
 }

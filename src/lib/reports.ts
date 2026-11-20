@@ -301,7 +301,7 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
         perHour: fp.hours ? Math.round(fp.profit.profit / fp.hours) : null,
         avgTicket: fp.profit.orders ? Math.round(fp.profit.gross / fp.profit.orders) : 0,
         sales: fp.profit.orders,
-        hasExpenses: fp.expenses.length > 0,
+        hasExpenses: fp.expenses.length + fp.mpExpenses.length > 0,
         missingCosts: fp.profit.missingCost.length > 0,
       };
     })

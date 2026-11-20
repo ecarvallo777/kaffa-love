@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { logEvent } from "@/lib/events";
 import { EXPENSE_CATEGORIES, setFairExpenses, type FairExpense } from "@/lib/costs";
+import { decideMpExpense, syncFairMpExpenses, type MpExpenseStatus } from "@/lib/fair-mp-expenses";
 import type { ActionResult } from "@/components/admin/action-form";
 
 export async function saveFairExpenses(_prev: ActionResult, form: FormData): Promise<ActionResult> {
@@ -38,4 +39,35 @@ export async function saveFairExpenses(_prev: ActionResult, form: FormData): Pro
   });
   refresh();
   return { ok: "Gastos guardados." };
+}
+
+/** Busca ahora en Mercado Pago los pagos de los días de la jornada */
+export async function syncMpExpensesAction(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(["admin"]);
+  const sessionId = String(form.get("sessionId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return { error: "Jornada no válida." };
+  try {
+    const r = await syncFairMpExpenses([sessionId]);
+    if (!r.enabled) return { error: "Solo funciona en producción (con la clave real de Mercado Pago)." };
+    refresh();
+    return { ok: r.added ? `${r.added} pago${r.added === 1 ? "" : "s"} nuevo${r.added === 1 ? "" : "s"} de Mercado Pago.` : "No hay pagos nuevos en Mercado Pago para estos días." };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function decideMpExpenseAction(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const staff = await requireStaff(["admin"]);
+  const status = String(form.get("status")) as MpExpenseStatus;
+  const category = String(form.get("category")) as FairExpense["category"];
+  if (!["feria", "mercaderia", "no_gasto"].includes(status)) return { error: "Clasificación no válida." };
+  if (!(EXPENSE_CATEGORIES as readonly string[]).includes(category)) return { error: "Categoría no válida." };
+  try {
+    const item = await decideMpExpense(String(form.get("mpId")), { status, category, remember: form.get("remember") === "on" });
+    await logEvent("gasto_mp_clasificado", "fair_session", item.sessionId, { pago: item.mpId, estado: status, categoria: category, por: staff.email });
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  refresh();
+  return { ok: "Guardado." };
 }

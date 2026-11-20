@@ -74,6 +74,7 @@ export const EVENT_LABELS: Record<string, string> = {
   marketing_generado: "Plan de marketing semanal listo",
   guia_publicada: "Guía publicada",
   guia_actualizada: "Guía actualizada",
+  gasto_mp_clasificado: "Gasto de Mercado Pago clasificado",
   instagram_conectado: "Instagram conectado para publicar",
   instagram_programado: "Publicación de Instagram programada",
   instagram_publicado: "Publicado en Instagram",

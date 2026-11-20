@@ -8,6 +8,8 @@ import { getFairProfits } from "@/lib/fair-profit";
 import { getSettings } from "@/lib/settings";
 import { Card, PageHeader, Pill, Table } from "@/components/admin/ui";
 import { ExpensesEditor } from "../expenses-editor";
+import { MpExpenses } from "../mp-expenses";
+import { getMpExpenses, mpExpensesEnabled } from "@/lib/fair-mp-expenses";
 
 export const metadata = { title: "Detalle de feria" };
 
@@ -17,10 +19,11 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
   await connection();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [{ data: session }, profits, settings] = await Promise.all([
+  const [{ data: session }, profits, settings, mpItems] = await Promise.all([
     createAdminClient().from("fair_sessions").select("*").eq("id", id).maybeSingle(),
     getFairProfits([id]),
     getSettings(),
+    getMpExpenses(id),
   ]);
   if (!session) notFound();
   const fp = profits.get(id)!;
@@ -33,7 +36,7 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
     ["Ventas netas", p.net],
     ["Costo de los productos vendidos", -p.productCost, "Costo neto de cada producto"],
     [`Comisión Mercado Pago Point (${settings.mpFeriaPct} %)`, -p.commission],
-    ["Gastos de la jornada", -p.expenses, "Stand, transporte, comida…"],
+    ["Gastos de la jornada", -p.expenses, "Anotados a mano + pagados con Mercado Pago. El stand resta sin IVA (tiene factura)"],
   ];
 
   return (
@@ -98,7 +101,12 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
             </p>
           </Card>
 
-          <Card title="Gastos de la jornada">
+          <Card title="Gastos pagados con Mercado Pago">
+            <MpExpenses sessionId={id} items={mpItems} enabled={mpExpensesEnabled()} />
+          </Card>
+
+          <Card title="Gastos anotados a mano">
+            <p className="mb-3 text-sm text-ink-soft">El arriendo del stand y lo que no se haya pagado con Mercado Pago (por ejemplo, en efectivo).</p>
             <ExpensesEditor sessionId={id} initial={fp.expenses} />
           </Card>
         </div>
@@ -120,7 +128,7 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
                       <td className="text-right tabular-nums">{x.units}</td>
                       <td className="text-right tabular-nums">{clp(x.revenue)}</td>
                       <td className="text-right tabular-nums">{x.cost === null ? <span className="text-ink-mute">sin costo</span> : clp(x.cost)}</td>
-                      <td className={`text-right tabular-nums ${m !== null && m < 0.2 ? "text-accent-deep" : ""}`}>{pct(m)}</td>
+                      <td className={`text-right tabular-nums ${m !== null && m < 0.2 ? "text-danger-deep" : ""}`}>{pct(m)}</td>
                     </tr>
                   );
                 })}
