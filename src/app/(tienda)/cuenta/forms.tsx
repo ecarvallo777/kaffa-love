@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { createAccountFromOrder, customerSignIn, requestPasswordReset, setMarketingConsent, setNewPassword } from "./actions";
 import { submitKeepingValues } from "@/lib/forms";
 
@@ -10,8 +11,10 @@ const primary = "h-12 w-full rounded-full bg-ink font-medium text-paper hover:bg
 
 export function SignInForm() {
   const [error, action, pending] = useActionState(customerSignIn, null);
+  const next = useSearchParams().get("next");
   return (
     <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="space-y-4">
+      {next && <input type="hidden" name="next" value={next} />}
       <input name="email" type="email" required autoComplete="email" placeholder="Correo" className={input} />
       <input name="password" type="password" required autoComplete="current-password" placeholder="Contraseña" className={input} />
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
@@ -35,9 +38,11 @@ export function ResetRequestForm() {
 
 export function NewPasswordForm({ tokenHash }: { tokenHash: string }) {
   const [error, action, pending] = useActionState(setNewPassword, null);
+  const next = useSearchParams().get("next");
   return (
     <form action={action} onSubmit={(e) => submitKeepingValues(e, action)} className="space-y-4">
       <input type="hidden" name="token_hash" value={tokenHash} />
+      {next && <input type="hidden" name="next" value={next} />}
       <input name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="Nueva contraseña (mín. 8 caracteres)" className={input} />
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button disabled={pending} className={primary}>{pending ? "Guardando…" : "Guardar contraseña"}</button>

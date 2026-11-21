@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -14,22 +15,32 @@ import { ReorderButton } from "./reorder-button";
 
 export const metadata: Metadata = { title: "Mi cuenta", robots: { index: false } };
 
-export default function AccountPage() {
+const ACCESS_MSG: Record<string, string> = {
+  vencido: "El enlace del correo venció (dura 7 días). Ingresa con tu correo y contraseña; si no tienes, créala con «Olvidé mi contraseña». Tu carrito te espera.",
+  invalido: "El enlace no es válido. Ingresa con tu correo y contraseña, o créala con «Olvidé mi contraseña».",
+  error: "No pudimos ingresar con el enlace. Intenta de nuevo o ingresa con tu correo y contraseña.",
+};
+
+export default function AccountPage(props: PageProps<"/cuenta">) {
   return (
     <div className="mx-auto max-w-3xl px-4 pt-12 sm:px-6">
       <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-paper-2" />}>
-        <Account />
+        <Account searchParams={props.searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function Account() {
+async function Account({ searchParams }: Pick<PageProps<"/cuenta">, "searchParams">) {
   await connection(); // la sesión se lee en cada visita
+  const sp = await searchParams;
   const customer = await getCustomer();
+  if (customer && sp.next === "/checkout") redirect("/checkout");
   if (!customer) {
+    const access = typeof sp.acceso === "string" ? ACCESS_MSG[sp.acceso] : null;
     return (
       <div className="mx-auto max-w-sm">
+        {access && <p role="alert" className="mb-6 rounded-2xl bg-crema/15 p-4 text-sm text-[#8a5a1c]">{access}</p>}
         <h1 className="font-display text-4xl font-light">Mi cuenta</h1>
         <p className="mt-2 text-ink-soft">Ingresa para ver tus pedidos. Si nunca creaste una contraseña, puedes hacerlo con “Olvidé mi contraseña”.</p>
         <div className="mt-8"><SignInForm /></div>

@@ -99,6 +99,10 @@ export const EVENT_LABELS: Record<string, string> = {
   receta_editada: "Receta editada",
   receta_eliminada: "Receta eliminada",
   cuenta_creada: "Cuenta de cliente creada",
+  cliente_creado: "Cliente creado desde el admin",
+  carrito_preparado: "Carrito armado desde el admin",
+  carrito_enviado: "Carrito enviado al cliente para pagar",
+  acceso_carrito: "Cliente entró con el enlace de su carrito",
   baja_novedades: "Se dio de baja de novedades",
 };
 

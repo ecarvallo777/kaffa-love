@@ -7,6 +7,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCustomer, sendPasswordLink } from "@/lib/customer-auth";
 import { logEvent } from "@/lib/events";
 
+/** Destino después de ingresar: solo rutas conocidas (evita redirigir a sitios externos) */
+const safeNext = (v: FormDataEntryValue | null) => (v === "/checkout" ? "/checkout" : "/cuenta");
+
 const PAID = ["pagado", "en_preparacion", "despachado", "listo_retiro", "entregado"];
 
 /** Crear contraseña justo después de comprar (desde la página del pedido) */
@@ -48,7 +51,7 @@ export async function customerSignIn(_prev: string | null, form: FormData): Prom
     await auth.auth.signOut();
     return "No encontramos compras asociadas a este correo.";
   }
-  redirect("/cuenta");
+  redirect(safeNext(form.get("next")));
 }
 
 export async function customerSignOut() {
@@ -79,7 +82,7 @@ export async function setNewPassword(_prev: string | null, form: FormData): Prom
     await auth.auth.signOut();
     return "Contraseña guardada, pero este correo no tiene compras en la tienda.";
   }
-  redirect("/cuenta");
+  redirect(safeNext(form.get("next")));
 }
 
 export async function setMarketingConsent(consent: boolean) {
