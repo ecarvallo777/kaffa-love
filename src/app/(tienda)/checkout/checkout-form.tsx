@@ -85,7 +85,8 @@ export function CheckoutForm({
       ? { email: profile.email, name: profile.name, phone: profile.phone, ...(profile.addresses[0] ? fromAddress(profile.addresses[0]) : {}) }
       : {}),
   }));
-  const [marketing, setMarketing] = useState(false);
+  // Marcada por defecto (decisión del negocio, 21-11-2026); el cliente puede desmarcarla
+  const [marketing, setMarketing] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
   const [redirecting, setRedirecting] = useState(false);
