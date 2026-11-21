@@ -5,6 +5,8 @@ import { refresh, updateTag } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import type { ActionResult } from "@/components/admin/action-form";
 import { applyPurchase, getPurchase, removePurchase, setPurchaseStatus, syncDriveInvoices, type ApplyLine } from "@/lib/purchases";
+import { queuePriceStudies, studyMarket } from "@/lib/pricing";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function syncNow(): Promise<ActionResult> {
   await requireStaff(["admin"]);
@@ -34,6 +36,12 @@ export async function confirmPurchase(_prev: ActionResult, form: FormData): Prom
     refresh();
     return { error: (e as Error).message };
   }
+  // Con el costo nuevo, se revisa el precio de venta frente al mercado (Admin → Precios)
+  const ids = [...new Set(lines.flatMap((l) => (l.action === "existente" ? [l.productId] : [])))];
+  if (ids.length) {
+    const { data } = await createAdminClient().from("products").select("id, name").in("id", ids);
+    await queuePriceStudies(data ?? []).catch((e) => console.error("[precios]", e));
+  }
   updateTag("catalog");
   redirect(`/admin/compras?aplicada=${form.get("soloCosto") === "1" ? "costo" : "stock"}`);
 }
@@ -55,4 +63,16 @@ export async function retryPurchase(_prev: ActionResult, form: FormData): Promis
   if (!p || p.status === "aplicada") return { error: "Esta factura ya se aplicó." };
   await removePurchase(p.id);
   return syncNow();
+}
+
+/** Precio sugerido para un producto nuevo de la factura: estudio de mercado con su costo (tarda 1 a 2 minutos) */
+export async function suggestNewProductPrice(input: { name: string; type: "cafe" | "accesorio"; costClp: number }) {
+  await requireStaff(["admin"]);
+  if (!input.name?.trim() || !(input.costClp > 0)) return { error: "Falta el nombre o el costo del producto." };
+  try {
+    const r = await studyMarket({ name: input.name.trim(), type: input.type, costClp: Math.round(input.costClp) });
+    return { ok: true as const, ...r };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }
