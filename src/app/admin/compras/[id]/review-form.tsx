@@ -202,7 +202,7 @@ export function ReviewForm({ purchase: p, products, categories }: { purchase: Pu
                         ))}
                       </select>
                     </label>
-                    <PriceSuggest name={r.name} type={r.type} costClp={uc} onPrice={(price) => set(i, { price: String(price) })} />
+                    {r.type === "accesorio" && <PriceSuggest name={r.name} type={r.type} costClp={uc} onPrice={(price) => set(i, { price: String(price) })} />}
                     <p className="text-xs text-ink-mute sm:col-span-4">
                       Se crea oculto en la tienda: agrégale foto y descripción, y publícalo desde Productos.
                       {num(r.price) > 0 && uc > 0 && <> Margen bruto estimado: {Math.round((1 - uc / (num(r.price) / 1.19)) * 100)} %.</>}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProductCosts } from "@/lib/costs";
 import { getSettings } from "@/lib/settings";
-import { commissionFor, getPriceStudies, marginAt, MIN_MARGIN } from "@/lib/pricing";
+import { commissionFor, getPriceStudies, marginAt, MIN_MARGIN, STUDY_TYPES } from "@/lib/pricing";
 import { clp } from "@/lib/catalog-utils";
 import { fmtDateTime } from "@/lib/format";
 import { ActionForm } from "@/components/admin/action-form";
@@ -22,7 +22,7 @@ export default async function PricesPage() {
   await connection();
   const db = createAdminClient();
   const [{ data: products }, costs, settings, studies] = await Promise.all([
-    db.from("products").select("id, name, type, price_clp").eq("active", true).in("type", ["cafe", "accesorio", "preparado"]).order("type").order("name"),
+    db.from("products").select("id, name, type, price_clp").eq("active", true).in("type", STUDY_TYPES).order("name"),
     getProductCosts(),
     getSettings(),
     getPriceStudies(),
@@ -50,7 +50,7 @@ export default async function PricesPage() {
     <>
       <PageHeader
         title="Precios"
-        description={`Precio sugerido según el costo y un estudio de mercado en tiendas chilenas, con IVA (${settings.ivaPct} %) y comisión de Mercado Pago. Margen = utilidad sobre la venta sin IVA, después de la comisión. Nunca bajo ${Math.round(MIN_MARGIN * 100)} %. El precio solo cambia si presionas «Aplicar».`}
+        description={`Precio sugerido según el costo y un estudio de mercado en tiendas chilenas, con IVA (${settings.ivaPct} %) y comisión de Mercado Pago. Margen = utilidad sobre la venta sin IVA, después de la comisión. Nunca bajo ${Math.round(MIN_MARGIN * 100)} %. Solo accesorios (el café y los preparados no se comparan). El precio solo cambia si presionas «Aplicar».`}
         actions={
           <ActionForm action={studyAllAction} confirm="Se estudian todos los productos con costo, de a uno cada 5 minutos. Cada estudio cuesta unos US$ 0,20 a 0,40. ¿Seguir?">
             <button className={btn.secondary}>Estudiar todos</button>

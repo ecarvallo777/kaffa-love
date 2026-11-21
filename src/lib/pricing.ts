@@ -23,6 +23,8 @@ import { logEvent } from "@/lib/events";
 
 const STORE = "precios.json";
 const MODEL = "claude-opus-5-5";
+/** Solo accesorios: el café envasado y los preparados no se comparan con el mercado (decisión del negocio) */
+export const STUDY_TYPES = ["accesorio"];
 /** Bajo este margen no se sugiere un precio (cubre despacho gratis, descuentos y mermas) */
 export const MIN_MARGIN = 0.25;
 /** Costo de la búsqueda web de Anthropic: US$ 10 por 1.000 búsquedas */
@@ -129,7 +131,6 @@ Tu tarea: estudiar el mercado chileno de un producto y sugerir su precio de vent
 Cómo investigar:
 - Busca el mismo producto o uno equivalente (misma función, capacidad, material y calidad parecida) en tiendas que venden en Chile: tiendas de café de especialidad, Mercado Libre Chile, Falabella, Paris, Ripley, Lider, tiendas de cocina y tiendas de accesorios de café.
 - Usa precios en pesos chilenos con IVA, de ofertas vigentes. Si un precio viene solo del resumen de la búsqueda y no estás seguro, abre la página para confirmarlo.
-- Para café en grano compara bolsas de especialidad de tamaño parecido (normaliza a la misma cantidad de gramos y dilo en el resumen). Para bebidas preparadas, compara con cafeterías de especialidad de Santiago.
 - Junta entre 3 y 6 referencias. No inventes enlaces ni precios: cada referencia debe venir de una página que encontraste. Marca "igual" si es el mismo producto y "similar" si es equivalente.
 
 Cómo sugerir el precio:
@@ -236,6 +237,7 @@ export async function studyProduct(productId: string) {
     getProductCosts(),
   ]);
   if (error || !p) throw new Error("No se encontró el producto.");
+  if (!STUDY_TYPES.includes(p.type)) throw new Error("Solo se estudia el precio de los accesorios.");
   const cost = costs[productId];
   const base = { productId, productName: p.name, requestedAt: new Date().toISOString() };
   if (cost === undefined) {

@@ -5,7 +5,7 @@ import { refresh, updateTag } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import type { ActionResult } from "@/components/admin/action-form";
 import { applyPurchase, getPurchase, removePurchase, setPurchaseStatus, syncDriveInvoices, type ApplyLine } from "@/lib/purchases";
-import { queuePriceStudies, studyMarket } from "@/lib/pricing";
+import { queuePriceStudies, studyMarket, STUDY_TYPES } from "@/lib/pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function syncNow(): Promise<ActionResult> {
@@ -39,7 +39,7 @@ export async function confirmPurchase(_prev: ActionResult, form: FormData): Prom
   // Con el costo nuevo, se revisa el precio de venta frente al mercado (Admin → Precios)
   const ids = [...new Set(lines.flatMap((l) => (l.action === "existente" ? [l.productId] : [])))];
   if (ids.length) {
-    const { data } = await createAdminClient().from("products").select("id, name").in("id", ids);
+    const { data } = await createAdminClient().from("products").select("id, name").in("id", ids).in("type", STUDY_TYPES);
     await queuePriceStudies(data ?? []).catch((e) => console.error("[precios]", e));
   }
   updateTag("catalog");
@@ -69,6 +69,7 @@ export async function retryPurchase(_prev: ActionResult, form: FormData): Promis
 export async function suggestNewProductPrice(input: { name: string; type: "cafe" | "accesorio"; costClp: number }) {
   await requireStaff(["admin"]);
   if (!input.name?.trim() || !(input.costClp > 0)) return { error: "Falta el nombre o el costo del producto." };
+  if (!STUDY_TYPES.includes(input.type)) return { error: "Solo se sugiere precio para accesorios." };
   try {
     const r = await studyMarket({ name: input.name.trim(), type: input.type, costClp: Math.round(input.costClp) });
     return { ok: true as const, ...r };

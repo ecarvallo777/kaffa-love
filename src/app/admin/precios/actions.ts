@@ -4,7 +4,7 @@ import { refresh, updateTag } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/events";
-import { getPriceStudies, markPriceApplied, queuePriceStudies, studyProduct } from "@/lib/pricing";
+import { getPriceStudies, markPriceApplied, queuePriceStudies, studyProduct, STUDY_TYPES } from "@/lib/pricing";
 import type { ActionResult } from "@/components/admin/action-form";
 
 /** Estudia un producto ahora (1 a 2 minutos) */
@@ -20,7 +20,7 @@ export async function studyAllAction(): Promise<ActionResult> {
   await requireStaff(["admin"]);
   const db = createAdminClient();
   const [{ data: products }, { data: costs }] = await Promise.all([
-    db.from("products").select("id, name").eq("active", true).in("type", ["cafe", "accesorio", "preparado"]),
+    db.from("products").select("id, name").eq("active", true).in("type", STUDY_TYPES),
     db.from("product_costs").select("product_id"),
   ]);
   const withCost = new Set((costs ?? []).map((c) => c.product_id));
