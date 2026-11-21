@@ -16,7 +16,7 @@ import type { ExpenseCategory, FairExpense } from "@/lib/costs";
  *   - "no_gasto": algo que no es del negocio.
  * El stand sigue siendo manual (tiene factura: se resta sin IVA, en fair-profit).
  *
- * Fuente: /v1/payments/search con payer.id = la cuenta (probado en Admin → /admin/mercadopago).
+ * Fuente: /v1/payments/search con payer.id = la cuenta (probado en producción el 20-11-2026).
  * Se guarda en config/gastos-mp.json.
  */
 
