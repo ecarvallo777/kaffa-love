@@ -229,8 +229,8 @@ Investiga el mercado chileno y sugiere el precio.`,
   };
 }
 
-/** Estudia un producto del catálogo y guarda el resultado */
-export async function studyProduct(productId: string) {
+/** Estudia un producto del catálogo y guarda el resultado. `costClp`: otro costo (por ejemplo, el de una factura por aplicar) */
+export async function studyProduct(productId: string, costClp?: number) {
   const db = createAdminClient();
   const [{ data: p, error }, costs] = await Promise.all([
     db.from("products").select("id, name, type, description, price_clp").eq("id", productId).single(),
@@ -238,7 +238,7 @@ export async function studyProduct(productId: string) {
   ]);
   if (error || !p) throw new Error("No se encontró el producto.");
   if (!STUDY_TYPES.includes(p.type)) throw new Error("Solo se estudia el precio de los accesorios.");
-  const cost = costs[productId];
+  const cost = costClp ?? costs[productId];
   const base = { productId, productName: p.name, requestedAt: new Date().toISOString() };
   if (cost === undefined) {
     return updateStudy(productId, (s) => ({ ...s, ...base, status: "error", error: "Falta el costo del producto (ingrésalo en Productos o con una factura).", studiedAt: new Date().toISOString() }));

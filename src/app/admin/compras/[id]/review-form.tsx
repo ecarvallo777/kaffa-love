@@ -7,7 +7,7 @@ import type { Purchase } from "@/lib/purchases";
 import { confirmPurchase } from "../actions";
 import { PriceSuggest } from "./price-suggest";
 
-type Product = { id: string; name: string; type: string; stock: number; active: boolean; cost: number | null };
+type Product = { id: string; name: string; type: string; stock: number; active: boolean; cost: number | null; analyzed: boolean };
 type Category = { id: string; name: string };
 type Row = {
   action: "existente" | "nuevo" | "ignorar";
@@ -202,7 +202,7 @@ export function ReviewForm({ purchase: p, products, categories }: { purchase: Pu
                         ))}
                       </select>
                     </label>
-                    {r.type === "accesorio" && <PriceSuggest name={r.name} type={r.type} costClp={uc} onPrice={(price) => set(i, { price: String(price) })} />}
+                    {r.type === "accesorio" && <PriceSuggest target={{ kind: "nuevo", name: r.name, type: r.type }} costClp={uc} onPrice={(price) => set(i, { price: String(price) })} />}
                     <p className="text-xs text-ink-mute sm:col-span-4">
                       Se crea oculto en la tienda: agrégale foto y descripción, y publícalo desde Productos.
                       {num(r.price) > 0 && uc > 0 && <> Margen bruto estimado: {Math.round((1 - uc / (num(r.price) / 1.19)) * 100)} %.</>}
@@ -210,6 +210,11 @@ export function ReviewForm({ purchase: p, products, categories }: { purchase: Pu
                   </div>
                 )}
 
+                {prod && prod.type === "accesorio" && !prod.analyzed && (
+                  <div className="mt-2 grid">
+                    <PriceSuggest target={{ kind: "existente", productId: prod.id }} costClp={uc} />
+                  </div>
+                )}
                 {prod &&
                   (costOnly ? (
                     <p className="mt-2 text-xs text-ink-mute">

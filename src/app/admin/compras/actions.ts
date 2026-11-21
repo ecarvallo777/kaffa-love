@@ -5,8 +5,7 @@ import { refresh, updateTag } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import type { ActionResult } from "@/components/admin/action-form";
 import { applyPurchase, getPurchase, removePurchase, setPurchaseStatus, syncDriveInvoices, type ApplyLine } from "@/lib/purchases";
-import { queuePriceStudies, studyMarket, STUDY_TYPES } from "@/lib/pricing";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { studyMarket, studyProduct, STUDY_TYPES } from "@/lib/pricing";
 
 export async function syncNow(): Promise<ActionResult> {
   await requireStaff(["admin"]);
@@ -35,12 +34,6 @@ export async function confirmPurchase(_prev: ActionResult, form: FormData): Prom
   } catch (e) {
     refresh();
     return { error: (e as Error).message };
-  }
-  // Con el costo nuevo, se revisa el precio de venta frente al mercado (Admin → Precios)
-  const ids = [...new Set(lines.flatMap((l) => (l.action === "existente" ? [l.productId] : [])))];
-  if (ids.length) {
-    const { data } = await createAdminClient().from("products").select("id, name").in("id", ids).in("type", STUDY_TYPES);
-    await queuePriceStudies(data ?? []).catch((e) => console.error("[precios]", e));
   }
   updateTag("catalog");
   redirect(`/admin/compras?aplicada=${form.get("soloCosto") === "1" ? "costo" : "stock"}`);
@@ -73,6 +66,25 @@ export async function suggestNewProductPrice(input: { name: string; type: "cafe"
   try {
     const r = await studyMarket({ name: input.name.trim(), type: input.type, costClp: Math.round(input.costClp) });
     return { ok: true as const, ...r };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+/** Precio sugerido para un accesorio que ya existe y nunca se ha analizado, con el costo de esta factura. Queda en Admin → Precios. */
+export async function suggestExistingProductPrice(input: { productId: string; costClp: number }) {
+  await requireStaff(["admin"]);
+  if (!(input.costClp > 0)) return { error: "Falta el costo del producto." };
+  try {
+    const s = await studyProduct(input.productId, Math.round(input.costClp));
+    if (s.status !== "listo") return { error: s.error ?? "No se pudo estudiar." };
+    return {
+      ok: true as const,
+      suggestedPriceClp: s.suggestedPriceClp!,
+      floorPriceClp: s.floorPriceClp!,
+      summary: s.summary ?? "",
+      references: s.references ?? [],
+    };
   } catch (e) {
     return { error: (e as Error).message };
   }

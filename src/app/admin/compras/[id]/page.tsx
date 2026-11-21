@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { getPurchase } from "@/lib/purchases";
 import { getProductCosts } from "@/lib/costs";
+import { getPriceStudies } from "@/lib/pricing";
 import { listCategories } from "@/lib/admin-data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clp } from "@/lib/catalog-utils";
@@ -23,10 +24,11 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
   const p = await getPurchase(decodeURIComponent(id));
   if (!p) notFound();
 
-  const [{ data: products }, costs, categories] = await Promise.all([
+  const [{ data: products }, costs, categories, studies] = await Promise.all([
     createAdminClient().from("products").select("id, name, type, stock, active").in("type", ["cafe", "accesorio"]).order("name"),
     getProductCosts(),
     listCategories(),
+    getPriceStudies(),
   ]);
   const names = new Map((products ?? []).map((x) => [x.id, x.name]));
   const parent = (c: { parent_id: string | null }) => categories.find((x) => x.id === c.parent_id)?.name;
@@ -80,7 +82,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
         <>
           <ReviewForm
             purchase={p}
-            products={(products ?? []).map((x) => ({ id: x.id, name: x.name, type: x.type, stock: x.stock, active: x.active, cost: costs[x.id] ?? null }))}
+            products={(products ?? []).map((x) => ({ id: x.id, name: x.name, type: x.type, stock: x.stock, active: x.active, cost: costs[x.id] ?? null, analyzed: studies[x.id]?.status === "listo" }))}
             categories={categories.map((c) => ({ id: c.id, name: parent(c) ? `${parent(c)} › ${c.name}` : c.name }))}
           />
           <ActionForm action={discardPurchase} className="mt-10" confirm="¿Descartar esta factura? No se cargará nada.">
