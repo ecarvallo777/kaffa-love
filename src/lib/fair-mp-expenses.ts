@@ -35,8 +35,10 @@ export type MpExpense = {
   detail: string;
   category: ExpenseCategory;
   status: MpExpenseStatus;
-  /** La decisión vino de una regla recordada para ese comercio */
+  /** La decisión vino de una regla recordada para ese comercio (no hace falta revisarlo) */
   byRule?: boolean;
+  /** Revisado y guardado en el admin */
+  confirmedAt?: string;
   createdAt: string;
 };
 
@@ -192,7 +194,7 @@ async function saveItems(next: Store) {
   const decided = new Map(current.items.map((i) => [i.mpId, i]));
   next.items = next.items.map((i) => {
     const d = decided.get(i.mpId);
-    return d ? { ...i, status: d.status, category: d.category, byRule: d.byRule } : i;
+    return d ? { ...i, status: d.status, category: d.category, byRule: d.byRule, confirmedAt: d.confirmedAt } : i;
   });
   next.rules = { ...next.rules, ...current.rules };
   await writeConfigJson(STORE, next);
@@ -219,6 +221,7 @@ export async function decideMpExpense(mpId: string, change: { status?: MpExpense
   const item = s.items.find((i) => i.mpId === mpId);
   if (!item) throw new Error("No encontramos ese pago.");
   if (change.category) item.category = change.category;
+  item.confirmedAt = new Date().toISOString();
   if (change.status) {
     item.status = change.status;
     item.byRule = false;

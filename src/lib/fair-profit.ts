@@ -15,7 +15,11 @@ export type FairProfit = {
   profit: ProfitBreakdown;
   hours: number | null;
   products: { productId: string; name: string; units: number; revenue: number; cost: number | null }[];
+  /** Ventas por día (hora de Chile): qué se vendió cada día de la jornada */
+  days: { date: string; gross: number; sales: number; byProduct: Record<string, { units: number; revenue: number }> }[];
 };
+
+const chileDay = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago", year: "numeric", month: "2-digit", day: "2-digit" });
 
 /** Utilidad real de una o varias jornadas de feria */
 export async function getFairProfits(sessionIds: string[]): Promise<Map<string, FairProfit>> {
@@ -65,6 +69,20 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
       }
     }
 
+    const days = new Map<string, FairProfit["days"][number]>();
+    for (const o of mine) {
+      const date = chileDay.format(new Date(o.paid_at ?? o.created_at));
+      const d = days.get(date) ?? { date, gross: 0, sales: 0, byProduct: {} };
+      d.sales += 1;
+      for (const i of o.order_items) {
+        const cur = (d.byProduct[i.product_id] ??= { units: 0, revenue: 0 });
+        cur.units += i.quantity;
+        cur.revenue += i.unit_price_clp * i.quantity;
+        d.gross += i.unit_price_clp * i.quantity;
+      }
+      days.set(date, d);
+    }
+
     const s = sessions?.find((x) => x.id === id);
     const hours = s?.closed_at ? (Date.parse(s.closed_at) - Date.parse(s.opened_at)) / 3600_000 : null;
     out.set(id, {
@@ -74,6 +92,7 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
       profit,
       hours: hours && hours >= 0.5 ? hours : null, // jornadas muy cortas distorsionan la utilidad por hora
       products: [...byProduct.values()].sort((a, b) => b.revenue - a.revenue),
+      days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
     });
   }
   return out;

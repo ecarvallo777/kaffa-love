@@ -9,6 +9,7 @@ import { getSettings } from "@/lib/settings";
 import { Card, PageHeader, Pill, Table } from "@/components/admin/ui";
 import { ExpensesEditor } from "../expenses-editor";
 import { MpExpenses } from "../mp-expenses";
+import { SalesByDay } from "../sales-by-day";
 import { getMpExpenses, mpExpensesEnabled } from "@/lib/fair-mp-expenses";
 
 export const metadata = { title: "Detalle de feria" };
@@ -111,7 +112,13 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
           </Card>
         </div>
 
-        <div>
+        <div className="space-y-8">
+          <section>
+            <h2 className="mb-1 font-display text-xl">Ventas por día</h2>
+            <p className="mb-3 text-xs text-ink-mute">Unidades vendidas cada día (pasa el cursor para ver el monto). En verde, el día en que más se vendió cada producto.</p>
+            <SalesByDay fp={fp} />
+          </section>
+          <section>
           <h2 className="mb-3 font-display text-xl">Qué se vendió</h2>
           {fp.products.length ? (
             <Table>
@@ -138,6 +145,7 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
             <p className="rounded-2xl border border-dashed border-line p-8 text-center text-ink-soft">Aún no hay ventas en esta jornada.</p>
           )}
           <p className="mt-2 text-xs text-ink-mute">Margen bruto por producto: ventas sin IVA menos su costo, antes de comisión y gastos.</p>
+          </section>
         </div>
       </div>
     </>
