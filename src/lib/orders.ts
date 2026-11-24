@@ -402,6 +402,7 @@ export async function confirmOrderPaid(orderId: string, paymentId: string, amoun
     if (updated?.length) {
       await logEvent("pago_confirmado", "order", orderId, { payment_id: paymentId, total_clp: order.total_clp });
       await sendOrderConfirmation(order);
+      await sendStoreOrderAlert(order).catch((e) => console.error("[orders] aviso a la tienda:", e));
     }
     return;
   }
@@ -426,6 +427,7 @@ export async function confirmOrderPaid(orderId: string, paymentId: string, amoun
     nota: "El pago llegó después de liberar el stock. Revisa si hay unidades o coordina con el cliente.",
   });
   await sendOrderConfirmation(order);
+  await sendStoreOrderAlert(order, true).catch((e) => console.error("[orders] aviso a la tienda:", e));
 }
 
 async function sendOrderConfirmation(order: OrderWithDetails) {
@@ -457,6 +459,49 @@ async function sendOrderConfirmation(order: OrderWithDetails) {
 ${delivery}
 <p><a href="${siteUrl()}/pedido/${order.id}" style="color:#387b4d">Ver el estado de tu pedido</a></p>
 <p style="color:#8b7c70;font-size:13px">La boleta te llega directamente desde Mercado Pago.</p>`,
+    ),
+  });
+}
+
+/**
+ * Aviso a la tienda (backoffice) de un pedido online pagado, para empezar a prepararlo.
+ * Llega al correo de contacto de Configuración (contacto@ → Gmail de la tienda).
+ */
+async function sendStoreOrderAlert(order: OrderWithDetails, late = false) {
+  const { contactEmail } = await getSettings();
+  if (!contactEmail || order.channel !== "online") return;
+  const customer = order.customers as { email: string; name: string | null; phone: string | null } | null;
+  const items = (order.order_items as { product_name: string; quantity: number; unit_price_clp: number; grind: Grind | null }[])
+    .map(
+      (i) =>
+        `<tr><td style="padding:6px 0"><b>${i.quantity} ×</b> ${escapeHtml(i.product_name)}${
+          i.grind ? ` <span style="color:#8b7c70">(molienda ${grindLabel(i.grind)?.toLowerCase()})</span>` : ""
+        }</td><td align="right">${clp(i.unit_price_clp * i.quantity)}</td></tr>`,
+    )
+    .join("");
+  const pickup = order.pickup_locations as { name: string; address: string } | null;
+  const a = order.shipping_address as Record<string, string | null> | null;
+  const delivery =
+    order.delivery === "retiro"
+      ? `<b>Retiro</b> en ${escapeHtml(pickup?.name ?? "lugar de retiro")}`
+      : `<b>Despacho</b> a ${escapeHtml([a?.street, a?.number, a?.apartment].filter(Boolean).join(" "))}, ${escapeHtml([a?.commune, a?.region].filter(Boolean).join(", "))}${
+          a?.notes ? `<br><span style="color:#8b7c70">Nota: ${escapeHtml(a.notes)}</span>` : ""
+        }`;
+  const adminUrl = `${siteUrl()}/admin/pedidos/${order.id}`;
+
+  await sendEmail({
+    to: contactEmail,
+    // En Preview (master) las compras son de prueba: que no se confundan con pedidos reales
+    subject: `${process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production" ? "[PRUEBA] " : ""}${late ? "⚠️ Pago tardío" : "Nuevo pedido"} ${orderLabel(order.number)} · ${clp(order.total_clp)} · ${order.delivery === "retiro" ? "Retiro" : a?.commune ?? "Despacho"}`,
+    html: emailLayout(
+      `Nuevo pedido ${orderLabel(order.number)}`,
+      `${late ? `<p style="background:#fbeee6;padding:10px 12px;border-radius:10px"><b>El pago llegó después de que venció la reserva:</b> el stock ya se había liberado. Revisa que haya unidades antes de prepararlo.</p>` : ""}
+<p><b>${escapeHtml(customer?.name ?? "Cliente")}</b><br>${escapeHtml(customer?.email ?? "")}${customer?.phone ? ` · ${escapeHtml(customer.phone)}` : ""}</p>
+<p>${delivery}</p>
+<table width="100%" style="border-top:1px solid #eee;border-bottom:1px solid #eee;margin:16px 0">${items}
+<tr><td style="padding:6px 0;color:#8b7c70">Envío</td><td align="right">${clp(order.shipping_clp)}</td></tr>
+<tr><td style="padding:6px 0"><b>Total pagado</b></td><td align="right"><b>${clp(order.total_clp)}</b></td></tr></table>
+<p style="margin:24px 0"><a href="${adminUrl}" style="background:#387b4d;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Gestionar el pedido</a></p>`,
     ),
   });
 }
