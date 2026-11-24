@@ -87,7 +87,8 @@ export async function registerFairSale(sessionId: string, lines: LineInput[], em
     .from("orders")
     .insert({
       channel: "feria",
-      status: "pagado",
+      // Se paga y se entrega en el momento
+      status: "entregado",
       delivery: "presencial",
       fair_session_id: sessionId,
       subtotal_clp: priced.subtotal,
