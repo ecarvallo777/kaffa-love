@@ -12,11 +12,11 @@
   { "from": "/23-balanza", "to": "/categoria/accesorios" },
   { "from": "/24-otro", "to": "/categoria/accesorios" },
 
-  { "from": "/:cat/45-:rest", "to": "/producto/caicedo-blend-colombia" },
+  { "from": "/:cat/45-:rest", "to": "/producto/gabriela-colombia" },
   { "from": "/:cat/47-:rest", "to": "/producto/la-betania-colombia" },
   { "from": "/:cat/25-:rest", "to": "/producto/cafetera-chemex-400" },
   { "from": "/:cat/27-:rest", "to": "/categoria/cafeteras-manuales" },
-  { "from": "/:cat/28-:rest", "to": "/producto/dripper-v60-600" },
+  { "from": "/:cat/28-:rest", "to": "/producto/set-v60-600" },
   { "from": "/:cat/29-:rest", "to": "/categoria/cafeteras-manuales" },
   { "from": "/:cat/30-:rest", "to": "/producto/tetera-cisne-600" },
   { "from": "/:cat/31-:rest", "to": "/producto/tetera-cisne-350" },
@@ -34,9 +34,10 @@
   { "from": "/content/3-:rest", "to": "/legal/terminos" },
   { "from": "/content/5-:rest", "to": "/legal/terminos" },
   { "from": "/contactanos", "to": "/contacto" },
-  { "from": "/blog.html", "to": "/" },
+  { "from": "/blog.html", "to": "/guias" },
   { "from": "/blog/recetas-c7.html", "to": "/categoria/cafe-de-especialidad" },
-  { "from": "/blog/:path*", "to": "/" },
+  { "from": "/blog/preparacion-chemex-iniciacion-b9.html", "to": "/producto/cafetera-chemex-400" },
+  { "from": "/blog/:path*", "to": "/guias" },
   { "from": "/iniciar-sesion", "to": "/cuenta" },
   { "from": "/mi-cuenta", "to": "/cuenta" }
 ]
