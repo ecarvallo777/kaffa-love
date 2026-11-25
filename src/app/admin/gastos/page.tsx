@@ -9,7 +9,7 @@ import { clp } from "@/lib/catalog-utils";
 import { fmtDateTime } from "@/lib/format";
 import { ActionForm } from "@/components/admin/action-form";
 import { Card, Field, PageHeader, Pill, btn, field } from "@/components/admin/ui";
-import { classifyAction, connectSheetAction, requestMovementsAction, syncNowAction } from "./actions";
+import { classifyAction, connectSheetAction, syncNowAction } from "./actions";
 
 export const metadata = { title: "Gastos" };
 export const maxDuration = 120;
@@ -69,12 +69,12 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/admin/g
         description="Todo lo que sale de la cuenta de Mercado Pago, clasificado. Los pagos en días de feria y los que calzan con una factura de Compras se clasifican solos; lo nuevo queda por clasificar."
         actions={
           <ActionForm action={syncNowAction}>
-            <button className={btn.secondary}>Leer Mercado Pago ahora</button>
+            <button className={btn.secondary}>Actualizar ahora</button>
           </ActionForm>
         }
       />
       <p className="mb-6 text-sm text-ink-soft">
-        Última lectura: {syncedAt ? fmtDateTime(syncedAt) : "nunca"} · se lee sola una vez al día · desde noviembre de 2026
+        Última lectura: {syncedAt ? fmtDateTime(syncedAt) : "nunca"} · se actualiza sola cada día (pagos y, minutos después, transferencias) · desde noviembre de 2026
         {allPending > 0 && <> · <b className="text-danger-deep">{allPending} por clasificar</b></>}
       </p>
 
@@ -133,7 +133,7 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/admin/g
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-ink-mute">{entries.length ? "Sin movimientos clasificados este mes." : "Aún no hay gastos. Presiona «Leer Mercado Pago ahora»."}</p>
+              <p className="text-sm text-ink-mute">{entries.length ? "Sin movimientos clasificados este mes." : "Aún no hay gastos. Presiona «Actualizar ahora»."}</p>
             )}
           </Card>
         </div>
@@ -181,7 +181,7 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/admin/g
 
           <Card title="Transferencias y retiros">
             <p className="text-sm text-ink-soft">
-              Vienen en el reporte de movimientos de Mercado Pago: se pide solo cada día y, cuando está listo, sus retiros y transferencias entran al libro como «Por clasificar» (proveedor o retiro personal). Puedes pedirlo ahora y recargar en unos minutos.
+              Vienen en el reporte de movimientos de Mercado Pago, que se pide solo cada día (y con «Actualizar ahora»). Cuando está listo, unos minutos después, sus retiros y transferencias entran solos como «Por clasificar»: proveedor o retiro personal.
             </p>
             {reportError && <p className="mt-2 text-sm text-danger-deep">{reportError}</p>}
             {reports.length > 0 && (
@@ -199,11 +199,6 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/admin/g
                 <p className="mt-1 font-mono break-all">{inspected.header.join(" · ")}</p>
                 <p className="mt-2">Tipos: {inspected.types.map(([t, n]) => `${t || "(vacío)"} (${n})`).join(", ")}</p>
               </div>
-            )}
-            {mpExpensesEnabled() && (
-              <ActionForm action={requestMovementsAction} className="mt-3">
-                <button className={btn.secondary}>Pedir reporte de movimientos</button>
-              </ActionForm>
             )}
           </Card>
         </div>

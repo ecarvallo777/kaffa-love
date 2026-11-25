@@ -8,7 +8,10 @@ import { CATEGORIES, classifyEntry, importLatestMovements, requestDailyMovements
 import { connectSheet, getSheetConfig, syncSheet } from "@/lib/expense-sheet";
 import type { ActionResult } from "@/components/admin/action-form";
 
-/** Lee Mercado Pago ahora y actualiza la planilla */
+/**
+ * Un solo botón: lee los pagos, suma las transferencias del último reporte (si está listo)
+ * y pide uno nuevo (la tarea de cada 5 minutos lo suma apenas Mercado Pago lo prepare).
+ */
 export async function syncNowAction(): Promise<ActionResult> {
   await requireStaff(["admin"]);
   try {
@@ -17,9 +20,12 @@ export async function syncNowAction(): Promise<ActionResult> {
     // Transferencias y retiros del último reporte de movimientos, si ya está listo
     const m = await importLatestMovements().catch(() => ({ read: false, added: 0 }));
     r.added += m.added;
+    await requestDailyMovements(new Date(), true).catch((e) => console.error("[gastos] reporte de movimientos:", e));
     const sheet = (await getSheetConfig()) ? await syncSheet().then(() => " Planilla actualizada.").catch((e: Error) => ` La planilla no se pudo actualizar: ${e.message}`) : "";
     refresh();
-    return { ok: `${r.added ? `${r.added} gasto${r.added === 1 ? "" : "s"} nuevo${r.added === 1 ? "" : "s"}.` : "Sin gastos nuevos."}${sheet}` };
+    return {
+      ok: `${r.added ? `${r.added} gasto${r.added === 1 ? "" : "s"} nuevo${r.added === 1 ? "" : "s"}.` : "Sin gastos nuevos."}${sheet} Las transferencias y retiros recientes se suman solos en unos minutos.`,
+    };
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -48,17 +54,6 @@ export async function connectSheetAction(_prev: ActionResult, form: FormData): P
     await syncSheet();
     refresh();
     return { ok: `Planilla «${cfg.title}» conectada y actualizada.` };
-  } catch (e) {
-    return { error: (e as Error).message };
-  }
-}
-
-export async function requestMovementsAction(): Promise<ActionResult> {
-  await requireStaff(["admin"]);
-  try {
-    await requestDailyMovements(new Date(), true);
-    refresh();
-    return { ok: "Reporte pedido. Mercado Pago lo prepara en unos minutos: recarga la página." };
   } catch (e) {
     return { error: (e as Error).message };
   }
