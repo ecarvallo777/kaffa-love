@@ -77,7 +77,7 @@ export default async function FairDetailPage({ params }: PageProps<"/admin/feria
                 <p className="font-display text-xl tabular-nums">{p.orders}</p>
               </div>
               <div className="rounded-xl bg-paper-2 p-3">
-                <p className="text-xs text-ink-mute">Utilidad por hora</p>
+                <p className="text-xs text-ink-mute">Utilidad por hora de venta{fp.hours ? ` (${Math.round(fp.hours)} h)` : ""}</p>
                 <p className="font-display text-xl tabular-nums">{fp.hours ? clp(Math.round(p.profit / fp.hours)) : "—"}</p>
               </div>
             </div>

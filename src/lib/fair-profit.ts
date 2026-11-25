@@ -13,6 +13,7 @@ export type FairProfit = {
   /** Gastos tomados solos de Mercado Pago (los clasificados como gasto de la feria) */
   mpExpenses: FairExpense[];
   profit: ProfitBreakdown;
+  /** Horas de venta: en cada día, de la primera a la última venta (mín. 1 h por día). Una jornada puede durar varios días. */
   hours: number | null;
   products: { productId: string; name: string; units: number; revenue: number; cost: number | null }[];
   /** Ventas por día (hora de Chile): qué se vendió cada día de la jornada */
@@ -26,7 +27,7 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
   const out = new Map<string, FairProfit>();
   if (!sessionIds.length) return out;
   const db = createAdminClient();
-  const [{ data: orders }, { data: sessions }, { data: bundleItems }, costs, expensesBySession, settings] = await Promise.all([
+  const [{ data: orders }, { data: bundleItems }, costs, expensesBySession, settings] = await Promise.all([
     db
       .from("orders")
       .select(
@@ -35,7 +36,6 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
       .eq("channel", "feria")
       .in("status", PAID_STATUSES)
       .in("fair_session_id", sessionIds),
-    db.from("fair_sessions").select("id, opened_at, closed_at").in("id", sessionIds),
     db.from("bundle_items").select("bundle_id, product_id, quantity"),
     getProductCosts(),
     getFairExpenses(),
@@ -70,8 +70,12 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
     }
 
     const days = new Map<string, FairProfit["days"][number]>();
+    const span = new Map<string, { first: number; last: number }>();
     for (const o of mine) {
-      const date = chileDay.format(new Date(o.paid_at ?? o.created_at));
+      const at = new Date(o.paid_at ?? o.created_at);
+      const date = chileDay.format(at);
+      const sp = span.get(date) ?? { first: at.getTime(), last: at.getTime() };
+      span.set(date, { first: Math.min(sp.first, at.getTime()), last: Math.max(sp.last, at.getTime()) });
       const d = days.get(date) ?? { date, gross: 0, sales: 0, byProduct: {} };
       d.sales += 1;
       for (const i of o.order_items) {
@@ -83,14 +87,14 @@ export async function getFairProfits(sessionIds: string[]): Promise<Map<string, 
       days.set(date, d);
     }
 
-    const s = sessions?.find((x) => x.id === id);
-    const hours = s?.closed_at ? (Date.parse(s.closed_at) - Date.parse(s.opened_at)) / 3600_000 : null;
+    // La jornada puede durar de viernes a domingo: se cuentan solo las horas en que se vendió
+    const hours = [...span.values()].reduce((h, d) => h + Math.max(1, (d.last - d.first) / 3600_000), 0) || null;
     out.set(id, {
       sessionId: id,
       expenses,
       mpExpenses,
       profit,
-      hours: hours && hours >= 0.5 ? hours : null, // jornadas muy cortas distorsionan la utilidad por hora
+      hours,
       products: [...byProduct.values()].sort((a, b) => b.revenue - a.revenue),
       days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
     });
