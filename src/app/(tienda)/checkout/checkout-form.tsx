@@ -66,6 +66,7 @@ export function CheckoutForm({
   freeShippingFromClp,
   welcomePct,
   profile,
+  staff = null,
 }: {
   catalog: Catalog;
   pickups: PickupLocation[];
@@ -74,6 +75,8 @@ export function CheckoutForm({
   freeShippingFromClp: number | null;
   welcomePct: number;
   profile: CustomerProfile | null;
+  /** Administrador con sesión: precio equipo por producto (el servidor lo vuelve a calcular) */
+  staff?: { email: string; prices: Record<string, number> } | null;
 }) {
   const { lines, notices } = useSyncedCart(catalog);
   const [draft, setDraft] = useState<Draft>(() => ({
@@ -83,7 +86,9 @@ export function CheckoutForm({
     // Cliente con sesión: sus datos y su última dirección
     ...(profile
       ? { email: profile.email, name: profile.name, phone: profile.phone, ...(profile.addresses[0] ? fromAddress(profile.addresses[0]) : {}) }
-      : {}),
+      : staff
+        ? { email: staff.email }
+        : {}),
   }));
   // Marcada por defecto (decisión del negocio, 21-11-2026); el cliente puede desmarcarla
   const [marketing, setMarketing] = useState(true);
@@ -121,8 +126,11 @@ export function CheckoutForm({
     setWelcome(welcomePct > 0 && currentSource() === WELCOME_SOURCE);
   }, [welcomePct]);
 
-  const itemsTotal = lines.reduce((s, l) => s + l.priceClp * l.qty, 0);
-  const discount = welcome ? welcomeDiscount(lines, welcomePct) : 0;
+  // Precio equipo: solo si paga con el mismo correo de su sesión de administrador
+  const isStaff = !!staff && draft.email.trim().toLowerCase() === staff.email;
+  const unitPrice = (l: { productId: string; priceClp: number }) => (isStaff ? (staff!.prices[l.productId] ?? l.priceClp) : l.priceClp);
+  const itemsTotal = lines.reduce((s, l) => s + unitPrice(l) * l.qty, 0);
+  const discount = welcome && !isStaff ? welcomeDiscount(lines, welcomePct) : 0;
   const subtotal = itemsTotal - discount;
 
   // Medición: inició el checkout (una vez por visita, con productos en el carrito)
@@ -134,7 +142,7 @@ export function CheckoutForm({
   }, [lines, subtotal]);
   const regionRate = rates.find((r) => r.region === draft.region);
   const rate = regionRate ? rateFor(regionRate, draft.commune, communeRates) : undefined;
-  const freeShipping = freeShippingFromClp !== null && subtotal >= freeShippingFromClp;
+  const freeShipping = !isStaff && freeShippingFromClp !== null && subtotal >= freeShippingFromClp;
   // Mismo cálculo que el servidor: XS para 1 bolsa de café, S para el resto
   const size = parcelSize(lines.map((l) => ({ type: catalog.products.find((p) => p.id === l.productId)?.type ?? "accesorio", qty: l.qty })));
   const ratePriceClp = rate ? ratePrice(rate, size) : null;
@@ -151,7 +159,7 @@ export function CheckoutForm({
         phone: draft.phone,
         marketing,
         source: currentSource(),
-        welcome,
+        welcome: welcome && !isStaff,
         delivery: draft.delivery,
         pickupLocationId: draft.delivery === "retiro" ? draft.pickupLocationId : undefined,
         address:
@@ -350,11 +358,20 @@ export function CheckoutForm({
                   <p className="font-medium leading-snug">{l.name}</p>
                   {l.grind && <p className="text-ink-mute">Molienda {grindLabel(l.grind)?.toLowerCase()}</p>}
                 </div>
-                <p className="text-sm tabular-nums">{clp(l.priceClp * l.qty)}</p>
+                <p className="text-right text-sm tabular-nums">
+                  {clp(unitPrice(l) * l.qty)}
+                  {isStaff && unitPrice(l) !== l.priceClp && <span className="block text-xs text-ink-mute line-through">{clp(l.priceClp * l.qty)}</span>}
+                </p>
               </li>
             );
           })}
         </ul>
+        {isStaff && (
+          <p className="mt-5 rounded-xl bg-leaf/10 px-3 py-2 text-sm text-leaf" data-testid="precio-equipo">
+            <b>Precio equipo:</b> pagas el costo + IVA + comisión de Mercado Pago. Sin despacho gratis.
+            {lines.some((l) => staff!.prices[l.productId] === undefined) && " Los productos sin costo registrado van a precio normal."}
+          </p>
+        )}
         <dl className="mt-6 space-y-2 border-t border-line pt-5 text-sm">
           <div className="flex justify-between">
             <dt className="text-ink-soft">Productos</dt>

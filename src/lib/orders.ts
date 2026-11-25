@@ -13,6 +13,7 @@ import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { grindLabel } from "@/lib/grinds";
 import { siteUrl } from "@/lib/env";
 import { addressKey } from "@/lib/customer-auth";
+import { getStaffBuyer, getStaffPrices } from "@/lib/staff-pricing";
 
 export const RESERVATION_MINUTES = 30;
 const GRINDS: Grind[] = ["grano", "fina", "media", "gruesa"];
@@ -204,9 +205,24 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
   const db = createAdminClient();
   const email = input.email.trim().toLowerCase();
 
+  // Precio equipo (src/lib/staff-pricing.ts): administrador con sesión iniciada que paga con su propio correo
+  const staffBuyer = await getStaffBuyer();
+  const isStaff = staffBuyer?.email === email;
+  let staffDiscountClp = 0;
+  if (isStaff) {
+    const prices = await getStaffPrices();
+    const lines = priced.lines.map((l) => {
+      const unitPriceClp = prices[l.product.id] ?? l.unitPriceClp;
+      return { ...l, unitPriceClp, totalClp: unitPriceClp * l.qty };
+    });
+    const subtotal = lines.reduce((s, l) => s + l.totalClp, 0);
+    staffDiscountClp = priced.subtotal - subtotal;
+    priced = { ...priced, lines, subtotal };
+  }
+
   // Descuento de bienvenida (QR de feria): solo en la primera compra online del correo
   let welcomeDiscountClp = 0;
-  if (input.welcome) {
+  if (input.welcome && !isStaff) {
     const pct = (await getSettings()).welcomePct;
     if (pct > 0 && normalizeSource(input.source) === WELCOME_SOURCE) {
       const { data: prev } = await db.from("customers").select("id").eq("email", email).maybeSingle();
@@ -241,7 +257,9 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
   let pickupLocationId: string | null = null;
   if (input.delivery === "despacho") {
     const size = parcelSize(priced.lines.map((l) => ({ type: l.product.type, qty: l.qty })));
-    const quote = shippingQuote(await getSettings(), input.address!.region, input.address!.commune, priced.subtotal, size);
+    const settings = await getSettings();
+    // El precio equipo no tiene despacho gratis
+    const quote = shippingQuote(isStaff ? { ...settings, freeShippingFromClp: null } : settings, input.address!.region, input.address!.commune, priced.subtotal, size);
     if (!quote) return { ok: false, errors: ["Por ahora no despachamos a esa región. Puedes elegir retiro."] };
     shippingClp = quote.priceClp;
     shippingService = quote.service;
@@ -342,6 +360,7 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
     delivery: input.delivery,
     fuente: normalizeSource(input.source) ?? "directo",
     ...(welcomeDiscountClp ? { descuento_bienvenida: welcomeDiscountClp } : {}),
+    ...(isStaff ? { precio_equipo: true, descuento_equipo: staffDiscountClp } : {}),
     items: priced.lines.map((l) => ({ product_id: l.product.id, qty: l.qty, grind: l.grind })),
   });
 

@@ -5,6 +5,7 @@ import { getCatalog } from "@/lib/catalog";
 import { getSettings } from "@/lib/settings";
 import { getPickupLocations } from "@/lib/pickup";
 import { getCustomerProfile } from "@/lib/customer-auth";
+import { getStaffBuyer, getStaffPrices } from "@/lib/staff-pricing";
 import { CheckoutForm } from "./checkout-form";
 
 export const metadata: Metadata = { title: "Finalizar compra", robots: { index: false } };
@@ -28,6 +29,9 @@ async function Checkout() {
     getPickupLocations(),
     getCustomerProfile(), // null si no hay sesión de cliente
   ]);
+  // Administrador con sesión: precio equipo (costo + IVA + comisión)
+  const staffBuyer = await getStaffBuyer();
+  const staff = staffBuyer ? { email: staffBuyer.email, prices: await getStaffPrices() } : null;
   return (
     <CheckoutForm
       catalog={catalog}
@@ -37,6 +41,7 @@ async function Checkout() {
       freeShippingFromClp={settings.freeShippingFromClp}
       welcomePct={settings.welcomePct}
       profile={profile}
+      staff={staff}
     />
   );
 }
