@@ -53,7 +53,7 @@ export async function connectSheetAction(_prev: ActionResult, form: FormData): P
 export async function requestMovementsAction(): Promise<ActionResult> {
   await requireStaff(["admin"]);
   try {
-    await requestMovementsReport(new Date(LEDGER_START).toISOString(), new Date().toISOString());
+    await requestMovementsReport(new Date(LEDGER_START), new Date());
     refresh();
     return { ok: "Reporte pedido. Mercado Pago lo prepara en unos minutos: recarga la página." };
   } catch (e) {

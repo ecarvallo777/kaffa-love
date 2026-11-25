@@ -101,6 +101,9 @@ async function paymentsMade(fromIso: string, toIso: string) {
   return out;
 }
 
+/** Fecha para la API de Mercado Pago: sin milisegundos (los reportes no aceptan ".000Z") */
+export const mpDate = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z");
+
 const SPENT = ["approved", "authorized", "in_process", "pending"];
 const DAY = 86400_000;
 
@@ -132,7 +135,7 @@ export async function syncLedger(now = new Date()) {
   if (!mpExpensesEnabled()) return { enabled: false as const, added: 0, removed: 0 };
   const store = await getLedger();
   const from = store.syncedAt ? new Date(Math.max(new Date(LEDGER_START).getTime(), new Date(store.syncedAt).getTime() - 7 * DAY)) : new Date(LEDGER_START);
-  const [payments, fairItems, purchases] = await Promise.all([paymentsMade(from.toISOString(), now.toISOString()), getMpExpenses(), getPurchases()]);
+  const [payments, fairItems, purchases] = await Promise.all([paymentsMade(mpDate(from), mpDate(now)), getMpExpenses(), getPurchases()]);
   const fairById = new Map(fairItems.map((f) => [f.mpId, f]));
   const byId = new Map(store.entries.map((e) => [e.id, e]));
   const usedPurchases = new Set(store.entries.flatMap((e) => (e.purchaseId ? [e.purchaseId] : [])));
@@ -260,8 +263,8 @@ async function mpRaw(path: string, init: RequestInit = {}) {
 }
 
 /** Pide el reporte de movimientos (liberaciones) de un rango; Mercado Pago lo prepara en minutos */
-export async function requestMovementsReport(fromIso: string, toIso: string) {
-  const r = await mpRaw("/v1/account/release_report", { method: "POST", body: JSON.stringify({ begin_date: fromIso, end_date: toIso }) });
+export async function requestMovementsReport(from: Date, to: Date) {
+  const r = await mpRaw("/v1/account/release_report", { method: "POST", body: JSON.stringify({ begin_date: mpDate(from), end_date: mpDate(to) }) });
   if (!r.ok) throw new Error(`Mercado Pago respondió ${r.status}: ${r.text.slice(0, 200)}`);
 }
 
