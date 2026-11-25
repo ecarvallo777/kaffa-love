@@ -50,7 +50,15 @@ export type LedgerEntry = {
   updatedAt: string;
 };
 
-type Store = { entries: LedgerEntry[]; rules: Record<string, Category>; syncedAt: string | null; sheetSyncedAt?: string | null };
+type Store = {
+  entries: LedgerEntry[];
+  rules: Record<string, Category>;
+  syncedAt: string | null;
+  sheetSyncedAt?: string | null;
+  /** Reporte de movimientos: último pedido y último leído */
+  movementsRequestedAt?: string | null;
+  movementsFile?: string | null;
+};
 
 /** Reglas por defecto (comercio → categoría); las que se recuerdan en el admin tienen prioridad */
 const DEFAULT_RULES: [RegExp, Category][] = [
@@ -289,4 +297,74 @@ export async function inspectMovementsReport(fileName: string) {
     types.set(t, (types.get(t) ?? 0) + 1);
   }
   return { header, rows: lines.length - 1, types: [...types.entries()].sort((a, b) => b[1] - a[1]) };
+}
+
+/** Pide el reporte de movimientos una vez al día (cubre desde el 1-11 hasta ahora; Mercado Pago lo prepara en minutos) */
+export async function requestDailyMovements(now = new Date(), force = false) {
+  const store = await getLedger();
+  if (!force && store.movementsRequestedAt && now.getTime() - new Date(store.movementsRequestedAt).getTime() < 20 * 3600_000) return false;
+  await requestMovementsReport(new Date(LEDGER_START), now);
+  await saveLedger({ ...store, movementsRequestedAt: now.toISOString() });
+  return true;
+}
+
+/**
+ * Lee el reporte de movimientos más reciente (si no se leyó antes) y suma al libro lo que no son pagos:
+ *   - payout: retiro o transferencia a una cuenta bancaria → "Por clasificar" (proveedor o retiro personal)
+ *   - payment con salida de dinero que no estaba en el libro (por ejemplo, transferencia a otra cuenta)
+ * Se ignoran las reservas (dinero retenido temporalmente), las devoluciones a clientes y las filas de saldo.
+ */
+export async function importLatestMovements() {
+  const store = await getLedger();
+  const reports = await listMovementsReports();
+  const latest = reports.find((r) => r.file_name)?.file_name;
+  if (!latest || latest === store.movementsFile) return { read: false as const, added: 0 };
+  const r = await mpRaw(`/v1/account/release_report/${encodeURIComponent(latest)}`);
+  if (!r.ok) {
+    // Aún se está generando
+    if (r.status === 404) return { read: false as const, added: 0 };
+    throw new Error(`Mercado Pago respondió ${r.status}: ${r.text.slice(0, 200)}`);
+  }
+  const lines = r.text.split(/\r?\n/).filter(Boolean);
+  const sep = (lines[0] ?? "").includes(";") ? ";" : ",";
+  const header = (lines[0] ?? "").split(sep).map((h) => h.trim().toUpperCase());
+  const col = (name: string) => header.indexOf(name);
+  const [iDate, iSource, iDesc, iDebit, iMethod] = ["DATE", "SOURCE_ID", "DESCRIPTION", "NET_DEBIT_AMOUNT", "PAYMENT_METHOD"].map(col);
+  if ([iDate, iSource, iDesc, iDebit].some((i) => i < 0)) throw new Error(`El reporte de movimientos cambió de formato: ${header.join(", ")}`);
+
+  const known = new Set(store.entries.map((e) => e.id));
+  const stamp = new Date().toISOString();
+  let added = 0;
+  for (const line of lines.slice(1)) {
+    const c = line.split(sep).map((x) => x.trim().replace(/^"|"$/g, ""));
+    const desc = (c[iDesc] ?? "").toLowerCase();
+    const debit = Math.round(Number((c[iDebit] ?? "0").replace(",", ".")) || 0);
+    const sourceId = c[iSource] ?? "";
+    if (debit <= 0 || !sourceId || !c[iDate]) continue;
+    if (desc !== "payout" && desc !== "payment") continue;
+    const date = new Date(c[iDate]);
+    if (Number.isNaN(date.getTime()) || date < new Date(LEDGER_START)) continue;
+    // Los pagos ya leídos por la búsqueda de pagos tienen el mismo id: no se repiten
+    if (known.has(sourceId) || known.has(`mov-${sourceId}`)) continue;
+    const entry: LedgerEntry = {
+      id: `mov-${sourceId}`,
+      source: "transferencia",
+      date: date.toISOString(),
+      amountClp: debit,
+      detail: desc === "payout" ? "Retiro o transferencia a cuenta bancaria" : `Pago con Mercado Pago${iMethod >= 0 && c[iMethod] ? ` (${c[iMethod]})` : ""}`,
+      category: "Por clasificar",
+      origin: "pendiente",
+      updatedAt: stamp,
+    };
+    // Los retiros no se clasifican por regla (todos se ven iguales); el resto sí
+    if (desc !== "payout") {
+      const rule = byRule(entry.detail, store.rules);
+      if (rule) Object.assign(entry, { category: rule, origin: "regla" });
+    }
+    store.entries.push(entry);
+    known.add(entry.id);
+    added++;
+  }
+  await saveLedger({ ...store, movementsFile: latest });
+  return { read: true as const, added };
 }

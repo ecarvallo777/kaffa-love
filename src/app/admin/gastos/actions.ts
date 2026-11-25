@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { after } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { logEvent } from "@/lib/events";
-import { CATEGORIES, LEDGER_START, classifyEntry, requestMovementsReport, syncLedger, type Category } from "@/lib/expense-ledger";
+import { CATEGORIES, classifyEntry, importLatestMovements, requestDailyMovements, syncLedger, type Category } from "@/lib/expense-ledger";
 import { connectSheet, getSheetConfig, syncSheet } from "@/lib/expense-sheet";
 import type { ActionResult } from "@/components/admin/action-form";
 
@@ -14,6 +14,9 @@ export async function syncNowAction(): Promise<ActionResult> {
   try {
     const r = await syncLedger();
     if (!r.enabled) return { error: "Solo funciona en producción (con la clave real de Mercado Pago)." };
+    // Transferencias y retiros del último reporte de movimientos, si ya está listo
+    const m = await importLatestMovements().catch(() => ({ read: false, added: 0 }));
+    r.added += m.added;
     const sheet = (await getSheetConfig()) ? await syncSheet().then(() => " Planilla actualizada.").catch((e: Error) => ` La planilla no se pudo actualizar: ${e.message}`) : "";
     refresh();
     return { ok: `${r.added ? `${r.added} gasto${r.added === 1 ? "" : "s"} nuevo${r.added === 1 ? "" : "s"}.` : "Sin gastos nuevos."}${sheet}` };
@@ -53,7 +56,7 @@ export async function connectSheetAction(_prev: ActionResult, form: FormData): P
 export async function requestMovementsAction(): Promise<ActionResult> {
   await requireStaff(["admin"]);
   try {
-    await requestMovementsReport(new Date(LEDGER_START), new Date());
+    await requestDailyMovements(new Date(), true);
     refresh();
     return { ok: "Reporte pedido. Mercado Pago lo prepara en unos minutos: recarga la página." };
   } catch (e) {

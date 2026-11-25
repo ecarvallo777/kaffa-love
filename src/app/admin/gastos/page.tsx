@@ -31,7 +31,8 @@ function ClassifyForm({ e, label }: { e: LedgerEntry; label: string }) {
       </select>
       <input name="note" defaultValue={e.note ?? ""} placeholder="Nota (opcional)" className={`${select} w-48`} />
       <label className="flex items-center gap-1 text-xs text-ink-soft">
-        <input type="checkbox" name="remember" defaultChecked /> Recordar este comercio
+        {/* Los retiros se ven todos iguales: recordarlos clasificaría todos de la misma forma */}
+        <input type="checkbox" name="remember" defaultChecked={e.source === "pago"} /> Recordar este comercio
       </label>
       <button className="h-9 rounded-full bg-ink px-4 text-sm font-medium text-paper hover:bg-accent">{label}</button>
     </ActionForm>
@@ -178,9 +179,9 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/admin/g
             )}
           </Card>
 
-          <Card title="Transferencias y retiros (en preparación)">
+          <Card title="Transferencias y retiros">
             <p className="text-sm text-ink-soft">
-              Las transferencias (a proveedores o a tu banco) no aparecen como pagos: vienen en el reporte de movimientos de Mercado Pago. Pídelo una vez para revisar su formato y sumarlas al libro.
+              Vienen en el reporte de movimientos de Mercado Pago: se pide solo cada día y, cuando está listo, sus retiros y transferencias entran al libro como «Por clasificar» (proveedor o retiro personal). Puedes pedirlo ahora y recargar en unos minutos.
             </p>
             {reportError && <p className="mt-2 text-sm text-danger-deep">{reportError}</p>}
             {reports.length > 0 && (
