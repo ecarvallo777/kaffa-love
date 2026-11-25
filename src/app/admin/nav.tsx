@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 /** Menú del admin agrupado por área. El orden de los grupos sigue el día a día: vender, catálogo, bodega. */
 const GROUPS = [
-  { label: "Inicio", items: [["/admin", "Resumen"], ["/admin/reportes", "Reportes"]] },
+  { label: "Inicio", items: [["/admin", "Resumen"]] },
+  { label: "Finanzas", items: [["/admin/reportes", "Reportes"], ["/admin/gastos", "Gastos"]] },
   { label: "Ventas", items: [["/admin/pedidos", "Pedidos"], ["/admin/clientes", "Clientes"], ["/admin/ferias", "Ferias"]] },
   { label: "Catálogo", items: [["/admin/productos", "Productos"], ["/admin/precios", "Precios"], ["/admin/recetas", "Recetas"]] },
   { label: "Bodega", items: [["/admin/stock", "Stock"], ["/admin/inventario", "Inventario"], ["/admin/compras", "Compras"]] },

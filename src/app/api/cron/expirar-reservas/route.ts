@@ -7,6 +7,7 @@ import { runWeeklyMarketing } from "@/lib/marketing/agent";
 import { publishDueInstagram } from "@/lib/marketing/instagram";
 import { syncFairMpExpenses } from "@/lib/fair-mp-expenses";
 import { studyNextPendingPrice } from "@/lib/pricing";
+import { dailyExpenseSync } from "@/lib/expense-daily";
 
 // Leer una factura nueva con Claude puede tomar alrededor de un minuto
 export const maxDuration = 300;
@@ -35,11 +36,12 @@ export async function GET(request: NextRequest) {
   const repurchaseEmails = await runRepurchaseEmails().catch((e) => (console.error("[cron] recompra:", e), 0));
   const reviewEmails = await runReviewEmails().catch((e) => (console.error("[cron] reseñas:", e), 0));
   const fairExpenses = await syncFairMpExpenses().catch((e) => (console.error("[cron] gastos de feria:", e), null));
+  const expenses = await dailyExpenseSync().catch((e) => (console.error("[cron] gastos:", e), null));
   const instagram = await publishDueInstagram().catch((e) => (console.error("[cron] instagram:", e), null));
   // Plan de marketing (lunes): tarda 1 a 2 minutos, así que esa pasada no lee facturas
   const marketing = await runWeeklyMarketing().catch((e) => (console.error("[cron] marketing:", e), false));
   const invoices = marketing ? null : await syncDriveInvoices(1).catch((e) => (console.error("[cron] facturas:", e), null));
   // Estudio de precio (Admin → Precios): uno por pasada, solo si esta pasada no usó ya a Claude
   const prices = marketing || (invoices && invoices.read > 0) ? null : await studyNextPendingPrice().catch((e) => (console.error("[cron] precios:", e), null));
-  return NextResponse.json({ ok: true, confirmed, expired, abandonEmails, repurchaseEmails, reviewEmails, fairExpenses, instagram, marketing, invoices, prices });
+  return NextResponse.json({ ok: true, confirmed, expired, abandonEmails, repurchaseEmails, reviewEmails, fairExpenses, expenses, instagram, marketing, invoices, prices });
 }
