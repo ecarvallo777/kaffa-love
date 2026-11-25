@@ -51,6 +51,22 @@ export async function getPaidOrders(fromIso: string, toIso: string): Promise<Sal
   return data as unknown as SaleOrder[];
 }
 
+/** Ids de los pedidos hechos con precio equipo (administradores al costo): no son ventas a clientes */
+export async function getStaffOrderIds(orderIds: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  for (let i = 0; i < orderIds.length; i += 200) {
+    const { data, error } = await createAdminClient()
+      .from("events")
+      .select("entity_id")
+      .eq("type", "pedido_creado")
+      .eq("data->>precio_equipo", "true")
+      .in("entity_id", orderIds.slice(i, i + 200));
+    if (error) throw new Error(error.message);
+    for (const e of data ?? []) if (e.entity_id) out.add(e.entity_id);
+  }
+  return out;
+}
+
 /** Costo neto unitario de un producto; las promociones suman el costo de sus productos */
 export function makeCostResolver(costs: Record<string, number>, bundleItems: { bundle_id: string; product_id: string; quantity: number }[]) {
   return (productId: string): number | null => {

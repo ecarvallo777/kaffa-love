@@ -52,6 +52,12 @@ export default async function ReportsPage({ searchParams }: PageProps<"/admin/re
         </p>
       )}
 
+      {r.staffPurchases.orders > 0 && (
+        <p className="mb-6 text-sm text-ink-mute">
+          No incluye {r.staffPurchases.orders} {r.staffPurchases.orders === 1 ? "compra" : "compras"} del equipo a precio costo ({clp(r.staffPurchases.total)}): no son ventas a clientes y no cuentan en la utilidad ni en el margen.
+        </p>
+      )}
+
       {/* Indicadores */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Tile label="Ventas" value={clp(r.current.gross)} now={r.current.gross} before={r.previous.gross} />

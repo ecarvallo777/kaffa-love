@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProductCosts } from "@/lib/costs";
 import { getSettings } from "@/lib/settings";
-import { computeProfit, getPaidOrders, makeCostResolver, type ProfitBreakdown, type SaleOrder } from "@/lib/profit";
+import { computeProfit, getPaidOrders, getStaffOrderIds, makeCostResolver, type ProfitBreakdown, type SaleOrder } from "@/lib/profit";
 import { getFairProfits } from "@/lib/fair-profit";
 import type { Grind } from "@/lib/catalog-types";
 
@@ -23,6 +23,8 @@ const weekdayOf = (d: Date) => new Intl.DateTimeFormat("es-CL", { timeZone: TZ, 
 export type Bucket = { key: string; label: string; online: number; feria: number };
 
 export type Report = {
+  /** Compras del equipo a precio costo: no cuentan en ventas, utilidad ni margen */
+  staffPurchases: { orders: number; total: number };
   from: string;
   to: string;
   channel: Channel;
@@ -111,9 +113,12 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
     ),
   ]);
   const costOf = makeCostResolver(costs, bundleItems ?? []);
-  const pick = (os: SaleOrder[]) => (channel === "todos" ? os : os.filter((o) => o.channel === channel));
+  // Las compras del equipo a precio costo no son ventas a clientes: quedan fuera de todo el reporte
+  const staffIds = await getStaffOrderIds([...all, ...prevAll].map((o) => o.id));
+  const pick = (os: SaleOrder[]) => (channel === "todos" ? os : os.filter((o) => o.channel === channel)).filter((o) => !staffIds.has(o.id));
   const orders = pick(all);
   const prevOrders = pick(prevAll);
+  const staffOrders = all.filter((o) => staffIds.has(o.id) && (channel === "todos" || o.channel === channel));
 
   // Gastos de ferias del período (para la utilidad total)
   const fairIds = [...new Set(orders.filter((o) => o.fair_session_id).map((o) => o.fair_session_id!))];
@@ -163,7 +168,7 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
 
   // Embudo de la tienda online
   const started = new Set((payStarts ?? []).map((e) => e.entity_id));
-  const created = createdOrders ?? [];
+  const created = (createdOrders ?? []).filter((o) => !staffIds.has(o.id));
   const funnel = {
     created: created.length,
     wentToPay: created.filter((o) => started.has(o.id)).length,
@@ -308,6 +313,7 @@ export async function getReport(period: PeriodKey, channel: Channel): Promise<Re
     .sort((a, b) => b.profit - a.profit);
 
   return {
+    staffPurchases: { orders: staffOrders.length, total: staffOrders.reduce((s, o) => s + o.total_clp, 0) },
     from: from.toISOString(),
     to: now.toISOString(),
     channel,
