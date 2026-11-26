@@ -69,8 +69,7 @@ export default async function PrivacyPage() {
       <ul>
         <li><strong>Mercado Pago</strong> (pagos y boletas).</li>
         <li><strong>Blue Express</strong> (despachos): nombre, teléfono y dirección de entrega.</li>
-        <li><strong>Supabase</strong> (base de datos y cuentas), <strong>Vercel</strong> (alojamiento del sitio) y <strong>Google</strong> (respaldos).</li>
-        <li><strong>Resend</strong> (envío de correos).</li>
+        <li><strong>Proveedores de tecnología</strong> que alojan el sitio, la base de datos y los respaldos, y que envían nuestros correos.</li>
         <li><strong>Meta</strong> (Facebook e Instagram), solo si aceptas las cookies de publicidad.</li>
       </ul>
       <p>
