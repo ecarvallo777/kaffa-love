@@ -60,13 +60,35 @@ async function graph(path: string, init?: RequestInit) {
 export async function connectMetaPixel(pixelId: string, token: string, testEventCode: string | null, by: string) {
   if (!/^\d{5,25}$/.test(pixelId)) throw new Error("El ID del conjunto de datos (píxel) son solo números.");
   if (!token) throw new Error("Falta el token de acceso.");
-  let name: string | null = null;
+  // El token de la API de conversiones solo permite enviar eventos (no leer el píxel):
+  // se verifica enviando una vista de prueba, que Meta deja solo en «Probar eventos»
   try {
-    const info = await graph(`/${pixelId}?fields=id,name&access_token=${encodeURIComponent(token)}`);
-    name = typeof info.name === "string" ? info.name : null;
+    const res = await graph(`/${pixelId}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        access_token: token,
+        test_event_code: testEventCode || "TEST_CONEXION",
+        data: [
+          {
+            event_name: "PageView",
+            event_time: Math.floor(Date.now() / 1000),
+            event_id: `conexion-${Date.now()}`,
+            action_source: "website",
+            event_source_url: siteUrl(),
+            user_data: { country: [sha("cl")], client_user_agent: "Kaffa Love (verificación de conexión)", client_ip_address: "200.1.1.1" },
+          },
+        ],
+      }),
+    });
+    if (!Number(res.events_received)) throw new Error("no confirmó la recepción del evento");
   } catch (e) {
     throw new Error(`Meta no aceptó el ID y el token: ${(e as Error).message}`);
   }
+  // El nombre es opcional: solo se puede leer si el token tiene permiso para eso
+  const name = await graph(`/${pixelId}?fields=name&access_token=${encodeURIComponent(token)}`)
+    .then((i) => (typeof i.name === "string" ? i.name : null))
+    .catch(() => null);
   await writeConfigJson(TOKEN_FILE, { token, savedAt: new Date().toISOString() });
   await writeConfigJson(CONFIG_FILE, { pixelId, name, testEventCode, connectedAt: new Date().toISOString(), by, lastPurchaseAt: null, lastError: null } satisfies PixelConfig);
   return { name };
