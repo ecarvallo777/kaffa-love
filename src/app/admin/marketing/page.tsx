@@ -10,6 +10,7 @@ import { CopyButton } from "./copy-button";
 import { InstagramSection } from "./instagram-section";
 import { MetaPixelSection } from "./meta-pixel-section";
 import { getMetaPixelConfig } from "@/lib/marketing/meta-pixel";
+import { adsStats, getAdsCampaign } from "@/lib/marketing/ads-followup";
 import { getInstagramAccount, getInstagramQueue } from "@/lib/marketing/instagram";
 
 export const metadata = { title: "Marketing" };
@@ -23,6 +24,8 @@ export default async function MarketingPage({ searchParams }: PageProps<"/admin/
   await connection();
   const sp = await searchParams;
   const [runs, guides, igAccount, igQueue, pixel] = await Promise.all([getMarketingRuns(), getGuidesFresh(), getInstagramAccount(), getInstagramQueue(), getMetaPixelConfig()]);
+  const campaign = await getAdsCampaign();
+  const campaignStats = campaign ? await adsStats(campaign).catch(() => null) : null;
   const run = runs.find((r) => r.id === sp.plan) ?? runs[0];
   const guide = run?.guideSlug ? guides.find((g) => g.slug === run.guideSlug) : undefined;
 
@@ -40,7 +43,7 @@ export default async function MarketingPage({ searchParams }: PageProps<"/admin/
       />
 
       <div id="meta" className="mb-6 scroll-mt-6">
-        <MetaPixelSection config={pixel} />
+        <MetaPixelSection config={pixel} campaign={campaign} stats={campaignStats} />
       </div>
 
       <div id="instagram" className="mb-6 scroll-mt-6">

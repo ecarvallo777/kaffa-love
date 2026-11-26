@@ -2,12 +2,14 @@ import { siteUrl } from "@/lib/env";
 import { fmtDateTime } from "@/lib/format";
 import { ActionForm } from "@/components/admin/action-form";
 import { Card, Field, btn, field } from "@/components/admin/ui";
-import { connectMetaPixelAction, disconnectMetaPixelAction, testMetaPixelAction } from "./actions";
+import { connectMetaPixelAction, disconnectMetaPixelAction, setAdsCampaignAction, stopAdsCampaignAction, testMetaPixelAction } from "./actions";
+import { clp } from "@/lib/catalog-utils";
+import type { AdsCampaign, AdsStats } from "@/lib/marketing/ads-followup";
 import type { getMetaPixelConfig } from "@/lib/marketing/meta-pixel";
 
 type Config = Awaited<ReturnType<typeof getMetaPixelConfig>>;
 
-export function MetaPixelSection({ config }: { config: Config }) {
+export function MetaPixelSection({ config, campaign, stats }: { config: Config; campaign: AdsCampaign | null; stats: AdsStats | null }) {
   if (!config) {
     return (
       <Card title="Anuncios en Instagram y Facebook (píxel de Meta)">
@@ -51,6 +53,30 @@ export function MetaPixelSection({ config }: { config: Config }) {
         {" "}Última compra enviada: {config.lastPurchaseAt ? fmtDateTime(config.lastPurchaseAt) : "ninguna aún"}.
       </p>
       {config.lastError && <p className="mt-2 text-sm text-danger-deep">Último error: {config.lastError}</p>}
+
+      <div className="mt-4 rounded-xl bg-paper-2 p-4">
+        <p className="text-sm font-medium">Seguimiento de la campaña</p>
+        {campaign && stats && (
+          <p className="mt-1 text-sm text-ink-soft">
+            Desde el {campaign.startDate.split("-").reverse().join("-")} ({stats.days} días): <b>{stats.visitors}</b> visitas, <b>{stats.carts}</b> carritos, <b>{stats.checkouts}</b> pagos
+            iniciados, <b>{stats.orders}</b> compras por <b>{clp(stats.revenue)}</b> · gasto estimado {clp(stats.spend)}. Correo de seguimiento el día 3, el día 7 y cada lunes.
+          </p>
+        )}
+        <ActionForm action={setAdsCampaignAction} className="mt-3 flex flex-wrap items-end gap-2">
+          <Field label="Inicio de la campaña" className="w-44">
+            <input name="startDate" type="date" defaultValue={campaign?.startDate} required className={field} />
+          </Field>
+          <Field label="Presupuesto diario (CLP)" className="w-44">
+            <input name="budget" inputMode="numeric" defaultValue={campaign?.dailyBudgetClp ?? 5000} required className={field} />
+          </Field>
+          <button className={btn.secondary}>{campaign ? "Guardar" : "Activar seguimiento"}</button>
+        </ActionForm>
+        {campaign && (
+          <ActionForm action={stopAdsCampaignAction} className="mt-2">
+            <button className="text-xs text-ink-mute underline underline-offset-4 hover:text-ink">Detener el seguimiento (campaña terminada)</button>
+          </ActionForm>
+        )}
+      </div>
 
       <details className="mt-4">
         <summary className="cursor-pointer text-sm font-medium">Probar la conexión</summary>

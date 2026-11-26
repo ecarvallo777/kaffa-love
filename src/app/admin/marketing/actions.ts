@@ -24,6 +24,7 @@ import {
   type IgPublication,
 } from "@/lib/marketing/instagram";
 import type { ActionResult } from "@/components/admin/action-form";
+import { setAdsCampaign, stopAdsCampaign } from "@/lib/marketing/ads-followup";
 import { connectMetaPixel, disconnectMetaPixel, sendMetaTestEvent } from "@/lib/marketing/meta-pixel";
 
 export async function generateMarketing(): Promise<ActionResult> {
@@ -272,4 +273,22 @@ export async function testMetaPixelAction(_prev: ActionResult, form: FormData): 
   } catch (e) {
     return { error: (e as Error).message };
   }
+}
+
+export async function setAdsCampaignAction(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(["admin"]);
+  const start = String(form.get("startDate") ?? "");
+  const budget = Number(String(form.get("budget") ?? "").replace(/\D/g, ""));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) return { error: "Elige la fecha de inicio." };
+  if (!budget || budget < 1000) return { error: "Escribe el presupuesto diario en pesos." };
+  await setAdsCampaign(start, budget);
+  refresh();
+  return { ok: "Listo: te llegará el seguimiento por correo el día 3, el día 7 y cada lunes." };
+}
+
+export async function stopAdsCampaignAction(): Promise<ActionResult> {
+  await requireStaff(["admin"]);
+  await stopAdsCampaign();
+  refresh();
+  return { ok: "Seguimiento detenido." };
 }
