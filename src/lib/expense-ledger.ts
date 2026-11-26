@@ -351,7 +351,7 @@ export async function importLatestMovements() {
       source: "transferencia",
       date: date.toISOString(),
       amountClp: debit,
-      detail: desc === "payout" ? "Retiro o transferencia a cuenta bancaria" : `Pago con Mercado Pago${iMethod >= 0 && c[iMethod] ? ` (${c[iMethod]})` : ""}`,
+      detail: desc === "payout" ? "Retiro o transferencia a cuenta bancaria" : ((await paymentDetail(sourceId)) ?? `Pago con Mercado Pago${iMethod >= 0 && c[iMethod] ? ` (${c[iMethod]})` : ""}`),
       category: "Por clasificar",
       origin: "pendiente",
       updatedAt: stamp,
@@ -365,6 +365,42 @@ export async function importLatestMovements() {
     known.add(entry.id);
     added++;
   }
+  await enrichGenericPayments(store);
   await saveLedger({ ...store, movementsFile: latest });
   return { read: true as const, added };
+}
+
+/** Descripción de un pago hecho con saldo (comercio, producto o motivo), consultando el pago en Mercado Pago */
+async function paymentDetail(id: string): Promise<string | null> {
+  const r = await mpRaw(`/v1/payments/${encodeURIComponent(id)}`);
+  if (!r.ok) return null;
+  try {
+    const p = JSON.parse(r.text) as {
+      description?: string | null;
+      statement_descriptor?: string | null;
+      operation_type?: string;
+      additional_info?: { items?: { title?: string }[] } | null;
+      point_of_interaction?: { type?: string; business_info?: { unit?: string; sub_unit?: string } } | null;
+    };
+    const parts = [p.description, p.statement_descriptor, p.additional_info?.items?.[0]?.title].filter((x): x is string => Boolean(x && x.trim()));
+    if (!parts.length && p.operation_type === "money_transfer") return "Transferencia a otra cuenta de Mercado Pago";
+    return parts.length ? [...new Set(parts)].join(" · ") : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Completa el detalle de los movimientos que quedaron genéricos y vuelve a aplicar las reglas */
+async function enrichGenericPayments(store: Store) {
+  for (const e of store.entries) {
+    if (e.source !== "transferencia" || !e.id.startsWith("mov-") || !e.detail.startsWith("Pago con Mercado Pago")) continue;
+    const detail = await paymentDetail(e.id.slice(4));
+    if (!detail) continue;
+    e.detail = detail;
+    e.updatedAt = new Date().toISOString();
+    if (e.origin === "pendiente") {
+      const rule = byRule(detail, store.rules);
+      if (rule) Object.assign(e, { category: rule, origin: "regla" });
+    }
+  }
 }
