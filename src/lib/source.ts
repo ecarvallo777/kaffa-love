@@ -32,6 +32,7 @@ export function sourceFromReferrer(referrer: string, ownHost: string): string | 
 
 const NAMES: Record<string, string> = {
   feria: "Feria (QR)",
+  anuncio_meta: "Anuncios de Meta",
   instagram: "Instagram",
   facebook: "Facebook",
   google: "Google",

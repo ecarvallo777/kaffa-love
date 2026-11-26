@@ -35,7 +35,10 @@ const SRC_DAYS = 30;
 export function captureSource() {
   try {
     const params = new URLSearchParams(location.search);
-    const src = normalizeSource(params.get("utm_source")) ?? sourceFromReferrer(document.referrer, location.hostname);
+    // Clic en un anuncio del catálogo de Meta: el enlace del catálogo trae utm_medium=catalogo
+    // y Meta le agrega fbclid (Google, con el mismo catálogo, no lo agrega)
+    const metaAd = params.get("utm_medium") === "catalogo" && (params.has("fbclid") || /^(instagram|facebook)$/.test(params.get("utm_source") ?? ""));
+    const src = metaAd ? "anuncio_meta" : (normalizeSource(params.get("utm_source")) ?? sourceFromReferrer(document.referrer, location.hostname));
     if (src) localStorage.setItem(SRC_KEY, JSON.stringify({ s: src, at: Date.now() }));
   } catch {
     // sin almacenamiento: no se mide el canal
