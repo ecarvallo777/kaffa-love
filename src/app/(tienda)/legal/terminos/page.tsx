@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import { clp } from "@/lib/catalog-utils";
 import { Prose } from "@/components/prose";
+import { BUSINESS } from "@/lib/legal";
 
 export const metadata: Metadata = { title: "Términos y condiciones" };
 
@@ -11,7 +12,8 @@ export default async function TermsPage() {
   return (
     <Prose eyebrow="Información" title="Términos y condiciones" updated="noviembre de 2026">
       <p>
-        Estos términos regulan las compras realizadas en la tienda online de Kaffa Love. Al comprar declaras haberlos leído y aceptado.
+        Estos términos regulan las compras realizadas en la tienda online de Kaffa Love, operada por {BUSINESS.legalName}, RUT {BUSINESS.rut}, con domicilio en{" "}
+        {BUSINESS.address}. Al comprar declaras haberlos leído y aceptado.
       </p>
 
       <h2>Precios y productos</h2>

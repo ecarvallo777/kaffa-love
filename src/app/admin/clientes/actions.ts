@@ -6,6 +6,7 @@ import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/events";
 import { sendCartEmail, setCustomerCart, type CartItemInput } from "@/lib/customer-cart-link";
+import { deleteCustomerData } from "@/lib/privacy-requests";
 import type { ActionResult } from "@/components/admin/action-form";
 
 const GRINDS = ["grano", "fina", "media", "gruesa"];
@@ -58,6 +59,19 @@ export async function sendCartAction(_prev: ActionResult, form: FormData): Promi
     await logEvent("carrito_enviado", "customer", customerId, { lineas: r.lines, subtotal: r.total, por: staff.email });
     refresh();
     return { ok: `Correo enviado a ${r.email}. Con el botón entra directo a pagar (vale 7 días).` };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+/** Derecho de supresión (Ley 21.719): borra los datos personales y conserva los pedidos anonimizados */
+export async function deleteCustomerDataAction(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const staff = await requireStaff(["admin"]);
+  if (String(form.get("confirm") ?? "").trim().toUpperCase() !== "ELIMINAR") return { error: "Escribe ELIMINAR para confirmar." };
+  try {
+    const r = await deleteCustomerData(String(form.get("id")), staff.email);
+    refresh();
+    return { ok: `Datos eliminados. Se conservaron ${r.orders} pedidos a nombre de «Cliente eliminado» (respaldo tributario). Avísale al cliente por correo que su solicitud fue atendida.` };
   } catch (e) {
     return { error: (e as Error).message };
   }

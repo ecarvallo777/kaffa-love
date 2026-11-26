@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BUSINESS } from "@/lib/legal";
 import { Suspense } from "react";
 import { getCatalog } from "@/lib/catalog";
 import { categoryHref, topCategories } from "@/lib/catalog-utils";
@@ -45,7 +46,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-7xl px-4 py-5 text-xs text-ink-mute sm:px-6">
-          © Kaffa Love · Precios en pesos chilenos con IVA incluido
+          © {BUSINESS.legalName} · RUT {BUSINESS.rut} · {BUSINESS.address} · Precios en pesos chilenos con IVA incluido
         </p>
       </div>
     </footer>

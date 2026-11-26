@@ -6,9 +6,9 @@ import { getCustomerCart } from "@/lib/customer-cart-link";
 import { clp } from "@/lib/catalog-utils";
 import { fmtDate, fmtDateTime, ORDER_STATUS } from "@/lib/format";
 import { ActionForm } from "@/components/admin/action-form";
-import { Card, PageHeader, Pill, StatusPill, Table, btn, textarea } from "@/components/admin/ui";
+import { Card, Field, PageHeader, Pill, StatusPill, Table, btn, field, textarea } from "@/components/admin/ui";
 import { CartEditor } from "../cart-editor";
-import { sendCartAction } from "../actions";
+import { deleteCustomerDataAction, sendCartAction } from "../actions";
 
 export const metadata = { title: "Cliente" };
 
@@ -117,6 +117,27 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
             ) : (
               <p className="text-sm text-ink-mute">Sin direcciones guardadas.</p>
             )}
+          </Card>
+          <Card title="Solicitudes sobre sus datos">
+            <p className="text-sm text-ink-soft">
+              Si el cliente pide ver, llevarse o borrar sus datos (Ley 21.719), respóndele dentro de <b>30 días corridos</b>.
+            </p>
+            <a href={`/admin/clientes/${c.id}/datos`} className={`${btn.secondary} mt-3`}>Descargar sus datos (JSON)</a>
+            <p className="mt-1 text-xs text-ink-mute">Para acceso o portabilidad: envíale el archivo adjunto desde contacto@.</p>
+            <details className="mt-4">
+              <summary className="cursor-pointer text-sm font-medium text-danger-deep">Eliminar sus datos</summary>
+              <p className="mt-2 text-sm text-ink-soft">
+                Borra nombre, correo, teléfono, direcciones, su cuenta y su carrito. Los pedidos se conservan sin datos personales (la ley tributaria obliga a
+                guardar las ventas por 6 años). No se puede deshacer.
+              </p>
+              <ActionForm action={deleteCustomerDataAction} className="mt-3 flex flex-wrap items-end gap-2">
+                <input type="hidden" name="id" value={c.id} />
+                <Field label="Escribe ELIMINAR" className="w-40">
+                  <input name="confirm" autoComplete="off" required className={field} />
+                </Field>
+                <button className={btn.danger}>Eliminar datos</button>
+              </ActionForm>
+            </details>
           </Card>
           <p className="text-xs text-ink-mute">Cliente desde {fmtDate(c.created_at)}{c.source === "prestashop" ? " (tienda anterior)" : ""}.</p>
         </div>
