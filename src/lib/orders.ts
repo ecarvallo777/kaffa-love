@@ -14,6 +14,7 @@ import { grindLabel } from "@/lib/grinds";
 import { siteUrl } from "@/lib/env";
 import { addressKey } from "@/lib/customer-auth";
 import { getStaffBuyer, getStaffPrices } from "@/lib/staff-pricing";
+import { queueMetaPurchase } from "@/lib/marketing/meta-pixel";
 
 export const RESERVATION_MINUTES = 30;
 const GRINDS: Grind[] = ["grano", "fina", "media", "gruesa"];
@@ -422,6 +423,7 @@ export async function confirmOrderPaid(orderId: string, paymentId: string, amoun
       await logEvent("pago_confirmado", "order", orderId, { payment_id: paymentId, total_clp: order.total_clp });
       await sendOrderConfirmation(order);
       await sendStoreOrderAlert(order).catch((e) => console.error("[orders] aviso a la tienda:", e));
+      queueMetaPurchase({ ...order, status: "pagado", paid_at: new Date().toISOString() });
     }
     return;
   }
@@ -447,6 +449,7 @@ export async function confirmOrderPaid(orderId: string, paymentId: string, amoun
   });
   await sendOrderConfirmation(order);
   await sendStoreOrderAlert(order, true).catch((e) => console.error("[orders] aviso a la tienda:", e));
+  queueMetaPurchase({ ...order, status: "pagado", paid_at: new Date().toISOString() });
 }
 
 async function sendOrderConfirmation(order: OrderWithDetails) {

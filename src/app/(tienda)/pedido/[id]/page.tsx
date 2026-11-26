@@ -11,6 +11,8 @@ import { reconcileOrderPayment, syncMercadoPagoPayment } from "@/lib/payments";
 import { OrderActions } from "./order-actions";
 import { CreateAccountOffer } from "../../cuenta/forms";
 import { hoursAgo } from "@/lib/format";
+import { getStaffOrderIds } from "@/lib/profit";
+import { MetaPurchase } from "./meta-purchase";
 
 export const metadata: Metadata = { title: "Tu pedido", robots: { index: false } };
 
@@ -58,9 +60,14 @@ async function OrderView({ params, searchParams }: PageProps<"/pedido/[id]">) {
   const reservationActive = order.status === "pendiente_pago" && order.reserved_until && new Date(order.reserved_until) > new Date();
 
   const hero = statusHero(order.status, order.delivery, lastAttemptFailed);
+  // Píxel de Meta: compra recién pagada (no las de precio equipo)
+  const recentPurchase = paidStatuses.includes(order.status) && !!order.paid_at && new Date(order.paid_at) > hoursAgo(48) && !(await getStaffOrderIds([order.id])).has(order.id);
 
   return (
     <div className="mx-auto max-w-3xl px-4 pt-10 sm:px-6 sm:pt-14">
+      {recentPurchase && (
+        <MetaPurchase orderId={order.id} value={order.total_clp} items={items.map((i) => ({ id: i.product_id, quantity: i.quantity, price: i.unit_price_clp }))} />
+      )}
       <div className={`rounded-3xl p-6 sm:p-10 ${hero.tone}`}>
         <p className="text-xs tracking-[0.2em] uppercase opacity-80">Pedido {orderLabel(order.number)}</p>
         <h1 className="mt-3 font-display text-3xl leading-tight font-light sm:text-5xl">{hero.title}</h1>

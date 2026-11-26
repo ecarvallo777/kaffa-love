@@ -8,6 +8,8 @@ import { Card, Empty, PageHeader, Pill, Table, btn } from "@/components/admin/ui
 import { generateMarketing, setPostStatus, toggleAction } from "./actions";
 import { CopyButton } from "./copy-button";
 import { InstagramSection } from "./instagram-section";
+import { MetaPixelSection } from "./meta-pixel-section";
+import { getMetaPixelConfig } from "@/lib/marketing/meta-pixel";
 import { getInstagramAccount, getInstagramQueue } from "@/lib/marketing/instagram";
 
 export const metadata = { title: "Marketing" };
@@ -20,7 +22,7 @@ const GUIDE_TONE: Record<GuideStatus, "ok" | "wait" | "neutral"> = { publicada: 
 export default async function MarketingPage({ searchParams }: PageProps<"/admin/marketing">) {
   await connection();
   const sp = await searchParams;
-  const [runs, guides, igAccount, igQueue] = await Promise.all([getMarketingRuns(), getGuidesFresh(), getInstagramAccount(), getInstagramQueue()]);
+  const [runs, guides, igAccount, igQueue, pixel] = await Promise.all([getMarketingRuns(), getGuidesFresh(), getInstagramAccount(), getInstagramQueue(), getMetaPixelConfig()]);
   const run = runs.find((r) => r.id === sp.plan) ?? runs[0];
   const guide = run?.guideSlug ? guides.find((g) => g.slug === run.guideSlug) : undefined;
 
@@ -36,6 +38,10 @@ export default async function MarketingPage({ searchParams }: PageProps<"/admin/
           </ActionForm>
         }
       />
+
+      <div id="meta" className="mb-6 scroll-mt-6">
+        <MetaPixelSection config={pixel} />
+      </div>
 
       <div id="instagram" className="mb-6 scroll-mt-6">
         <InstagramSection account={igAccount} queue={igQueue} message={typeof sp.ig === "string" ? sp.ig : null} />

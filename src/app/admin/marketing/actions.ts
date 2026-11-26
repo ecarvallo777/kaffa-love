@@ -24,6 +24,7 @@ import {
   type IgPublication,
 } from "@/lib/marketing/instagram";
 import type { ActionResult } from "@/components/admin/action-form";
+import { connectMetaPixel, disconnectMetaPixel, sendMetaTestEvent } from "@/lib/marketing/meta-pixel";
 
 export async function generateMarketing(): Promise<ActionResult> {
   const staff = await requireStaff(["admin"]);
@@ -233,4 +234,42 @@ export async function cancelPublicationAction(_prev: ActionResult, form: FormDat
   if (p.status !== "cancelada") return { error: "Ya se está publicando; no se puede cancelar." };
   await removeMedia(media);
   backToInstagram("Publicación cancelada.");
+}
+
+// Píxel de Meta y API de conversiones ------------------------------------------------
+
+export async function connectMetaPixelAction(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const staff = await requireStaff(["admin"]);
+  const pixelId = String(form.get("pixelId") ?? "").replace(/\D/g, "");
+  const token = String(form.get("token") ?? "").trim();
+  const testEventCode = String(form.get("testEventCode") ?? "").trim() || null;
+  if (token.length < 40) return { error: "Pega el token completo de la API de conversiones." };
+  try {
+    const { name } = await connectMetaPixel(pixelId, token, testEventCode, staff.email);
+    updateTag("meta-pixel");
+    refresh();
+    return { ok: `Conectado${name ? ` a «${name}»` : ""}. El píxel ya está en la tienda.` };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function disconnectMetaPixelAction(): Promise<ActionResult> {
+  await requireStaff(["admin"]);
+  await disconnectMetaPixel();
+  updateTag("meta-pixel");
+  refresh();
+  return { ok: "Píxel quitado de la tienda." };
+}
+
+export async function testMetaPixelAction(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(["admin"]);
+  const code = String(form.get("testEventCode") ?? "").trim();
+  if (!/^TEST\w+$/i.test(code)) return { error: "Copia el código de «Probar eventos» (empieza con TEST)." };
+  try {
+    const n = await sendMetaTestEvent(code);
+    return { ok: `Meta recibió ${n} evento de prueba. Míralo en Administrador de eventos → Probar eventos.` };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }

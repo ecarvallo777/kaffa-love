@@ -6,6 +6,8 @@ import { CartToast } from "@/components/cart-toast";
 import { CartSync } from "@/components/cart-sync";
 import { SourceCapture } from "@/components/source-capture";
 import { getSettings } from "@/lib/settings";
+import { MetaPixel } from "@/components/meta-pixel";
+import { getStorePixelId } from "@/lib/marketing/meta-pixel";
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +24,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
         <CartSync />
         {/* Visitas (Vercel Web Analytics): se activa en el panel de Vercel; en local no envía nada */}
         <Analytics />
+        <Pixel />
       </Suspense>
     </>
   );
@@ -31,4 +34,10 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
 async function Welcome() {
   const { welcomePct } = await getSettings();
   return <SourceCapture welcomePct={welcomePct} />;
+}
+
+/** Píxel de Meta y aviso de cookies (solo si está conectado en Admin → Marketing) */
+async function Pixel() {
+  const pixelId = await getStorePixelId();
+  return pixelId ? <MetaPixel pixelId={pixelId} /> : null;
 }

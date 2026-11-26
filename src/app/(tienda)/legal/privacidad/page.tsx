@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import { Prose } from "@/components/prose";
+import { CookieChoiceReset } from "@/components/meta-pixel";
 
 export const metadata: Metadata = { title: "Política de privacidad" };
 
 export default async function PrivacyPage() {
   const s = await getSettings();
   return (
-    <Prose eyebrow="Información" title="Política de privacidad" updated="noviembre de 2026">
+    <Prose eyebrow="Información" title="Política de privacidad" updated="26 de noviembre de 2026">
       <p>En Kaffa Love cuidamos tus datos personales y los tratamos conforme a la legislación chilena de protección de datos.</p>
 
       <h2>Qué datos usamos</h2>
@@ -29,8 +30,16 @@ export default async function PrivacyPage() {
 
       <h2>Con quién los compartimos</h2>
       <p>
-        Solo con los servicios necesarios para operar: Mercado Pago (pagos), Blue Express (despachos), y nuestros proveedores de alojamiento y
-        correo. No vendemos ni cedemos tus datos a terceros para fines comerciales.
+        Solo con los servicios necesarios para operar: Mercado Pago (pagos), Blue Express (despachos), nuestros proveedores de alojamiento y
+        correo y, si aceptas las cookies de publicidad, Meta (ver abajo). No vendemos tus datos.
+      </p>
+
+      <h2 id="cookies">Cookies y publicidad</h2>
+      <p>
+        La tienda usa almacenamiento del navegador para tu carrito y para medir, sin identificarte, cómo se usa el sitio. Además, <strong>solo si lo aceptas</strong> en
+        el aviso de cookies, usamos el píxel de Meta (Facebook e Instagram): Meta recibe qué productos viste, agregaste al carrito o compraste y, al comprar, tu
+        correo, teléfono, nombre y comuna cifrados (no legibles), para mostrarte nuestros anuncios y medir si funcionan. Meta trata esos datos según su propia
+        política de privacidad. Puedes retirar tu aceptación cuando quieras: <CookieChoiceReset />.
       </p>
 
       <h2>Tus derechos</h2>

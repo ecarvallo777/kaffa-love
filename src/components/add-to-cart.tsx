@@ -8,6 +8,7 @@ import { GRINDS } from "@/lib/grinds";
 import { GrindGlyph } from "@/components/grind-glyph";
 import { setSelectedGrind, useSelectedGrind } from "@/lib/grind-selection";
 import { track } from "@/lib/track";
+import { metaEvent } from "@/lib/meta-events";
 
 /** Resumen de una receta del café, para mostrarla al elegir su molienda */
 export type RecipeHint = {
@@ -55,7 +56,8 @@ export function AddToCart({ product, available, maxQty, recipes = [] }: Props) {
   // Medición: vio la ficha de este producto
   useEffect(() => {
     track("vista_producto", { product_id: product.id });
-  }, [product.id]);
+    metaEvent("ViewContent", { content_ids: [product.id], content_type: "product", content_name: product.name, value: product.priceClp, currency: "CLP" });
+  }, [product.id, product.name, product.priceClp]);
 
   function submit() {
     if (!available) return;
@@ -78,6 +80,7 @@ export function AddToCart({ product, available, maxQty, recipes = [] }: Props) {
       qty,
     );
     track("agrego_carrito", { product_id: product.id, qty });
+    metaEvent("AddToCart", { content_ids: [product.id], content_type: "product", contents: [{ id: product.id, quantity: qty }], value: product.priceClp * qty, currency: "CLP" });
     setQty(1);
   }
 

@@ -14,6 +14,7 @@ import { ProductArt } from "@/components/product-art";
 import { useSyncedCart } from "@/components/use-synced-cart";
 import { placeOrder } from "./actions";
 import { currentSource, track } from "@/lib/track";
+import { metaEvent } from "@/lib/meta-events";
 import { parcelSize, rateFor, ratePrice, type CommuneRate } from "@/lib/shipping";
 import { WELCOME_SOURCE, welcomeDiscount } from "@/lib/welcome";
 
@@ -139,6 +140,14 @@ export function CheckoutForm({
     if (tracked.current || !lines.length) return;
     tracked.current = true;
     track("inicio_checkout", { items: lines.reduce((s, l) => s + l.qty, 0), total: subtotal });
+    metaEvent("InitiateCheckout", {
+      content_ids: [...new Set(lines.map((l) => l.productId))],
+      content_type: "product",
+      contents: lines.map((l) => ({ id: l.productId, quantity: l.qty })),
+      num_items: lines.reduce((s, l) => s + l.qty, 0),
+      value: subtotal,
+      currency: "CLP",
+    });
   }, [lines, subtotal]);
   const regionRate = rates.find((r) => r.region === draft.region);
   const rate = regionRate ? rateFor(regionRate, draft.commune, communeRates) : undefined;
