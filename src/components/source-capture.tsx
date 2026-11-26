@@ -3,29 +3,43 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { captureSource, currentSource } from "@/lib/track";
-import { WELCOME_SOURCE } from "@/lib/welcome";
+import { isWelcomeSource } from "@/lib/welcome";
+import { readConsent } from "@/lib/meta-events";
 
 const SEEN_KEY = "kaffa-bienvenida-vista";
 
 /**
  * Guarda el canal de llegada (enlace etiquetado o sitio de origen) al entrar a la tienda.
- * A quien llega por el QR de la feria le muestra una vez el descuento de bienvenida.
+ * A quien llega por el QR de la feria o un anuncio de Meta le muestra una vez el descuento de
+ * bienvenida. Si está el aviso de cookies, espera a que la persona lo responda (no se tapan).
  */
 export function SourceCapture({ welcomePct }: { welcomePct: number }) {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState<string | null>(null);
   useEffect(() => {
     captureSource();
+    let source: string | null = null;
     try {
-      if (welcomePct > 0 && currentSource() === WELCOME_SOURCE && !localStorage.getItem(SEEN_KEY)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- lectura única desde localStorage
-        setShow(true);
-      }
-    } catch {}
+      source = currentSource();
+      if (!(welcomePct > 0 && isWelcomeSource(source) && !localStorage.getItem(SEEN_KEY))) return;
+    } catch {
+      return;
+    }
+    const cookieBannerOpen = () => readConsent() === null && !!document.querySelector('[data-testid="aviso-cookies"]');
+    const tryShow = () => {
+      if (!cookieBannerOpen()) setShow(source);
+    };
+    // El aviso de cookies aparece después de cargar: se revisa un momento después y al responderlo
+    const t = setTimeout(tryShow, 1200);
+    window.addEventListener("kaffa-cookies", tryShow);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("kaffa-cookies", tryShow);
+    };
   }, [welcomePct]);
 
   if (!show) return null;
   const close = () => {
-    setShow(false);
+    setShow(null);
     try {
       localStorage.setItem(SEEN_KEY, "1");
     } catch {}
@@ -37,10 +51,21 @@ export function SourceCapture({ welcomePct }: { welcomePct: number }) {
           <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
         </svg>
       </button>
-      <p className="pr-8 font-display text-xl">¡Qué bueno verte de nuevo!</p>
-      <p className="mt-1 text-sm text-paper/80">
-        Por venir desde la feria, tienes <b className="text-paper">{welcomePct} % de descuento</b> en tu primera compra online. Se aplica solo al pagar.
-      </p>
+      {show === "feria" ? (
+        <>
+          <p className="pr-8 font-display text-xl">¡Qué bueno verte de nuevo!</p>
+          <p className="mt-1 text-sm text-paper/80">
+            Por venir desde la feria, tienes <b className="text-paper">{welcomePct} % de descuento</b> en tu primera compra online. Se aplica solo al pagar.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="pr-8 font-display text-xl">Te damos la bienvenida a Kaffa Love</p>
+          <p className="mt-1 text-sm text-paper/80">
+            En tu primera compra tienes <b className="text-paper">{welcomePct} % de descuento</b>. Se aplica solo al pagar.
+          </p>
+        </>
+      )}
       <Link
         href="/categoria/cafe-de-especialidad"
         onClick={close}

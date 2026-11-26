@@ -16,7 +16,8 @@ import { placeOrder } from "./actions";
 import { currentSource, track } from "@/lib/track";
 import { metaEvent } from "@/lib/meta-events";
 import { parcelSize, rateFor, ratePrice, type CommuneRate } from "@/lib/shipping";
-import { WELCOME_SOURCE, welcomeDiscount } from "@/lib/welcome";
+import { isWelcomeSource, welcomeDiscount, welcomeLabel } from "@/lib/welcome";
+import { readEstimateRegion } from "@/components/shipping-estimate";
 
 const DRAFT_KEY = "kaffa-checkout-v1";
 
@@ -102,16 +103,22 @@ export function CheckoutForm({
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "null") as Partial<Draft> | null;
-      if (!saved) return;
+      if (!saved) {
+        // Primera vez: si calculó el envío en el carrito o en un producto, parte con despacho a esa región
+        const region = readEstimateRegion();
+        const hasAddress = !!profile?.addresses[0];
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- carga única desde localStorage
+        if (region && !hasAddress && rates.some((r) => r.region === region)) setDraft((d) => ({ ...d, delivery: "despacho", region }));
+        return;
+      }
       const pickupLocationId = pickups.some((p) => p.id === saved.pickupLocationId) ? saved.pickupLocationId! : undefined;
       // Con sesión mandan los datos de la cuenta; del borrador solo se recuerda cómo recibir el pedido
       const restore = profile
         ? { ...(saved.delivery ? { delivery: saved.delivery } : {}), ...(pickupLocationId ? { pickupLocationId } : {}) }
         : { ...saved, ...(pickupLocationId ? { pickupLocationId } : {}) };
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- carga única desde localStorage
       setDraft((d) => ({ ...d, ...restore }));
     } catch {}
-  }, [pickups, profile]);
+  }, [pickups, profile, rates]);
   useEffect(() => {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -124,7 +131,7 @@ export function CheckoutForm({
   const [welcome, setWelcome] = useState(false);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- lectura única desde localStorage
-    setWelcome(welcomePct > 0 && currentSource() === WELCOME_SOURCE);
+    setWelcome(welcomePct > 0 && isWelcomeSource(currentSource()));
   }, [welcomePct]);
 
   // Precio equipo: solo si paga con el mismo correo de su sesión de administrador
@@ -389,7 +396,7 @@ export function CheckoutForm({
           {discount > 0 && (
             <div className="flex justify-between text-leaf" data-testid="bienvenida">
               <dt>
-                Bienvenida de la feria (−{welcomePct} %)
+                {welcomeLabel(currentSource())} (−{welcomePct} %)
                 <span className="block text-xs text-ink-mute">Solo en tu primera compra online</span>
               </dt>
               <dd className="tabular-nums">−{clp(discount)}</dd>

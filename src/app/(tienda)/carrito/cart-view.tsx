@@ -7,8 +7,22 @@ import { addToCart, cartCount, removeLine, setLineGrind, setLineQty, type CartLi
 import { GRINDS } from "@/lib/grinds";
 import { ProductArt } from "@/components/product-art";
 import { useSyncedCart } from "@/components/use-synced-cart";
+import { ShippingEstimate } from "@/components/shipping-estimate";
+import { WhatsAppHelp } from "@/components/whatsapp-help";
+import { parcelSize } from "@/lib/shipping";
+import type { ShippingRate } from "@/lib/settings";
 
-export function CartView({ catalog, freeShippingFromClp }: { catalog: Catalog; freeShippingFromClp: number | null }) {
+export function CartView({
+  catalog,
+  freeShippingFromClp,
+  rates,
+  contactPhone,
+}: {
+  catalog: Catalog;
+  freeShippingFromClp: number | null;
+  rates: ShippingRate[];
+  contactPhone: string;
+}) {
   const { lines, notices } = useSyncedCart(catalog);
   const subtotal = lines.reduce((s, l) => s + l.priceClp * l.qty, 0);
   const count = cartCount(lines);
@@ -119,11 +133,15 @@ export function CartView({ catalog, freeShippingFromClp }: { catalog: Catalog; f
             </dt>
             <dd className="tabular-nums">{clp(subtotal)}</dd>
           </div>
-          <div className="flex justify-between">
-            <dt className="text-ink-soft">Envío</dt>
-            <dd className="text-ink-soft">Se calcula en el siguiente paso</dd>
-          </div>
         </dl>
+        <ShippingEstimate
+          rates={rates}
+          size={parcelSize(lines.map((l) => ({ type: catalog.products.find((p) => p.id === l.productId)?.type ?? "accesorio", qty: l.qty })))}
+          freeFromClp={freeShippingFromClp}
+          subtotalClp={subtotal}
+          className="mt-3"
+        />
+        <p className="mt-1 text-xs text-ink-mute">O retiro sin costo. Eliges al pagar.</p>
         <div className="mt-5 flex items-baseline justify-between border-t border-line pt-5">
           <span className="font-medium">Subtotal</span>
           <span className="text-2xl font-medium tabular-nums">{clp(subtotal)}</span>
@@ -138,6 +156,9 @@ export function CartView({ catalog, freeShippingFromClp }: { catalog: Catalog; f
         <p className="mt-4 text-center text-xs text-ink-mute">
           Pago seguro con Mercado Pago · Retiro sin costo
         </p>
+        <div className="mt-4 text-center">
+          <WhatsAppHelp phone={contactPhone} message="Hola, tengo una duda sobre mi compra en kaffalove.cl" />
+        </div>
       </aside>
     </div>
   );

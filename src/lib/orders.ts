@@ -6,7 +6,7 @@ import { refreshCatalog } from "@/lib/catalog-revalidate";
 import { getSettings, shippingQuote } from "@/lib/settings";
 import { parcelSize } from "@/lib/shipping";
 import { normalizeSource } from "@/lib/source";
-import { WELCOME_SOURCE, welcomeUnitPrice } from "@/lib/welcome";
+import { isWelcomeSource, welcomeUnitPrice } from "@/lib/welcome";
 import { REGIONES } from "@/lib/chile";
 import { clp } from "@/lib/catalog-utils";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
@@ -221,11 +221,11 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
     priced = { ...priced, lines, subtotal };
   }
 
-  // Descuento de bienvenida (QR de feria): solo en la primera compra online del correo
+  // Descuento de bienvenida (QR de feria o anuncio de Meta): solo en la primera compra online del correo
   let welcomeDiscountClp = 0;
   if (input.welcome && !isStaff) {
     const pct = (await getSettings()).welcomePct;
-    if (pct > 0 && normalizeSource(input.source) === WELCOME_SOURCE) {
+    if (pct > 0 && isWelcomeSource(normalizeSource(input.source))) {
       const { data: prev } = await db.from("customers").select("id").eq("email", email).maybeSingle();
       const { count } = prev
         ? await db

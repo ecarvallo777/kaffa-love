@@ -34,6 +34,7 @@ export function MetaPixel({ pixelId }: { pixelId: string }) {
   const choose = (v: "si" | "no") => {
     writeConsent(v);
     setConsent(v);
+    window.dispatchEvent(new Event("kaffa-cookies"));
   };
   return (
     <div role="dialog" aria-label="Cookies" data-testid="aviso-cookies" className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-xl rounded-2xl border border-line bg-paper p-4 shadow-xl sm:inset-x-6 sm:bottom-6">

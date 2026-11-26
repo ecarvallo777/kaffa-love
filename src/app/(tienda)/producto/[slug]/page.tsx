@@ -22,6 +22,9 @@ import { GrindGuide } from "@/components/grind-guide";
 import { RecipeTabs } from "@/components/recipe-card";
 import { recipeRatio, recipesForProduct } from "@/lib/recipes";
 import { getSettings } from "@/lib/settings";
+import { ShippingEstimate } from "@/components/shipping-estimate";
+import { WhatsAppHelp } from "@/components/whatsapp-help";
+import type { ParcelSize } from "@/lib/shipping";
 export async function generateStaticParams() {
   const catalog = await getCatalog();
   return catalog.products.map((p) => ({ slug: p.slug }));
@@ -169,12 +172,15 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
           </div>
 
           <ul className="mt-8 divide-y divide-line border-y border-line text-sm">
-            <Suspense fallback={<ShippingPerk free={null} />}>
-              <ShippingPerkLoader />
+            <Suspense fallback={<Perk icon="truck" title="Despacho a todo Chile" text="Con Blue Express." />}>
+              <ShippingPerkLoader size={isCoffee ? "xs" : "s"} />
             </Suspense>
             <Perk icon="store" title="Retiro sin costo" text="Elige retiro en persona en el checkout." />
             <Perk icon="lock" title="Pago seguro" text="Con Mercado Pago. La boleta llega desde Mercado Pago." />
           </ul>
+          <Suspense>
+            <ProductWhatsApp name={product.name} />
+          </Suspense>
 
           {isCoffee && <CoffeeDetails product={product} notes={notes} />}
           {bundle && <BundleContents bundle={bundle} catalog={catalog} />}
@@ -225,19 +231,26 @@ function StockLine({ available, low, maxQty }: { available: boolean; low: boolea
   );
 }
 
-async function ShippingPerkLoader() {
-  return <ShippingPerk free={(await getSettings()).freeShippingFromClp} />;
-}
-
-function ShippingPerk({ free }: { free: number | null }) {
-  return free ? (
-    <Perk icon="truck" title={`Despacho gratis sobre ${clp(free)}`} text="Bajo ese monto, se cotiza con Blue Express al finalizar la compra." />
-  ) : (
-    <Perk icon="truck" title="Despacho a domicilio" text="Cotizado con Blue Express al finalizar la compra." />
+async function ShippingPerkLoader({ size }: { size: ParcelSize }) {
+  const s = await getSettings();
+  const free = s.freeShippingFromClp;
+  return (
+    <Perk
+      icon="truck"
+      title="Despacho a todo Chile"
+      text={free ? `Gratis sobre ${clp(free)}. Con Blue Express.` : "Con Blue Express."}
+    >
+      <ShippingEstimate rates={s.shippingRates.filter((r) => r.enabled)} size={size} freeFromClp={free} className="mt-2" />
+    </Perk>
   );
 }
 
-function Perk({ icon, title, text }: { icon: "truck" | "store" | "lock"; title: string; text: string }) {
+async function ProductWhatsApp({ name }: { name: string }) {
+  const { contactPhone } = await getSettings();
+  return <WhatsAppHelp phone={contactPhone} message={`Hola, tengo una duda sobre ${name}`} className="mt-4" />;
+}
+
+function Perk({ icon, title, text, children }: { icon: "truck" | "store" | "lock"; title: string; text: string; children?: React.ReactNode }) {
   const paths = {
     truck: "M3 7h11v9H3zM14 10h4l3 3v3h-7M7 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM17 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z",
     store: "M4 10v10h16V10M3 10l2-6h14l2 6M3 10h18M10 20v-6h4v6",
@@ -248,10 +261,11 @@ function Perk({ icon, title, text }: { icon: "truck" | "store" | "lock"; title: 
       <svg viewBox="0 0 24 24" className="mt-0.5 size-5 shrink-0 text-ink-soft" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden>
         <path d={paths[icon]} />
       </svg>
-      <span>
+      <div className="min-w-0">
         <span className="font-medium">{title}</span>
         <span className="text-ink-soft"> · {text}</span>
-      </span>
+        {children}
+      </div>
     </li>
   );
 }
