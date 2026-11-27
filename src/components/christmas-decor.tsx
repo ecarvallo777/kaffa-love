@@ -90,35 +90,6 @@ export function SantaHat() {
   );
 }
 
-/** Corona de pino con frutos rojos alrededor del café destacado de la portada (va detrás de la bolsa) */
-export function HeroWreath() {
-  if (!useSeason(false)) return null;
-  const n = 56;
-  const leaves = Array.from({ length: n }, (_, i) => (i * 360) / n);
-  const greens = ["#387b4d", "#2b5f3c", "#3d5944", "#4a8a5c"];
-  return (
-    <svg aria-hidden viewBox="0 0 200 200" className="pointer-events-none absolute inset-0 size-full">
-      {leaves.map((a, i) => (
-        <g key={a} transform={`rotate(${a} 100 100)`}>
-          <ellipse cx="100" cy={i % 2 ? 7 : 11} rx="8" ry="3" fill={greens[i % 4]} transform={`rotate(${i % 2 ? 32 : -32} 100 ${i % 2 ? 7 : 11})`} />
-        </g>
-      ))}
-      {leaves.filter((_, i) => i % 7 === 3).map((a) => (
-        <g key={`b${a}`} transform={`rotate(${a} 100 100)`}>
-          <circle cx="97" cy="9" r="2.6" fill="#b2402f" />
-          <circle cx="102" cy="11" r="2.4" fill="#c4473a" />
-          <circle cx="99" cy="13" r="2.2" fill="#b2402f" />
-        </g>
-      ))}
-      <g transform="translate(100 190)">
-        <path d="M0 0 C-14 -12 -26 -4 -18 4 C-12 9 -4 4 0 0 Z M0 0 C14 -12 26 -4 18 4 C12 9 4 4 0 0 Z" fill="#b2402f" />
-        <path d="M-2 2 L-9 12 M2 2 L9 12" stroke="#b2402f" strokeWidth="4" strokeLinecap="round" />
-        <circle r="4" fill="#8c2e21" />
-      </g>
-    </svg>
-  );
-}
-
 /** Cinta de regalo en la esquina de las tarjetas de packs */
 export function GiftRibbon() {
   if (!useSeason(false)) return null;
@@ -131,23 +102,34 @@ export function GiftRibbon() {
   );
 }
 
-/** Fila de pinos nevados sobre el pie de página */
+/**
+ * Pinos nevados sobre el pie de página y Kaffito (la mascota, con gorro de Navidad) caminando
+ * de un lado a otro entre ellos. Sin movimiento, Kaffito se queda quieto saludando.
+ */
 export function FooterTrees() {
   if (!useSeason(false)) return null;
   const trees = Array.from({ length: 40 }, (_, i) => i);
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-full flex h-10 items-end justify-center gap-3 overflow-hidden">
-      {trees.map((i) => {
-        const h = [34, 26, 30, 22, 38, 28][i % 6];
-        return (
-          <svg key={i} viewBox="0 0 20 30" style={{ height: h }} className="shrink-0">
-            <path d="M10 0 L17 12 L13.5 12 L19 21 L14 21 L20 28 L0 28 L6 21 L1 21 L6.5 12 L3 12 Z" fill={i % 3 ? "#3d5944" : "#387b4d"} />
-            <path d="M10 0 L13 5 L11 4.5 L10 6 L9 4.5 L7 5 Z" fill="#fff" opacity="0.9" />
-            <rect x="8.8" y="28" width="2.4" height="2" fill="#5b4d44" />
-            {i % 5 === 2 && <path d="M10 -0.5 l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="#e9c46a" />}
-          </svg>
-        );
-      })}
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-full h-20 overflow-hidden">
+      <div className="absolute inset-x-0 bottom-0 flex h-10 items-end justify-center gap-3">
+        {trees.map((i) => {
+          const h = [34, 26, 30, 22, 38, 28][i % 6];
+          return (
+            <svg key={i} viewBox="0 0 20 30" style={{ height: h }} className="shrink-0">
+              <path d="M10 0 L17 12 L13.5 12 L19 21 L14 21 L20 28 L0 28 L6 21 L1 21 L6.5 12 L3 12 Z" fill={i % 3 ? "#3d5944" : "#387b4d"} />
+              <path d="M10 0 L13 5 L11 4.5 L10 6 L9 4.5 L7 5 Z" fill="#fff" opacity="0.9" />
+              <rect x="8.8" y="28" width="2.4" height="2" fill="#5b4d44" />
+              {i % 5 === 2 && <path d="M10 -0.5 l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="#e9c46a" />}
+            </svg>
+          );
+        })}
+      </div>
+      <div className="absolute bottom-0 left-[12%] motion-safe:animate-[kaffito-walk_46s_linear_infinite]" data-testid="kaffito">
+        <div className="motion-safe:animate-[kaffito-step_0.55s_ease-in-out_infinite]">
+          {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar */}
+          <img src="/brand/kaffito-navidad.png" alt="" width={53} height={76} className="h-[76px] w-auto drop-shadow-sm" />
+        </div>
+      </div>
     </div>
   );
 }

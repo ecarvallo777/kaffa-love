@@ -54,6 +54,21 @@
     from { transform: translate3d(0, -10vh, 0) rotate(0deg); }
     to { transform: translate3d(2.5rem, 105vh, 0) rotate(200deg); }
   }
+  /* Kaffito camina de izquierda a derecha, se da vuelta y regresa */
+  @keyframes kaffito-walk {
+    0% { left: -70px; transform: scaleX(1); }
+    48% { left: calc(100% + 10px); transform: scaleX(1); }
+    50% { left: calc(100% + 10px); transform: scaleX(-1); }
+    98% { left: -70px; transform: scaleX(-1); }
+    100% { left: -70px; transform: scaleX(1); }
+  }
+  /* Pasitos: sube y baja balanceándose */
+  @keyframes kaffito-step {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    25% { transform: translateY(-4px) rotate(0deg); }
+    50% { transform: translateY(0) rotate(4deg); }
+    75% { transform: translateY(-4px) rotate(0deg); }
+  }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
