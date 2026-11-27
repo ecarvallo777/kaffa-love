@@ -104,7 +104,7 @@ export function GiftRibbon() {
 
 /**
  * Pinos nevados sobre el pie de página y Kaffito (la mascota, con gorro de Navidad) caminando
- * de un lado a otro entre ellos. Sin movimiento, Kaffito se queda quieto saludando.
+ * de un lado a otro entre ellos. Sin movimiento, Kaffito se queda quieto.
  */
 export function FooterTrees() {
   if (!useSeason(false)) return null;
@@ -125,11 +125,48 @@ export function FooterTrees() {
         })}
       </div>
       <div className="absolute bottom-0 left-[12%] motion-safe:animate-[kaffito-walk_46s_linear_infinite]" data-testid="kaffito">
-        <div className="motion-safe:animate-[kaffito-step_0.55s_ease-in-out_infinite]">
-          {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar */}
-          <img src="/brand/kaffito-navidad.png" alt="" width={53} height={76} className="h-[76px] w-auto drop-shadow-sm" />
+        <div className="motion-safe:animate-[kaffito-bob_0.35s_ease-in-out_infinite]">
+          <WalkingKaffito />
         </div>
       </div>
+    </div>
+  );
+}
+
+/*
+ * Kaffito de perfil por capas: el cuerpo y cada pata son la misma imagen recortada (clip-path),
+ * y las patas se balancean desde la cadera en pares diagonales, como un trote.
+ * Coordenadas en % de public/brand/kaffito-navidad-perfil.png (572 × 600).
+ */
+const KAFFITO_H = 72;
+const KAFFITO_W = Math.round((KAFFITO_H * 572) / 600);
+const LEGS = [
+  { x: [7, 25], top: 82, phase: "a" },
+  { x: [25, 46], top: 86, phase: "b" },
+  { x: [46, 65], top: 86, phase: "a" },
+  { x: [65, 82], top: 86, phase: "b" },
+] as const;
+const BODY_CLIP = "polygon(0 0, 100% 0, 100% 100%, 82% 100%, 82% 86%, 25% 86%, 25% 82%, 7% 82%, 7% 100%, 0 100%)";
+
+function WalkingKaffito() {
+  const img = "absolute inset-0 size-full";
+  return (
+    <div className="relative drop-shadow-sm" style={{ width: KAFFITO_W, height: KAFFITO_H }}>
+      {LEGS.map((l) => (
+        // eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar
+        <img
+          key={l.x[0]}
+          src="/brand/kaffito-navidad-perfil.png"
+          alt=""
+          className={`${img} ${l.phase === "a" ? "motion-safe:animate-[kaffito-leg-a_0.7s_ease-in-out_infinite]" : "motion-safe:animate-[kaffito-leg-b_0.7s_ease-in-out_infinite]"}`}
+          style={{
+            clipPath: `polygon(${l.x[0]}% ${l.top}%, ${l.x[1]}% ${l.top}%, ${l.x[1]}% 100%, ${l.x[0]}% 100%)`,
+            transformOrigin: `${(l.x[0] + l.x[1]) / 2}% ${l.top}%`,
+          }}
+        />
+      ))}
+      {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar */}
+      <img src="/brand/kaffito-navidad-perfil.png" alt="" className={img} style={{ clipPath: BODY_CLIP }} />
     </div>
   );
 }

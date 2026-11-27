@@ -62,12 +62,18 @@
     98% { left: -70px; transform: scaleX(-1); }
     100% { left: -70px; transform: scaleX(1); }
   }
-  /* Pasitos: sube y baja balanceándose */
-  @keyframes kaffito-step {
-    0%, 100% { transform: translateY(0) rotate(-4deg); }
-    25% { transform: translateY(-4px) rotate(0deg); }
-    50% { transform: translateY(0) rotate(4deg); }
-    75% { transform: translateY(-4px) rotate(0deg); }
+  /* Trote: el cuerpo sube un poco en cada paso y las patas se mueven en pares diagonales */
+  @keyframes kaffito-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+  @keyframes kaffito-leg-a {
+    0%, 100% { transform: rotate(14deg); }
+    50% { transform: rotate(-14deg); }
+  }
+  @keyframes kaffito-leg-b {
+    0%, 100% { transform: rotate(-14deg); }
+    50% { transform: rotate(14deg); }
   }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
