@@ -102,35 +102,77 @@ export function GiftRibbon() {
   );
 }
 
-/**
- * Pinos nevados sobre el pie de página y Kaffito (la mascota, con gorro de Navidad) empujando
- * un trineo de regalos de un lado a otro entre ellos. Sin movimiento, se quedan quietos.
- */
+/** Fila de pinos con la punta nevada (algunos con estrella) */
+function TreeRow({ count = 40, colors = ["#3d5944", "#387b4d"], className = "" }: { count?: number; colors?: [string, string]; className?: string }) {
+  return (
+    <div className={`flex items-end justify-center gap-3 ${className}`}>
+      {Array.from({ length: count }, (_, i) => {
+        const h = [34, 26, 30, 22, 38, 28][i % 6];
+        return (
+          <svg key={i} viewBox="0 0 20 30" style={{ height: h }} className="shrink-0">
+            <path d="M10 0 L17 12 L13.5 12 L19 21 L14 21 L20 28 L0 28 L6 21 L1 21 L6.5 12 L3 12 Z" fill={i % 3 ? colors[0] : colors[1]} />
+            <path d="M10 0 L13 5 L11 4.5 L10 6 L9 4.5 L7 5 Z" fill="#fff" opacity="0.9" />
+            <rect x="8.8" y="28" width="2.4" height="2" fill="#5b4d44" />
+            {i % 5 === 2 && <path d="M10 -0.5 l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="#e9c46a" />}
+          </svg>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Pinos nevados sobre el pie de página */
 export function FooterTrees() {
   if (!useSeason(false)) return null;
-  const trees = Array.from({ length: 40 }, (_, i) => i);
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-full h-20 overflow-hidden">
-      <div className="absolute inset-x-0 bottom-0 flex h-10 items-end justify-center gap-3">
-        {trees.map((i) => {
-          const h = [34, 26, 30, 22, 38, 28][i % 6];
-          return (
-            <svg key={i} viewBox="0 0 20 30" style={{ height: h }} className="shrink-0">
-              <path d="M10 0 L17 12 L13.5 12 L19 21 L14 21 L20 28 L0 28 L6 21 L1 21 L6.5 12 L3 12 Z" fill={i % 3 ? "#3d5944" : "#387b4d"} />
-              <path d="M10 0 L13 5 L11 4.5 L10 6 L9 4.5 L7 5 Z" fill="#fff" opacity="0.9" />
-              <rect x="8.8" y="28" width="2.4" height="2" fill="#5b4d44" />
-              {i % 5 === 2 && <path d="M10 -0.5 l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="#e9c46a" />}
-            </svg>
-          );
-        })}
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-full h-10 overflow-hidden">
+      <TreeRow className="absolute inset-x-0 bottom-0 h-10" />
+    </div>
+  );
+}
+
+/**
+ * Kaffito (la mascota, con gorro de Navidad) empujando un trineo con regalos y café de un lado
+ * a otro. Va dentro de un contenedor con position relative; sin movimiento se queda quieto.
+ */
+export function KaffitoSled({ height = 72 }: { height?: number }) {
+  const sled = Math.round(height * 0.86);
+  return (
+    <div className="absolute bottom-0 left-[12%] flex items-end motion-safe:animate-[kaffito-walk_46s_linear_infinite]" data-testid="kaffito">
+      <div className="relative z-10 motion-safe:animate-[kaffito-bob_0.35s_ease-in-out_infinite]">
+        <WalkingKaffito height={height} />
       </div>
-      <div className="absolute bottom-0 left-[12%] flex items-end motion-safe:animate-[kaffito-walk_46s_linear_infinite]" data-testid="kaffito">
-        <div className="relative z-10 motion-safe:animate-[kaffito-bob_0.35s_ease-in-out_infinite]">
-          <WalkingKaffito />
+      {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar */}
+      <img src="/brand/trineo-navidad.png" alt="" width={Math.round((sled * 700) / 490)} height={sled} style={{ height: sled, marginLeft: -height / 6 }} className="w-auto drop-shadow-sm" />
+    </div>
+  );
+}
+
+/**
+ * Franja navideña arriba de la tienda: el aviso de la fecha límite de despacho y, debajo, una
+ * escena nocturna con pinos sobre la nieve por donde pasa Kaffito con su trineo.
+ * Se muestra desde el primer render (estamos en temporada al publicarla) para no mover la página.
+ */
+export function ChristmasBand({ text }: { text: string | null }) {
+  if (!useSeason(true)) return null;
+  return (
+    <div
+      data-testid="aviso-navidad"
+      className="relative h-[108px] overflow-hidden text-white sm:h-[100px]"
+      style={{
+        background:
+          "radial-gradient(1.5px 1.5px at 12% 30%, #fff8 50%, transparent 51%), radial-gradient(1.5px 1.5px at 33% 18%, #fff6 50%, transparent 51%), radial-gradient(2px 2px at 58% 26%, #fff7 50%, transparent 51%), radial-gradient(1.5px 1.5px at 79% 14%, #fff6 50%, transparent 51%), radial-gradient(1.5px 1.5px at 91% 34%, #fff7 50%, transparent 51%), linear-gradient(180deg, #1c4229 0%, #2b5f3c 100%)",
+      }}
+    >
+      <p className="relative z-20 mx-auto max-w-3xl px-4 pt-2 text-center text-xs leading-snug font-medium sm:text-sm">{text ?? " "}</p>
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[64px]">
+        <TreeRow count={60} colors={["#4a8a5c", "#6aa57a"]} className="absolute inset-x-0 bottom-2 h-10 opacity-80" />
+        <svg viewBox="0 0 1200 20" preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-3 w-full">
+          <path d="M0 8 Q100 0 200 7 T400 6 T600 8 T800 5 T1000 7 T1200 6 V20 H0 Z" fill="#f6f0e7" />
+        </svg>
+        <div className="absolute inset-x-0 bottom-1.5 h-full">
+          <KaffitoSled height={56} />
         </div>
-        {/* Trineo con regalos y café, empujado por Kaffito (se desliza, no rebota) */}
-        {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar */}
-        <img src="/brand/trineo-navidad.png" alt="" width={89} height={62} className="-ml-3 h-[62px] w-auto drop-shadow-sm" />
       </div>
     </div>
   );
@@ -141,8 +183,6 @@ export function FooterTrees() {
  * y las patas se balancean desde la cadera en pares diagonales, como un trote.
  * Coordenadas en % de public/brand/kaffito-navidad-perfil.png (572 × 600).
  */
-const KAFFITO_H = 72;
-const KAFFITO_W = Math.round((KAFFITO_H * 572) / 600);
 const LEGS = [
   { x: [7, 25], top: 82, phase: "a" },
   { x: [25, 46], top: 86, phase: "b" },
@@ -151,10 +191,10 @@ const LEGS = [
 ] as const;
 const BODY_CLIP = "polygon(0 0, 100% 0, 100% 100%, 82% 100%, 82% 86%, 25% 86%, 25% 82%, 7% 82%, 7% 100%, 0 100%)";
 
-function WalkingKaffito() {
+function WalkingKaffito({ height }: { height: number }) {
   const img = "absolute inset-0 size-full";
   return (
-    <div className="relative drop-shadow-sm" style={{ width: KAFFITO_W, height: KAFFITO_H }}>
+    <div className="relative drop-shadow-sm" style={{ width: Math.round((height * 572) / 600), height }}>
       {LEGS.map((l) => (
         // eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar
         <img
