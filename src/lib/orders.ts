@@ -168,6 +168,8 @@ export type CheckoutInput = {
     notes?: string;
   };
   lines: LineInput[];
+  /** Es para regalo: dedicatoria y nombre de quien recibe (se guarda como evento «regalo» del pedido) */
+  gift?: { message?: string; recipient?: string };
 };
 
 export type CheckoutResult =
@@ -336,6 +338,13 @@ export async function createOnlineOrder(input: CheckoutInput): Promise<CheckoutR
     .single();
   if (orderError) throw new Error(`No se pudo crear el pedido: ${orderError.message}`);
 
+  if (input.gift) {
+    await logEvent("regalo", "order", order.id, {
+      mensaje: input.gift.message?.trim().slice(0, 300) || null,
+      recibe: input.gift.recipient?.trim().slice(0, 80) || null,
+    }).catch((e) => console.error("[orders] regalo:", e));
+  }
+
   const { error: itemsError } = await db.from("order_items").insert(
     priced.lines.map((l) => ({
       order_id: order.id,
@@ -485,6 +494,12 @@ ${delivery}
   });
 }
 
+/** Datos de regalo del pedido (dedicatoria y quien recibe), si el cliente lo marcó */
+export async function getGift(orderId: string): Promise<{ mensaje: string | null; recibe: string | null } | null> {
+  const { data } = await createAdminClient().from("events").select("data").eq("type", "regalo").eq("entity_id", orderId).limit(1).maybeSingle();
+  return (data?.data as { mensaje: string | null; recibe: string | null } | undefined) ?? null;
+}
+
 /**
  * Aviso a la tienda (backoffice) de un pedido online pagado, para empezar a prepararlo.
  * Llega al correo de contacto de Configuración (contacto@ → Gmail de la tienda).
@@ -510,6 +525,12 @@ async function sendStoreOrderAlert(order: OrderWithDetails, late = false) {
           a?.notes ? `<br><span style="color:#8b7c70">Nota: ${escapeHtml(a.notes)}</span>` : ""
         }`;
   const adminUrl = `${siteUrl()}/admin/pedidos/${order.id}`;
+  const gift = await getGift(order.id);
+  const giftHtml = gift
+    ? `<p style="background:#eef5f0;padding:10px 12px;border-radius:10px">🎁 <b>Es para regalo:</b> no incluyas precios ni boleta en el paquete.${
+        gift.recibe ? `<br>Va a nombre de: <b>${escapeHtml(gift.recibe)}</b>` : ""
+      }${gift.mensaje ? `<br>Dedicatoria: «${escapeHtml(gift.mensaje)}»` : ""}</p>`
+    : "";
 
   await sendEmail({
     to: contactEmail,
@@ -520,6 +541,7 @@ async function sendStoreOrderAlert(order: OrderWithDetails, late = false) {
       `${late ? `<p style="background:#fbeee6;padding:10px 12px;border-radius:10px"><b>El pago llegó después de que venció la reserva:</b> el stock ya se había liberado. Revisa que haya unidades antes de prepararlo.</p>` : ""}
 <p><b>${escapeHtml(customer?.name ?? "Cliente")}</b><br>${escapeHtml(customer?.email ?? "")}${customer?.phone ? ` · ${escapeHtml(customer.phone)}` : ""}</p>
 <p>${delivery}</p>
+${giftHtml}
 <table width="100%" style="border-top:1px solid #eee;border-bottom:1px solid #eee;margin:16px 0">${items}
 <tr><td style="padding:6px 0;color:#8b7c70">Envío</td><td align="right">${clp(order.shipping_clp)}</td></tr>
 <tr><td style="padding:6px 0"><b>Total pagado</b></td><td align="right"><b>${clp(order.total_clp)}</b></td></tr></table>

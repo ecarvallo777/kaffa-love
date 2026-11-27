@@ -28,6 +28,7 @@ export default async function OrderDetail({ params }: PageProps<"/admin/pedidos/
   const pickup = order.pickup_locations as { name: string; address: string } | null;
   const address = order.shipping_address as Record<string, string | null> | null;
   const isOnline = order.channel === "online";
+  const gift = events?.find((e) => e.type === "regalo")?.data as { mensaje: string | null; recibe: string | null } | undefined;
 
   const actions: { status: string; label: string; primary?: boolean }[] = [];
   if (isOnline) {
@@ -73,6 +74,22 @@ export default async function OrderDetail({ params }: PageProps<"/admin/pedidos/
             </ul>
             {order.mp_payment_id && <p className="mt-2 text-xs text-ink-mute">Pago Mercado Pago: {order.mp_payment_id}</p>}
           </Card>
+
+          {gift && (
+            <Card title="🎁 Es para regalo">
+              <p className="text-sm font-medium">No incluyas precios ni boleta en el paquete.</p>
+              {gift.recibe && (
+                <p className="mt-2 text-sm">
+                  Va a nombre de: <b>{gift.recibe}</b>
+                </p>
+              )}
+              {gift.mensaje ? (
+                <blockquote className="mt-3 rounded-xl bg-paper-2 p-4 font-display text-lg whitespace-pre-line">{gift.mensaje}</blockquote>
+              ) : (
+                <p className="mt-2 text-sm text-ink-mute">Sin dedicatoria.</p>
+              )}
+            </Card>
+          )}
 
           {isOnline && (actions.length > 0 || canCancel || canShip) && (
             <Card title="Siguiente paso">

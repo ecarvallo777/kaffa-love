@@ -15,7 +15,7 @@ export default async function PrivacyPage() {
   const s = await getSettings();
   const contact = s.contactEmail ? <a href={`mailto:${s.contactEmail}`}>{s.contactEmail}</a> : <Link href="/contacto">nuestros canales de contacto</Link>;
   return (
-    <Prose eyebrow="Información" title="Política de privacidad" updated="26 de noviembre de 2026">
+    <Prose eyebrow="Información" title="Política de privacidad" updated="27 de noviembre de 2026">
       <p>
         En Kaffa Love cuidamos tus datos personales y los tratamos conforme a la Ley 19.628 sobre protección de la vida privada, modificada por la Ley 21.719. Aquí te
         contamos qué datos usamos, para qué, con quién los compartimos y cómo ejercer tus derechos.
@@ -31,6 +31,7 @@ export default async function PrivacyPage() {
         <li><strong>Contacto:</strong> nombre, correo y teléfono que ingresas al comprar o crear tu cuenta.</li>
         <li><strong>Despacho:</strong> dirección y comuna, solo si eliges despacho a domicilio.</li>
         <li><strong>Compras:</strong> productos, montos, fechas y estado de tus pedidos.</li>
+        <li><strong>Regalos:</strong> si marcas que es para regalo, la dedicatoria y el nombre de quien lo recibe.</li>
         <li><strong>Cuenta:</strong> si creas una, tu correo y contraseña (guardada cifrada: nadie del equipo puede leerla).</li>
         <li>
           <strong>Navegación:</strong> un identificador al azar de tu navegador y el canal por el que llegaste (por ejemplo, Instagram o Google), para medir de forma

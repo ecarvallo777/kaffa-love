@@ -18,6 +18,7 @@ import { metaEvent } from "@/lib/meta-events";
 import { parcelSize, rateFor, ratePrice, type CommuneRate } from "@/lib/shipping";
 import { isWelcomeSource, welcomeDiscount, welcomeLabel } from "@/lib/welcome";
 import { readEstimateRegion } from "@/components/shipping-estimate";
+import { christmasCutoff, fmtCutoff } from "@/lib/navidad";
 
 const DRAFT_KEY = "kaffa-checkout-v1";
 
@@ -94,6 +95,10 @@ export function CheckoutForm({
   }));
   // Marcada por defecto (decisión del negocio, 21-11-2026); el cliente puede desmarcarla
   const [marketing, setMarketing] = useState(true);
+  // Regalo: dedicatoria impresa y sin precios en el paquete (se guarda aparte del pedido)
+  const [gift, setGift] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
+  const [giftRecipient, setGiftRecipient] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
   const [redirecting, setRedirecting] = useState(false);
@@ -190,6 +195,7 @@ export function CheckoutForm({
               }
             : undefined,
         lines: lines.map((l) => ({ productId: l.productId, grind: l.grind, qty: l.qty })),
+        gift: gift ? { message: giftMessage, recipient: draft.delivery === "despacho" ? giftRecipient : "" } : undefined,
       });
       if (res.ok) {
         setRedirecting(true);
@@ -352,10 +358,42 @@ export function CheckoutForm({
                 <p className="rounded-2xl bg-paper-2 p-4 text-sm sm:col-span-6">
                   <span className="font-medium">Despacho con Blue Express</span> · {rate.days} ·{" "}
                   <span className="font-medium tabular-nums">{freeShipping ? "Gratis" : clp(ratePriceClp ?? rate.priceClp)}</span>
+                  {christmasCutoff(rate.region) && (
+                    <span className="mt-1 block text-xs text-leaf">🎄 Llega antes de Navidad si compras hasta el {fmtCutoff(christmasCutoff(rate.region)!)}.</span>
+                  )}
                 </p>
               )}
             </div>
           )}
+
+          <div className="mt-5 rounded-2xl border border-line p-4" data-testid="regalo">
+            <label className="flex items-start gap-3">
+              <input type="checkbox" checked={gift} onChange={(e) => setGift(e.target.checked)} className="mt-1 size-4 accent-accent" />
+              <span>
+                <span className="block font-medium">Es para regalo</span>
+                <span className="block text-sm text-ink-mute">Sin precios en el paquete y con tu dedicatoria. Sin costo.</span>
+              </span>
+            </label>
+            {gift && (
+              <div className="mt-4 grid gap-4">
+                {draft.delivery === "despacho" && (
+                  <Field label="¿A nombre de quién va? (opcional)" hint="Si no eres tú quien lo recibe.">
+                    <input value={giftRecipient} onChange={(e) => setGiftRecipient(e.target.value)} maxLength={80} className={input} />
+                  </Field>
+                )}
+                <Field label="Dedicatoria (opcional)" hint={`${giftMessage.length}/300`}>
+                  <textarea
+                    value={giftMessage}
+                    onChange={(e) => setGiftMessage(e.target.value)}
+                    maxLength={300}
+                    rows={3}
+                    placeholder="Ej.: ¡Feliz Navidad! Para que disfrutes tus mañanas. Con cariño, Ana."
+                    className="w-full rounded-xl border border-line bg-paper px-4 py-3 text-base outline-none transition-colors placeholder:text-ink-mute/70 focus:border-ink"
+                  />
+                </Field>
+              </div>
+            )}
+          </div>
         </Step>
       </div>
 

@@ -63,6 +63,7 @@ export const ORDER_STATUS: Record<string, { label: string; tone: "ok" | "wait" |
 
 export const EVENT_LABELS: Record<string, string> = {
   pedido_creado: "Pedido creado",
+  regalo: "Marcado como regalo",
   pago_iniciado: "Cliente fue a pagar",
   pago_confirmado: "Pago confirmado",
   pago_rechazado: "Pago rechazado",

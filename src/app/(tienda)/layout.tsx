@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteHeader } from "@/components/site-header";
+import { ChristmasBar } from "@/components/christmas-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { CartToast } from "@/components/cart-toast";
 import { CartSync } from "@/components/cart-sync";
@@ -12,6 +13,7 @@ import { getStorePixelId } from "@/lib/marketing/meta-pixel";
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <ChristmasBar />
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <SiteFooter />

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { clp } from "@/lib/catalog-utils";
 import { ratePrice, type ParcelSize } from "@/lib/shipping";
 import type { ShippingRate } from "@/lib/settings";
+import { christmasCutoff, fmtCutoff } from "@/lib/navidad";
 
 /** Región elegida para calcular el envío; el checkout la usa si no hay datos guardados */
 export const REGION_KEY = "kaffa-region-envio";
@@ -91,6 +92,12 @@ export function ShippingEstimate({
           </span>
         )}
       </p>
+      {rate && <ChristmasLine region={rate.region} />}
     </div>
   );
+}
+
+function ChristmasLine({ region }: { region: string }) {
+  const cutoff = christmasCutoff(region);
+  return cutoff ? <p className="mt-1 text-xs text-leaf">🎄 Llega antes de Navidad si compras hasta el {fmtCutoff(cutoff)}.</p> : null;
 }

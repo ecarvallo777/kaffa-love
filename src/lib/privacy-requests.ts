@@ -22,12 +22,14 @@ export async function exportCustomerData(customerId: string, by: string) {
     db.from("addresses").select("street, number, apartment, commune, region, notes, created_at").eq("customer_id", customerId),
     db
       .from("orders")
-      .select("number, channel, status, delivery, shipping_address, subtotal_clp, shipping_clp, total_clp, created_at, paid_at, tracking_number, order_items (product_name, quantity, unit_price_clp, grind)")
+      .select("id, number, channel, status, delivery, shipping_address, subtotal_clp, shipping_clp, total_clp, created_at, paid_at, tracking_number, order_items (product_name, quantity, unit_price_clp, grind)")
       .eq("customer_id", customerId)
       .order("created_at"),
     loadServerCart(customerId).catch(() => null),
   ]);
   if (!customer) throw new Error("No encontramos al cliente.");
+  const ids = (orders ?? []).map((o) => o.id);
+  const { data: gifts } = ids.length ? await db.from("events").select("entity_id, data").eq("type", "regalo").in("entity_id", ids) : { data: [] };
   await logEvent("datos_exportados", "customer", customerId, { por: by });
   return {
     responsable: "Kaffa Love SpA (RUT 78.181.139-4) · contacto@kaffalove.cl",
@@ -55,6 +57,7 @@ export async function exportCustomerData(customerId: string, by: string) {
       creado: o.created_at,
       pagado: o.paid_at,
       seguimiento: o.tracking_number,
+      regalo: gifts?.find((g) => g.entity_id === o.id)?.data ?? null,
     })),
     carrito_guardado: cart ?? [],
   };
@@ -82,7 +85,8 @@ export async function deleteCustomerData(customerId: string, by: string) {
     await db.from("orders").update({ shipping_address: { commune: a.commune ?? null, region: a.region ?? null } }).eq("id", o.id);
   }
   const orderIds = (orders ?? []).map((o) => o.id);
-  if (orderIds.length) await db.from("events").delete().eq("type", "meta_atribucion").in("entity_id", orderIds);
+  // Atribución de anuncios y dedicatorias de regalo: datos personales ligados a los pedidos
+  if (orderIds.length) await db.from("events").delete().in("type", ["meta_atribucion", "regalo"]).in("entity_id", orderIds);
 
   await db.from("addresses").delete().eq("customer_id", customerId);
   await saveServerCart(customerId, []).catch(() => {});
