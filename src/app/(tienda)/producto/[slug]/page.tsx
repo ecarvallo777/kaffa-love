@@ -11,6 +11,7 @@ import {
   categoryHref,
   clp,
   displayName,
+  needsGrind,
   productHref,
   tastingNotes,
 } from "@/lib/catalog-utils";
@@ -155,7 +156,7 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
                 slug: product.slug,
                 name: product.name,
                 priceClp: product.price_clp,
-                isCoffee,
+                isCoffee: needsGrind(product, catalog),
               }}
               available={available}
               maxQty={maxQty}
@@ -208,6 +209,12 @@ async function ProductView({ params }: Pick<PageProps<"/producto/[slug]">, "para
               }))}
             />
           )}
+          <GrindGuide compact />
+        </div>
+      )}
+
+      {!isCoffee && needsGrind(product, catalog) && (
+        <div className="mt-16">
           <GrindGuide compact />
         </div>
       )}

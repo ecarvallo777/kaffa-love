@@ -40,6 +40,13 @@ export function bundleDetails(p: Product, catalog: Catalog) {
   return { items, regular, savings: Math.max(0, regular - p.price_clp) };
 }
 
+/** Hay que elegir molienda: un café o una promoción que incluye café (una molienda para todo el pack) */
+export function needsGrind(p: Product, catalog: Catalog) {
+  if (p.type === "cafe") return true;
+  if (p.type !== "promocion") return false;
+  return catalog.bundleItems.some((b) => b.bundle_id === p.id && catalog.products.find((x) => x.id === b.product_id)?.type === "cafe");
+}
+
 /**
  * Disponibilidad para la tienda. Una promoción está disponible solo si todos
  * sus productos tienen stock; su máximo es el del producto más escaso.

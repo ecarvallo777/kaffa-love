@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Catalog, Grind } from "@/lib/catalog-types";
-import { availability, clp, productHref } from "@/lib/catalog-utils";
+import { availability, clp, needsGrind, productHref } from "@/lib/catalog-utils";
 import { addToCart, cartCount, removeLine, setLineGrind, setLineQty, type CartLine } from "@/lib/cart-store";
 import { GRINDS } from "@/lib/grinds";
 import { ProductArt } from "@/components/product-art";
@@ -238,7 +238,7 @@ function Suggestions({ catalog, lines, gap }: { catalog: Catalog; lines: CartLin
                   {p.name}
                 </Link>
                 <p className="text-sm text-ink-soft tabular-nums">{clp(p.price_clp)}</p>
-                {p.type === "cafe" ? (
+                {needsGrind(p, catalog) ? (
                   <Link href={href} className="mt-auto pt-2 text-sm font-medium text-accent underline-offset-4 hover:underline">
                     Elegir molienda →
                   </Link>

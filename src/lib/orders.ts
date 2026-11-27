@@ -66,7 +66,7 @@ export async function priceLines(lines: LineInput[], channel: "online" | "feria"
 
   const { data: bundleItems } = await db
     .from("bundle_items")
-    .select("bundle_id, product_id, quantity, products:product_id (name, stock, track_stock)")
+    .select("bundle_id, product_id, quantity, products:product_id (name, stock, track_stock, type)")
     .in("bundle_id", ids);
 
   const priced: PricedLine[] = [];
@@ -93,6 +93,16 @@ export async function priceLines(lines: LineInput[], channel: "online" | "feria"
         continue;
       }
       grind = l.grind;
+    } else if (p.type === "promocion") {
+      // Promoción con café: la molienda se elige para el pack (en la feria es opcional)
+      const hasCoffee = bundleItems?.some((b) => b.bundle_id === p.id && (b.products as unknown as { type: string } | null)?.type === "cafe");
+      if (hasCoffee) {
+        if (l.grind && GRINDS.includes(l.grind)) grind = l.grind;
+        else if (channel !== "feria") {
+          problems.push(`Elige la molienda de ${p.name}.`);
+          continue;
+        }
+      }
     }
     priced.push({
       product: p as Product,
