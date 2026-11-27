@@ -103,8 +103,8 @@ export function GiftRibbon() {
 }
 
 /**
- * Pinos nevados sobre el pie de página y Kaffito (la mascota, con gorro de Navidad) caminando
- * de un lado a otro entre ellos. Sin movimiento, Kaffito se queda quieto.
+ * Pinos nevados sobre el pie de página y Kaffito (la mascota, con gorro de Navidad) empujando
+ * un trineo de regalos de un lado a otro entre ellos. Sin movimiento, se quedan quietos.
  */
 export function FooterTrees() {
   if (!useSeason(false)) return null;
@@ -124,10 +124,13 @@ export function FooterTrees() {
           );
         })}
       </div>
-      <div className="absolute bottom-0 left-[12%] motion-safe:animate-[kaffito-walk_46s_linear_infinite]" data-testid="kaffito">
-        <div className="motion-safe:animate-[kaffito-bob_0.35s_ease-in-out_infinite]">
+      <div className="absolute bottom-0 left-[12%] flex items-end motion-safe:animate-[kaffito-walk_46s_linear_infinite]" data-testid="kaffito">
+        <div className="relative z-10 motion-safe:animate-[kaffito-bob_0.35s_ease-in-out_infinite]">
           <WalkingKaffito />
         </div>
+        {/* Trineo con regalos y café, empujado por Kaffito (se desliza, no rebota) */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa chica, sin optimizar */}
+        <img src="/brand/trineo-navidad.png" alt="" width={89} height={62} className="-ml-3 h-[62px] w-auto drop-shadow-sm" />
       </div>
     </div>
   );
