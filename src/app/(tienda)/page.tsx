@@ -16,6 +16,7 @@ import { ProductArt } from "@/components/product-art";
 import { ProductCard } from "@/components/product-card";
 import { GrindGuide } from "@/components/grind-guide";
 import { flavorColor } from "@/components/tasting-notes";
+import { ChristmasOnly, FallingSparkles, OutOfSeason } from "@/components/christmas-decor";
 
 export default async function Home() {
   const [catalog, settings] = await Promise.all([getCatalog(), getSettings()]);
@@ -38,6 +39,26 @@ export default async function Home() {
       {featured && <Hero coffee={featured} catalog={catalog} />}
 
       <ValueStrip freeShippingFromClp={settings.freeShippingFromClp} />
+
+      {/* Navidad: los packs suben al principio como regalos (se ordena solo según la fecha) */}
+      {bundles.length > 0 && (
+        <ChristmasOnly>
+          <Section
+            id="regalos"
+            eyebrow="🎄 Navidad"
+            title="Regala buen café"
+            lead="Packs listos para regalar. Marca «Es para regalo» al pagar y lo enviamos con tu dedicatoria y sin precios en el paquete."
+            href={catSlug(bundles[0]) && categoryHref(catSlug(bundles[0])!)}
+            linkLabel="Ver todos los packs"
+          >
+            <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+              {bundles.map((p) => (
+                <ProductCard key={p.id} product={p} catalog={catalog} size="lg" />
+              ))}
+            </div>
+          </Section>
+        </ChristmasOnly>
+      )}
 
       {coffees.length > 0 && (
         <Section
@@ -81,19 +102,21 @@ export default async function Home() {
       )}
 
       {bundles.length > 0 && (
-        <Section
-          eyebrow="Regalos y promociones"
-          title="Mejor juntos"
-          lead="Combinaciones pensadas para empezar a preparar café de filtro, a mejor precio que por separado."
-          href={catSlug(bundles[0]) && categoryHref(catSlug(bundles[0])!)}
-          linkLabel="Ver promociones"
-        >
-          <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2">
-            {bundles.map((p) => (
-              <ProductCard key={p.id} product={p} catalog={catalog} size="lg" />
-            ))}
-          </div>
-        </Section>
+        <OutOfSeason>
+          <Section
+            eyebrow="Regalos y promociones"
+            title="Mejor juntos"
+            lead="Combinaciones pensadas para empezar a preparar café de filtro, a mejor precio que por separado."
+            href={catSlug(bundles[0]) && categoryHref(catSlug(bundles[0])!)}
+            linkLabel="Ver promociones"
+          >
+            <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2">
+              {bundles.map((p) => (
+                <ProductCard key={p.id} product={p} catalog={catalog} size="lg" />
+              ))}
+            </div>
+          </Section>
+        </OutOfSeason>
       )}
     </>
   );
@@ -111,6 +134,7 @@ function Hero({ coffee, catalog }: { coffee: Product; catalog: Catalog }) {
 
   return (
     <section className="relative overflow-hidden">
+      <FallingSparkles />
       <div className="mx-auto grid max-w-7xl items-center gap-10 md:items-start px-4 pt-10 pb-14 sm:px-6 md:grid-cols-[1.1fr_1fr] md:pt-8 md:pb-16">
         <div className="animate-rise md:pt-12 lg:pt-16">
           <p className="text-xs font-medium tracking-[0.2em] text-accent uppercase">
@@ -130,6 +154,14 @@ function Hero({ coffee, catalog }: { coffee: Product; catalog: Catalog }) {
             >
               Elegir mi café
             </Link>
+            <ChristmasOnly>
+              <Link
+                href="#regalos"
+                className="inline-flex h-12 items-center rounded-full bg-accent px-6 font-medium text-white transition-colors hover:bg-accent-deep"
+              >
+                🎁 Regalos de Navidad
+              </Link>
+            </ChristmasOnly>
             <Link
               href="#guia-molienda"
               className="inline-flex h-12 items-center rounded-full border border-ink/20 px-6 font-medium transition-colors hover:border-ink"

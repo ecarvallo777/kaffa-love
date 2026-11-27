@@ -46,6 +46,14 @@
     0%, 100% { transform: scale(1); }
     40% { transform: scale(1.25); }
   }
+  @keyframes twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  @keyframes fall {
+    from { transform: translate3d(0, -10vh, 0) rotate(0deg); }
+    to { transform: translate3d(2.5rem, 105vh, 0) rotate(200deg); }
+  }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }

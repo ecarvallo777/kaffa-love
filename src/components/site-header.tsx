@@ -6,6 +6,7 @@ import { getSettings } from "@/lib/settings";
 import { categoryHref, clp, topCategories } from "@/lib/catalog-utils";
 import { CartButton } from "@/components/cart-button";
 import { Wordmark } from "@/components/wordmark";
+import { ChristmasGarland } from "@/components/christmas-decor";
 
 export function SiteHeader() {
   return (
@@ -57,6 +58,7 @@ export function SiteHeader() {
           <CartButton />
         </div>
       </div>
+      <ChristmasGarland />
     </header>
   );
 }

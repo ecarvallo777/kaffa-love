@@ -6,9 +6,14 @@
 export const CHRISTMAS = {
   santiago: "2026-12-19",
   regiones: "2026-12-16",
-  /** Desde este día ya no se muestra nada */
+  /** Desde este día ya no se muestra el aviso de despacho */
   end: "2026-12-25",
+  /** Desde este día se quita la decoración navideña */
+  decorUntil: "2026-12-26",
 };
+
+/** Temporada de Navidad (decoración y sección de regalos) */
+export const isChristmasSeason = (today = todayInChile()) => today < CHRISTMAS.decorUntil;
 
 export const SANTIAGO_REGION = "Metropolitana de Santiago";
 
