@@ -9,7 +9,7 @@ import { isChristmasSeason } from "@/lib/navidad";
  * Colores: verde del logo, rojo y crema de la tienda (el logo no se toca).
  */
 
-function useSeason(initial: boolean) {
+export function useSeason(initial: boolean) {
   const [on, setOn] = useState(initial);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- depende de la fecha del visitante
@@ -74,6 +74,80 @@ export function FallingSparkles() {
           <path d="M12 0 L14 10 L24 12 L14 14 L12 24 L10 14 L0 12 L10 10 Z" fill="currentColor" />
         </svg>
       ))}
+    </div>
+  );
+}
+
+/** Gorro navideño sobre el ícono del carrito */
+export function SantaHat() {
+  if (!useSeason(false)) return null;
+  return (
+    <svg aria-hidden viewBox="0 0 24 20" className="pointer-events-none absolute -top-2.5 -left-1.5 h-4 w-5 -rotate-12">
+      <path d="M3 15 C5 6 11 1 17 4 C19 5 20 8 21 11 L14 10 C10 10 6 12 3 15 Z" fill="#b2402f" />
+      <circle cx="21" cy="12" r="2.4" fill="#fff" />
+      <rect x="1.5" y="13.5" width="15" height="4.5" rx="2.2" fill="#fff" transform="rotate(-12 9 16)" />
+    </svg>
+  );
+}
+
+/** Corona de pino con frutos rojos alrededor del café destacado de la portada (va detrás de la bolsa) */
+export function HeroWreath() {
+  if (!useSeason(false)) return null;
+  const n = 56;
+  const leaves = Array.from({ length: n }, (_, i) => (i * 360) / n);
+  const greens = ["#387b4d", "#2b5f3c", "#3d5944", "#4a8a5c"];
+  return (
+    <svg aria-hidden viewBox="0 0 200 200" className="pointer-events-none absolute inset-0 size-full">
+      {leaves.map((a, i) => (
+        <g key={a} transform={`rotate(${a} 100 100)`}>
+          <ellipse cx="100" cy={i % 2 ? 7 : 11} rx="8" ry="3" fill={greens[i % 4]} transform={`rotate(${i % 2 ? 32 : -32} 100 ${i % 2 ? 7 : 11})`} />
+        </g>
+      ))}
+      {leaves.filter((_, i) => i % 7 === 3).map((a) => (
+        <g key={`b${a}`} transform={`rotate(${a} 100 100)`}>
+          <circle cx="97" cy="9" r="2.6" fill="#b2402f" />
+          <circle cx="102" cy="11" r="2.4" fill="#c4473a" />
+          <circle cx="99" cy="13" r="2.2" fill="#b2402f" />
+        </g>
+      ))}
+      <g transform="translate(100 190)">
+        <path d="M0 0 C-14 -12 -26 -4 -18 4 C-12 9 -4 4 0 0 Z M0 0 C14 -12 26 -4 18 4 C12 9 4 4 0 0 Z" fill="#b2402f" />
+        <path d="M-2 2 L-9 12 M2 2 L9 12" stroke="#b2402f" strokeWidth="4" strokeLinecap="round" />
+        <circle r="4" fill="#8c2e21" />
+      </g>
+    </svg>
+  );
+}
+
+/** Cinta de regalo en la esquina de las tarjetas de packs */
+export function GiftRibbon() {
+  if (!useSeason(false)) return null;
+  return (
+    <div aria-hidden className="pointer-events-none absolute top-0 right-0 size-28 overflow-hidden rounded-tr-2xl">
+      <div className="absolute top-7 -right-10 w-44 rotate-45 bg-danger py-1 text-center text-[0.65rem] font-medium tracking-[0.14em] text-white uppercase shadow">
+        Para regalar
+      </div>
+    </div>
+  );
+}
+
+/** Fila de pinos nevados sobre el pie de página */
+export function FooterTrees() {
+  if (!useSeason(false)) return null;
+  const trees = Array.from({ length: 40 }, (_, i) => i);
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-full flex h-10 items-end justify-center gap-3 overflow-hidden">
+      {trees.map((i) => {
+        const h = [34, 26, 30, 22, 38, 28][i % 6];
+        return (
+          <svg key={i} viewBox="0 0 20 30" style={{ height: h }} className="shrink-0">
+            <path d="M10 0 L17 12 L13.5 12 L19 21 L14 21 L20 28 L0 28 L6 21 L1 21 L6.5 12 L3 12 Z" fill={i % 3 ? "#3d5944" : "#387b4d"} />
+            <path d="M10 0 L13 5 L11 4.5 L10 6 L9 4.5 L7 5 Z" fill="#fff" opacity="0.9" />
+            <rect x="8.8" y="28" width="2.4" height="2" fill="#5b4d44" />
+            {i % 5 === 2 && <path d="M10 -0.5 l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="#e9c46a" />}
+          </svg>
+        );
+      })}
     </div>
   );
 }

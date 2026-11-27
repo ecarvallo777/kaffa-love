@@ -1,3 +1,4 @@
+import { FooterTrees } from "@/components/christmas-decor";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/legal";
 import { Suspense } from "react";
@@ -7,7 +8,8 @@ import { Wordmark } from "@/components/wordmark";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-line bg-paper-2 text-ink">
+    <footer className="relative mt-24 border-t border-line bg-paper-2 text-ink">
+      <FooterTrees />
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
           <Wordmark className="h-10" />

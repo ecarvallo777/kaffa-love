@@ -16,7 +16,7 @@ import { ProductArt } from "@/components/product-art";
 import { ProductCard } from "@/components/product-card";
 import { GrindGuide } from "@/components/grind-guide";
 import { flavorColor } from "@/components/tasting-notes";
-import { ChristmasOnly, FallingSparkles, OutOfSeason } from "@/components/christmas-decor";
+import { ChristmasOnly, FallingSparkles, HeroWreath, OutOfSeason } from "@/components/christmas-decor";
 
 export default async function Home() {
   const [catalog, settings] = await Promise.all([getCatalog(), getSettings()]);
@@ -178,6 +178,7 @@ function Hero({ coffee, catalog }: { coffee: Product; catalog: Catalog }) {
         >
           <div className="relative mx-auto aspect-square max-w-md xl:max-w-lg rounded-full bg-paper-2">
             <div className="absolute inset-[8%] rounded-full border border-dashed border-line" />
+            <HeroWreath />
             <ProductArt
               product={coffee}
               catalog={catalog}

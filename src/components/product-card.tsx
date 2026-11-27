@@ -10,6 +10,7 @@ import {
   tastingNotes,
 } from "@/lib/catalog-utils";
 import { ProductArt } from "@/components/product-art";
+import { GiftRibbon } from "@/components/christmas-decor";
 
 export function ProductCard({
   product,
@@ -46,6 +47,7 @@ export function ProductCard({
             available ? "" : "opacity-50 grayscale"
           }`}
         />
+        {bundle && available && <GiftRibbon />}
         <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
           {!available && <Badge tone="ink">Agotado</Badge>}
           {available && bundle && bundle.savings > 0 && (
